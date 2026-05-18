@@ -13,6 +13,8 @@ Vibe coding 学习经验、踩坑笔记与项目记录。
 | 目录 | 说明 |
 |---|---|
 | [`workflow-spec/`](./workflow-spec/) | AI 原生开发九步工作流规范（团队规范 + AI skill + 模板 + 工具推荐） |
+| [`projects/`](./projects/) | 用上述工作流跑出来的实战项目集合 |
+| └ [`projects/first-project/`](./projects/first-project/) | 第一个示例项目（待定义功能；骨架已就绪可起任务） |
 
 ## 后续规划
 
