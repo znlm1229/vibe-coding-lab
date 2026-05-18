@@ -14,14 +14,16 @@ Brainstorm → Grill Me → Prototype → SPEC → Plan → Tasks → Implementa
 
 ## 文件索引
 
-| 文件 | 面向 | 用途 |
-|---|---|---|
-| [`specification.md`](./specification.md) | 团队成员 | 标准规范的可读 Markdown 版（推荐起点） |
-| [`specification.docx`](./specification.docx) | 客户 / 团队分享 | 同上的 Word 原件，适合直接发出去 |
-| [`SKILL.md`](./SKILL.md) | AI 编码代理 | 可被 Claude Code 等 agent 自动加载的 skill 文件 |
-| [`references/spec-template.md`](./references/spec-template.md) | 写 SPEC 时参考 | 阶段 4 SPEC 文档模板与可测试验收标准写法 |
-| [`references/plan-and-tasks.md`](./references/plan-and-tasks.md) | 拆 Plan/Tasks 时参考 | 阶段 5 / 6 的结构与任务拆分准则 |
-| [`references/tooling.md`](./references/tooling.md) | 选工具时参考 | 每个阶段的现成工具推荐（Claude Code 与 Codex） |
+| 文件 | 版本 | 面向 | 用途 |
+|---|---|---|---|
+| [`specification.md`](./specification.md) | **v1.1**（正本） | 团队成员 | 标准规范的可读 Markdown 版（推荐起点） |
+| [`specification.docx`](./specification.docx) | v1.0（滞后） | 客户 / 团队分享 | 同上的 Word 原件；分发前确认是否要按 md 重新生成 |
+| [`SKILL.md`](./SKILL.md) | v1.1 | AI 编码代理 | 可被 Claude Code 等 agent 自动加载的 skill 文件 |
+| [`references/spec-template.md`](./references/spec-template.md) | — | 写 SPEC 时参考 | 阶段 4 SPEC 文档模板与可测试验收标准写法 |
+| [`references/plan-and-tasks.md`](./references/plan-and-tasks.md) | — | 拆 Plan/Tasks 时参考 | 阶段 5 / 6 的结构与任务拆分准则 |
+| [`references/tooling.md`](./references/tooling.md) | v1.1 | 选工具时参考 | 每个阶段的现成工具推荐（Claude Code 与 Codex） |
+
+> **v1.0 → v1.1 主要变化**：Stage 2 Grill Me 绑定强制 skill `grill-me`。详见 [`specification.md#8-更新记录`](./specification.md#8-更新记录)。
 
 ## 怎么用
 

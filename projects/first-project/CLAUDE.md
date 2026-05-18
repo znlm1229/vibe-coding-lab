@@ -16,6 +16,14 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 > ★ = 人工关卡，未经用户**明确确认**不得跨越。
 
+### 阶段绑定的强制 skill
+
+| 阶段 | 必须调用的 skill | 说明 |
+|---|---|---|
+| Stage 2 ｜ Grill Me | `grill-me` | 驱动整阶段的拷问交互，覆盖决策树每个分支。AI 自由列问题不能替代。skill 不可用时停下来告诉用户，不要静默退化。 |
+
+后续如有新增 skill 绑定，同步更新本表 + [`../../workflow-spec/specification.md`](../../workflow-spec/specification.md) + [`../../workflow-spec/references/tooling.md`](../../workflow-spec/references/tooling.md)。
+
 **完整规则与定义请阅读**：
 - 总规范：[`../../workflow-spec/specification.md`](../../workflow-spec/specification.md)
 - AI 行为细则：[`../../workflow-spec/SKILL.md`](../../workflow-spec/SKILL.md)
@@ -74,6 +82,7 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 - ❌ 给一行 bug 修复硬凑 9 个阶段（请按规模伸缩，但要明说跳了哪些和为什么）
 - ❌ 在实现中途**静默修改** SPEC——发现 SPEC 错了或不全，**停下来回 Stage 4 显式修订**并取得再确认
 - ❌ 自我批准任何人工关卡
+- ❌ 在 Stage 2 Grill Me **不调用 `grill-me` skill** 而靠自由列问题敷衍（除非整个 Stage 2 按规模伸缩规则被显式跳过，并写明理由）
 
 ## 7. 第一次接到任务时的开场动作
 

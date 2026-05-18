@@ -37,7 +37,9 @@ Do not evaluate to a winner yet — that is the user's call, informed by the nex
 
 Pressure-test before you build. Take the leading idea (or ideas) and interrogate it: surface hidden assumptions, edge cases, failure modes, integration risks, and unanswered questions. The name is literal — the AI should grill the *idea*, and invite the user to grill back.
 
-Output: a list of pointed questions and identified risks, grouped roughly by severity. Each item should be specific enough to act on ("what happens to in-flight requests during the migration?" not "have we considered edge cases?").
+**Required tool: the `grill-me` skill.** This stage must be driven by invoking the `grill-me` skill, which relentlessly interviews the user about the plan or design, resolving each branch of the decision tree. Ad-hoc question-listing by the AI alone does not match the skill's coverage and is not an acceptable substitute. If the skill is unavailable in the current environment, stop and surface this to the user rather than silently falling back.
+
+Output: a list of pointed questions and identified risks, grouped roughly by severity (distilled from the `grill-me` interaction). Each item should be specific enough to act on ("what happens to in-flight requests during the migration?" not "have we considered edge cases?"). The artifact must also include a short **skill invocation record**: when the skill was invoked, how many interview turns, and which key decision-tree branches were covered.
 
 End this stage by asking the user to answer the open questions, or to confirm which ones are acceptable to defer. Their answers feed the SPEC.
 

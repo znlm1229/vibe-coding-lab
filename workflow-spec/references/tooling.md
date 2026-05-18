@@ -45,10 +45,11 @@ Spec Kit 的关键特性:
 
 ## 阶段 2 — Grill Me 质询拷问
 
-- **Spec Kit `/speckit.clarify`**:交互式地识别并解决 spec 里的歧义,可指定关注领域(如「聚焦安全与性能要求」)。
+- **`grill-me` skill（本流程强制，v1.1+）**:Claude Code 内置 skill,以「不依不饶」的方式逐条审问用户的方案 / 设计,把决策树的每个分支都问到落地。触发方式:用户说「grill me」/「grill 这个设计」,或 AI 在本阶段主动调用 (`/grill-me`)。这是本流程在 Stage 2 的**默认且强制工具**——决策树的覆盖度是自由发挥的"列几个问题"做不到的。Stage 2 artifact 中需附 skill 调用记录。
+- **Spec Kit `/speckit.clarify`**:交互式地识别并解决 spec 里的歧义,可指定关注领域(如「聚焦安全与性能要求」)。可与 `grill-me` 互补——`grill-me` 拷问方向 / 设计,`clarify` 收紧已成形的 spec。
 - **Spec Kit `/speckit.analyze`**:跨 artifact 的一致性与缺口分析。
 - **Spec Kit 对抗式审查扩展**:社区里有「lens agent」风格的扩展,并行跑多个批判性代理,专门暴露 `clarify`/`analyze` 结构上抓不到的风险——prompt injection、完整性缺口、跨 spec 漂移、静默失败等,产出结构化的发现报告。
-- **Claude Code / Codex 通用模式**:红队 / 批判者 subagent——一个唯一职责就是攻击领先想法的子代理。Claude Code 可直接用 subagent 实现;Codex 可用独立任务实现。
+- **Claude Code / Codex 通用模式**:红队 / 批判者 subagent——一个唯一职责就是攻击领先想法的子代理。Claude Code 可直接用 subagent 实现;Codex 可用独立任务实现。可作为 `grill-me` 之外的补充。
 
 ---
 
