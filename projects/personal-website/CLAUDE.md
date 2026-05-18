@@ -1,10 +1,13 @@
-# CLAUDE.md — first-project
+# CLAUDE.md — personal-website
 
-> 本文件是 first-project 的**项目级 AI 指令**。Claude Code / Codex 等 agent 在本目录及子目录下工作时自动加载，规则优先级高于全局默认行为。
+> 本文件是 personal-website 的**项目级 AI 指令**。Claude Code / Codex 等 agent 在本目录及子目录下工作时自动加载，规则优先级高于全局默认行为。
 
 ## 1. 项目状态
 
-**未定义** —— 等用户给出本项目的具体功能 / 范围与第一个任务。在此之前不要主动开始任何阶段，不要凭空构思项目内容。
+**进行中** —— 项目定位：用户的个人网站。具体范围（极简名片 / 博客 / 作品集 / 混合 / SaaS 寄生等）待 Stage 2 `grill-me` 拷问后定型。
+
+- 当前任务：[`workflow/001-personal-website/`](./workflow/001-personal-website/) — Stage 1 Brainstorm
+- 历史任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）
 
