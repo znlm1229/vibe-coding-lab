@@ -1,0 +1,68 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Main from "@/components/Main.astro";
+import Footer from "@/components/Footer.astro";
+import config from "@/config";
+
+// 项目列表：featured 优先，order 升序，最后按 title 字母序兜底
+const projects = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+  (a, b) => {
+    const fA = a.data.featured ? 1 : 0;
+    const fB = b.data.featured ? 1 : 0;
+    if (fA !== fB) return fB - fA;
+    const oA = a.data.order ?? 999;
+    const oB = b.data.order ?? 999;
+    if (oA !== oB) return oA - oB;
+    return a.data.title.localeCompare(b.data.title);
+  }
+);
+---
+
+<Layout title={`项目 | ${config.site.title}`} description="作品集与实战项目">
+  <Header />
+  <Breadcrumb />
+  <Main pageTitle="项目" pageDesc="作品集与实战记录。九步工作流跑出来的项目陆续补充。">
+    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        projects.map(project => (
+          <li class="rounded-lg border border-border bg-card transition-colors hover:border-accent">
+            <a
+              href={`/projects/${project.id}/`}
+              class="block h-full p-4 no-underline"
+            >
+              <h3 class="text-accent text-lg font-semibold">
+                {project.data.title}
+              </h3>
+              <p class="text-muted-foreground mt-2 text-sm">
+                {project.data.summary}
+              </p>
+              {project.data.tech.length > 0 && (
+                <div class="mt-3 flex flex-wrap gap-1.5">
+                  {project.data.tech.map(t => (
+                    <span class="bg-muted rounded px-2 py-0.5 text-xs">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {project.data.status === "wip" && (
+                <span class="text-muted-foreground mt-3 inline-block text-xs">
+                  🚧 进行中
+                </span>
+              )}
+              {project.data.status === "archived" && (
+                <span class="text-muted-foreground mt-3 inline-block text-xs">
+                  已归档
+                </span>
+              )}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </Main>
+  <Footer />
+</Layout>
