@@ -50,10 +50,24 @@
 
 ## 最终验收
 
-- ⬜ **用户验收通过** — 时间：______ ｜ 备注：______
-- ⬜ **打回** — 回到：⬜ Stage 4 SPEC ｜ ⬜ Stage 5 Plan ｜ ⬜ Stage 6 Tasks ｜ ⬜ Stage 7 Implementation
+- ✅ **用户验收通过** — 时间：**2026-05-19** ｜ 备注：用户直接回复「验收通过」，13/13 AC 全过、5 项非阻塞遗留留作下次任务（不打回）
+- ⬜ ~~打回~~
 
-> 通过后请在项目根的 [`../../README.md`](../../README.md) 「任务台账」里登记本任务完成状态。
+> ✅ 已在 [`../../README.md`](../../README.md) 任务台账登记本任务完成状态。
+
+## 任务正式关闭
+
+**001-personal-website** 全流程九阶段走完。归档信息：
+
+- **生产 URL**：https://lw-personal.pages.dev/
+- **GitHub repo**：[znlm1229/vibe-coding-lab](https://github.com/znlm1229/vibe-coding-lab)
+- **本地代码**：`projects/personal-website/`
+- **artifact 完整链**：本目录 `01-brainstorm.md` ~ `09-acceptance.md`
+- **关键 commit 链**：从 `45b46e6 stage-2` 到 `16f0c0b stage-9`，共 ~30 个 commit，全可追溯
+- **持续维护方式**：直接编辑 `src/content/posts/*.md` 或 `src/content/projects/*.md` → git push → CF Pages 自动 build & deploy
+- **下次任务建议**：
+  - **002 — UX 收尾**：Header 加 Projects 导航 / Footer 清理 starter 模板 / About / hello 文案润色
+  - **003 — 品牌化**：自制 OG 图、考虑自定义域名、个人专属配色
 
 ## SPEC 与实施的偏差记录
 

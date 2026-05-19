@@ -4,9 +4,11 @@ vibe-coding-lab 的第一个实战项目：**用户的个人网站**。目的是
 
 ## 当前状态
 
-🟢 **进行中** —— 项目定位「个人网站」已明确；具体范围（极简名片 / 博客 / 作品集 / 混合 / SaaS 寄生等定位）待 Stage 2 `grill-me` 拷问后定型。
+🟢 **上线运行中** —— 首版 MVP 已上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/)，13/13 AC 通过用户验收（2026-05-19）。
 
-- 当前任务：[`workflow/001-personal-website/`](./workflow/001-personal-website/) — Stage 1 Brainstorm
+- 已完成任务：001 — 用九步工作流端到端搭出个人网站
+- 内容维护：直接编辑 `src/content/{posts,projects,pages}/*.md` → git push → CF Pages 自动 deploy
+- 后续候选任务：002（UX 收尾）、003（品牌化），用户提议时再开
 
 ## 工作流（必须遵循）
 
@@ -38,6 +40,6 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 <!-- 完成或进行中的任务列在这里，按编号倒序 -->
 
-| # | 任务 | 状态 | 当前阶段 |
+| # | 任务 | 状态 | 备注 |
 |---|---|---|---|
-| 001 | [`001-personal-website`](./workflow/001-personal-website/) | 进行中 | **Stage 9 Acceptance ★ 等用户签收**（13/13 AC 满足，上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/)） |
+| 001 | [`001-personal-website`](./workflow/001-personal-website/) | ✅ **已完成 2026-05-19** | 用户验收通过，13/13 AC 满足，上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/) |

@@ -6,9 +6,10 @@
 
 **进行中** —— 项目定位：用户的个人网站。具体范围（极简名片 / 博客 / 作品集 / 混合 / SaaS 寄生等）待 Stage 2 `grill-me` 拷问后定型。
 
-- 当前任务：[`workflow/001-personal-website/`](./workflow/001-personal-website/) — **Stage 9 Acceptance ★ 等用户最终签收**
+- **001-personal-website ✅ 已完成（2026-05-19 用户验收通过）**
 - 公网 URL：https://lw-personal.pages.dev/
-- 已完成阶段：Stage 1 Brainstorm → Stage 2 Grill Me（10 轮）→ Stage 3 Prototype（跳过）→ Stage 4 SPEC（已确认 + v1.0.1/v1.0.2 patch）→ Stage 5 Plan → Stage 6 Tasks（已确认）→ Stage 7 Implementation（19 task + 1 个 Stage 8 回路 fix）→ Stage 8 Human QA（已通过，1 阻塞已修：EmailLink）→ **13/13 AC 待用户最终签收**
+- 完整链路：Stage 1 Brainstorm → 2 Grill Me（10 轮）→ 3 Prototype（跳过）→ 4 SPEC（含 v1.0.1 / v1.0.2 patch）→ 5 Plan → 6 Tasks → 7 Implementation（19 task + Stage 8 回路 fix）→ 8 Human QA（1 阻塞已修）→ 9 Acceptance（13/13 AC 通过 + 用户签收）
+- 下一任务：候选 002（UX 收尾：Header nav / Footer 清理 / 文案润色）、003（品牌化：自制 OG / 自定义域名）—— 用户提议时再开
 - 历史任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）
