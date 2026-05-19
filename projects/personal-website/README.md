@@ -40,4 +40,4 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 | # | 任务 | 状态 | 当前阶段 |
 |---|---|---|---|
-| 001 | [`001-personal-website`](./workflow/001-personal-website/) | 进行中 | Stage 1 Brainstorm |
+| 001 | [`001-personal-website`](./workflow/001-personal-website/) | 进行中 | Stage 6 Tasks ★ 等待用户确认 |
