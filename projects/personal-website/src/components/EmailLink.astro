@@ -1,0 +1,50 @@
+---
+// 邮箱混淆链接组件
+// 满足 SPEC AC10：HTML 源码不含明文邮箱字符串；客户端 JS 启用后渲染为可点击 mailto: 链接 + 显示真实邮箱
+// 实现：构建期 base64 编码 → 运行期客户端 atob 解码
+
+interface Props {
+  /** 真实邮箱地址，仅在构建期可见，会被 base64 编码后写入 data-email */
+  email: string;
+  /** 自定义显示文字；不传则启用 JS 后自动替换为真实邮箱 */
+  text?: string;
+  /** 透传 class */
+  class?: string;
+}
+
+const { email, text, class: className = "" } = Astro.props;
+
+// 注意：避免在 HTML 中出现任何形如 a@b.c 的字符串（包括 @、邮箱片段）
+// 用 base64 编码后整个串失去 email 字面特征
+const encoded = Buffer.from(email).toString("base64");
+const fallbackText = text ?? "邮箱（启用 JS 后显示）";
+const autoFill = text == null;
+---
+
+<a
+  href="#"
+  data-email={encoded}
+  data-autofill={autoFill ? "1" : undefined}
+  class:list={["email-link", className]}
+  rel="nofollow"
+>
+  {fallbackText}
+</a>
+
+<script>
+  // 客户端解码 base64 邮箱 → 构造 mailto + 可选替换显示文字
+  // 用 querySelectorAll 一次性处理页面上所有 EmailLink 实例
+  document.querySelectorAll<HTMLAnchorElement>("a.email-link").forEach(a => {
+    const enc = a.dataset.email;
+    if (!enc) return;
+    try {
+      const email = atob(enc);
+      a.href = `mailto:${email}`;
+      if (a.dataset.autofill === "1") {
+        a.textContent = email;
+      }
+    } catch {
+      // base64 解码异常容错：保持原状，不暴露内部错误
+    }
+  });
+</script>

@@ -30,7 +30,14 @@
 
 ### P3 About 页
 
-- [ ] T4, T5
+- [x] **T4 — 写 about 页 markdown 内容** ｜ commit: 待填（与 T5 合并提交）
+  - 删除 starter `src/content/pages/about.md`（astro-paper 营销内容）
+  - 新建 `src/content/pages/about.mdx`（用 mdx 而非 md 是为 T5 引入组件留口子）
+  - 含李旺自我介绍 + 网站说明 + "在做什么" + 联系方式入口；TODO 注释标出可补充处
+- [x] **T5 — 实现邮箱混淆组件 + 接入 about 页联系入口** ｜ commit: 待填（与 T4 合并提交）
+  - 新建 `src/components/EmailLink.astro`：构建期 `Buffer.from(email).toString("base64")`，运行期 `atob()` 解码 → 设 `href="mailto:..."` + 可选替换显示文字
+  - about.mdx 中 `import EmailLink` 并使用 `<EmailLink email="617809914@qq.com" />`
+  - **AC10 验证通过**：`grep "617809914@qq.com" dist/` 返回空（无明文）；`data-email="NjE3ODA5OTE0QHFxLmNvbQ=="`（base64）写在 HTML 中
 
 ### P4 Projects
 
