@@ -54,7 +54,13 @@
 
 ### P5 Blog
 
-- [ ] T10, T11
+- [x] **T10 — Hello 博客（OQ3 主题：本站搭建过程 + 九步工作流）** ｜ commit: 待填
+  - `src/content/posts/hello-and-the-nine-stages.md`
+  - frontmatter：pubDatetime=2026-05-19T10:00:00+08:00 / author=李旺 / tags=[vibe-coding, workflow, meta] / featured
+  - 字数约 480（≤ SPEC 限 600）；含九步流程速览 + 各阶段做了什么 + 技术栈 + 完整 artifact 链接
+- [x] **T11 — 验证 /posts 索引 + /posts/[slug] 详情（用 starter 默认）** ｜ commit: 待填（与 T10 合并）
+  - starter 自带 `src/pages/posts/[...page].astro` + `src/pages/posts/[...slug]/index.astro` 默认工作良好
+  - 验证：`/posts/index.html` 含 hello 文链接；`/posts/hello-and-the-nine-stages/index.html` 详情页生成 OK；pagefind 已索引
 
 ### P6 首页
 
