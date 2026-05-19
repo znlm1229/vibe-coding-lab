@@ -75,7 +75,21 @@
 
 ### P7 元数据
 
-- [ ] T14, T15, T16
+- [x] **T14 — 替换 favicon（OG image MVP 保留 starter default）** ｜ commit: 待填
+  - `cp public/avatar.svg public/favicon.svg` 覆盖 starter 默认 favicon
+  - 浏览器 tab 显示「李旺」蓝底白字 initials
+  - **MVP 不替换 default-og.jpg**：satori 已开启 `dynamicOgImage`，每页自动生成 OG；首页/about 等 fallback 用 starter 的 default-og.jpg（acceptable for MVP，二期可自制品牌 OG）
+- [x] **T15 — 自定义 404 页** ｜ commit: 待填
+  - 重写 `src/pages/404.astro`：去掉 i18n 依赖，硬编码中文文案
+  - 包含「404 大数字 + ¯\_(ツ)_/¯ + 友好提示 + 回首页链接」
+  - 访问 `/nonexistent` 触发 404 时显示此页
+- [x] **T16 — 站点级 SEO meta（title/desc/作者/语言/时区）+ 修 footer AC10 漏洞** ｜ commit: 待填
+  - 全量替换 `astro-paper.config.ts`：title「李旺 · 个人网站」/ description / author=李旺 / lang=zh-CN / timezone=Asia/Shanghai / url=`znlm1229.pages.dev`
+  - **socials 数组裁掉 mailto:yourmail@gmail.com 等 starter 占位**，只保留 `github` → 修复 T9 deviation log 中的 AC10 footer 漏洞
+  - editPost 关闭（MVP 简化）
+  - astro.config.ts i18n.locales = ["zh-CN"]，defaultLocale 同步（避免 getLocaleRelativeUrl 报 MissingLocaleError）
+  - UI label（Posts / About / Tags 等）暂英文回退（useTranslations 内置兜底），post-MVP 可加 `src/i18n/lang/zh-CN.ts`
+  - 验证：dist/index.html `<title>` = 「李旺 · 个人网站」（AC9）；site-wide HTML grep 邮箱字符串 = 0（AC10）；pagefind 提示 zh-CN 不支持 stemming 但搜索仍工作（可接受）
 
 ### P8 部署
 

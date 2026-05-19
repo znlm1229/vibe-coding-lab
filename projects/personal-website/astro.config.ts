@@ -27,8 +27,11 @@ export default defineConfig({
     }),
   ],
   i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
+    // 站点目前仅一个语言 zh-CN；UI label（Posts / Tags / About 等）暂未做中文 i18n
+    // 翻译文件 fallback 走 src/i18n/lang/en.ts（useTranslations 内置兜底）
+    // 后续如需中文 UI label，新增 src/i18n/lang/zh-CN.ts 即可
+    locales: ["zh-CN"],
+    defaultLocale: "zh-CN",
     routing: {
       prefixDefaultLocale: false,
     },

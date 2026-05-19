@@ -2,14 +2,15 @@ import { defineAstroPaperConfig } from "./src/types/config";
 
 export default defineAstroPaperConfig({
   site: {
-    url: "https://astro-paper.pages.dev/",
-    title: "AstroPaper",
-    description: "A minimal, responsive and SEO-friendly Astro blog theme.",
-    author: "Sat Naing",
-    profile: "https://satna.ing",
+    url: "https://znlm1229.pages.dev/",
+    title: "李旺 · 个人网站",
+    description:
+      "李旺的个人网站：后端开发者，业余在用 AI 辅助开发做点东西。含项目卡片与博客。",
+    author: "李旺",
+    profile: "https://github.com/znlm1229",
     ogImage: "default-og.jpg",
-    lang: "en",
-    timezone: "Asia/Bangkok",
+    lang: "zh-CN",
+    timezone: "Asia/Shanghai",
     dir: "ltr",
   },
   posts: {
@@ -22,24 +23,20 @@ export default defineAstroPaperConfig({
     dynamicOgImage: true,
     showArchives: true,
     showBackButton: true,
-    editPost: {
-      enabled: true,
-      url: "https://github.com/satnaing/astro-paper/edit/main/",
-    },
+    // MVP 不启用「edit on github」按钮（避免暴露仓库结构 / 简化首版）
+    editPost: { enabled: false },
     search: "pagefind",
   },
+  // 仅保留 GitHub —— 移除 starter 默认的 mailto:yourmail@gmail.com 等占位
+  // mailto 留在 starter socials 里会违反 AC10（HTML 不含明文邮箱）
+  // 邮件联系入口在首页 #contact 与 /about 通过 EmailLink 组件混淆呈现
   socials: [
-    { name: "github",   url: "https://github.com/satnaing/astro-paper" },
-    { name: "x",        url: "https://x.com/username" },
-    { name: "linkedin", url: "https://www.linkedin.com/in/username/" },
-    { name: "mail",     url: "mailto:yourmail@gmail.com" },
+    { name: "github", url: "https://github.com/znlm1229" },
   ],
+  // 文章页"分享到..."按钮的目标（不含明文邮箱地址，是模板 URL，合规）
   shareLinks: [
-    { name: "whatsapp", url: "https://wa.me/?text=" },
-    { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" },
     { name: "x",        url: "https://x.com/intent/post?url=" },
     { name: "telegram", url: "https://t.me/share/url?url=" },
-    { name: "pinterest", url: "https://pinterest.com/pin/create/button/?url=" },
-    { name: "mail",     url: "mailto:?subject=See%20this%20post&body=" },
+    { name: "facebook", url: "https://www.facebook.com/sharer.php?u=" },
   ],
 });
