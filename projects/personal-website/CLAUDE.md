@@ -6,8 +6,8 @@
 
 **进行中** —— 项目定位：用户的个人网站。具体范围（极简名片 / 博客 / 作品集 / 混合 / SaaS 寄生等）待 Stage 2 `grill-me` 拷问后定型。
 
-- 当前任务：[`workflow/001-personal-website/`](./workflow/001-personal-website/) — **Stage 6 Tasks ★ 等待用户确认**
-- 已完成阶段：Stage 1 Brainstorm（5 方向）→ Stage 2 Grill Me（10 轮）→ Stage 3 Prototype（跳过）→ Stage 4 SPEC（已确认 2026-05-19）→ Stage 5 Plan（9 phases）
+- 当前任务：[`workflow/001-personal-website/`](./workflow/001-personal-website/) — **Stage 7 Implementation**（T1 起步）
+- 已完成阶段：Stage 1 Brainstorm（5 方向）→ Stage 2 Grill Me（10 轮）→ Stage 3 Prototype（跳过）→ Stage 4 SPEC（已确认 2026-05-19）→ Stage 5 Plan（9 phases）→ Stage 6 Tasks（已确认 2026-05-19，19 task）
 - 历史任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）
