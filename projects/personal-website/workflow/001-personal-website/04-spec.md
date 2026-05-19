@@ -168,14 +168,14 @@
 
 ## Open questions
 
-> 理想情况下 SPEC 确认时这些已答完。OQ1 / OQ2 阻塞 Stage 7 开始；OQ3 阻塞 Stage 7 中后段。
+> 全部已在 SPEC 确认时解决。✅ = 已定。
 
-| # | 问题 | AI 建议 | Owner | 阻塞节点 |
-|---|---|---|---|---|
-| OQ1 | 联系邮箱用 `617809914@qq.com` 还是新申请的 personal email？ | 建议申请独立的（如 Gmail），与个人项目身份解耦 | 用户 | Stage 7 开始前 |
-| OQ2 | 网图头像具体方案：dicebear / Unsplash / boring avatars / 其它？ | 建议先用 dicebear 一键生成占位 | 用户 | Stage 7 开始前 |
-| OQ3 | 第一篇 hello/intro 博客文章主题取向？ | 建议「介绍本站搭建过程 + 九步工作流」一文双用 | 用户 | Stage 7 写文章时 |
-| OQ4 | vibe-coding-lab 项目卡详情页内容大纲？ | 建议聚焦「九步工作流如何应用到本站搭建」 | 用户 | Stage 7 写卡片时 |
+| # | 问题 | 决定 | 备注 |
+|---|---|---|---|
+| ✅ OQ1 | 联系邮箱 | **`617809914@qq.com`** | 用户偏好用现有 git config 邮箱。AC10 邮箱混淆要求仍生效（不在 HTML 明文写）。 |
+| ✅ OQ2 | 网图头像方案 | **dicebear 程序生成几何头像** | 生成后下载 SVG 到 `public/avatar.svg`，不在运行时调外链（缓解外链失效风险） |
+| ✅ OQ3 | 第一篇 hello/intro 博客主题 | **「介绍本站搭建过程 + 九步工作流」** | 一文双用 —— 既是博客内容又是 vibe-coding-lab 项目卡的延伸支撑 |
+| ✅ OQ4 | vibe-coding-lab 项目卡详情大纲 | **聚焦「九步工作流如何应用到本站搭建」** | 与 OQ3 互为引用，详情页可直接 link 到博客文章 |
 
 ## Acceptance criteria
 
@@ -199,7 +199,7 @@
 
 ## 用户确认
 
-- ⬜ **等待确认**
-- ⬜ **已确认** — 确认时间：______ ｜ 备注：______
+- ✅ **已确认** — 确认时间：**2026-05-19** ｜ 备注：OQ1 用户指定 `617809914@qq.com`（覆盖 AI 建议的独立邮箱）；OQ2/3/4 采纳 AI 建议
+- ⬜ ~~等待确认~~
 
-> 一旦确认，本 SPEC 即为契约。后续 Plan / Tasks / Implementation 全部对照本文件；Stage 9 Acceptance 对照本节 13 条 AC 逐条核对。修改本 SPEC 需显式重新确认（不允许静默漂移）。
+> 本 SPEC 已为契约。后续 Plan / Tasks / Implementation 全部对照本文件；Stage 9 Acceptance 对照本节 13 条 AC 逐条核对。修改本 SPEC 需显式重新确认（不允许静默漂移）。
