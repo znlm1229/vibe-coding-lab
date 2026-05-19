@@ -22,13 +22,17 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 > ★ = 人工关卡，未经用户**明确确认**不得跨越。
 
-### 阶段绑定的强制 skill
+### 阶段绑定的 skill（workflow-spec v1.2）
 
-| 阶段 | 必须调用的 skill | 说明 |
-|---|---|---|
-| Stage 2 ｜ Grill Me | `grill-me` | 驱动整阶段的拷问交互，覆盖决策树每个分支。AI 自由列问题不能替代。skill 不可用时停下来告诉用户，不要静默退化。 |
+| 阶段 | skill | 级别 | 说明 |
+|---|---|---|---|
+| Stage 1 ｜ Brainstorm | `brainstorming` | 推荐 | superpowers 内置，强制结构化发散，避免锚定第一个想法 |
+| Stage 2 ｜ Grill Me | `grill-me` | **强制** | 拷问交互覆盖决策树每个分支。AI 自由列问题不能替代。skill 不可用时停下报告 |
+| Stage 5 ｜ Plan | `writing-plans` | 推荐 | 结构化多步计划（phase 排序、风险标记、测试策略）|
+| Stage 7 → 8 过渡 | `verification-before-completion` | **强制** | 声明完成前必须跑验证命令并确认输出，证据先于断言；防 AC 字面 PASS / 行为 FAIL 盲区 |
+| Stage 8 ｜ Human QA | `requesting-code-review` | 推荐 | 模仿"工程师准备 PR"的格式组织质检就绪摘要 |
 
-后续如有新增 skill 绑定，同步更新本表 + [`../../workflow-spec/specification.md`](../../workflow-spec/specification.md) + [`../../workflow-spec/references/tooling.md`](../../workflow-spec/references/tooling.md)。
+新增 skill 绑定需同步更新 [`../../workflow-spec/specification.md`](../../workflow-spec/specification.md) + [`../../workflow-spec/SKILL.md`](../../workflow-spec/SKILL.md) + [`../../workflow-spec/references/tooling.md`](../../workflow-spec/references/tooling.md)。
 
 **完整规则与定义请阅读**：
 - 总规范：[`../../workflow-spec/specification.md`](../../workflow-spec/specification.md)
@@ -89,6 +93,10 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 - ❌ 在实现中途**静默修改** SPEC——发现 SPEC 错了或不全，**停下来回 Stage 4 显式修订**并取得再确认
 - ❌ 自我批准任何人工关卡
 - ❌ 在 Stage 2 Grill Me **不调用 `grill-me` skill** 而靠自由列问题敷衍（除非整个 Stage 2 按规模伸缩规则被显式跳过，并写明理由）
+- ❌ 在 Stage 7 → 8 过渡 **不调用 `verification-before-completion` skill** 就声明完成（v1.2 强制；防 AC 字面通过 / 行为破洞的盲区）
+- ❌ 把 auto-mode 当作绕过人工关卡的借口（v1.2 规则四：auto-mode 仅适用于阶段内例行决策，不可凌驾 4 个人工关卡 SPEC / Tasks / QA / Acceptance）
+- ❌ 写 AC 时只写「AI 如何验证」一栏（v1.2 要求：每条 AC 必须同时标 AI 验证 + 人工验证两通道）
+- ❌ Stage 8 发现 bug 修完后，commit 信息复用 `task-TX:` 而不是 `fix(TX):`（v1.2 规范：区分首次实现 vs 修复回路）
 
 ## 7. 第一次接到任务时的开场动作
 

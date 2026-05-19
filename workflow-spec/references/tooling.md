@@ -36,10 +36,11 @@ Spec Kit 的关键特性:
 
 发散式构思不需要特殊工具,需要的是一个不受约束的模型 + 一个明确要求「多个方案」的提示。
 
-- **Claude Code**:用 subagent / agent teams,一次性并行启动多个研究代理,各自调查问题的不同框架。比单线程串行地想要快,而且能压住「锚定第一个想法」的倾向。
+- **`brainstorming` skill（本流程推荐，v1.2+）**: superpowers 系列内置 skill,强制结构化发散思考,先发散后收敛,避免锚定第一个想法。Stage 1 默认调用。
+- **Claude Code**:用 subagent / agent teams,一次性并行启动多个研究代理,各自调查问题的不同框架。比单线程串行地想要快。也可用 `dispatching-parallel-agents` skill 一次派几个 agent 各自跑一个方向。
 - **Codex**:用云端并行任务能力同时跑多个探索方向。
 - **通用**:配合白板工具(Excalidraw、tldraw、FigJam)给团队和 AI 一起发散时用。
-- **Spec Kit 相关**:Spec Kit 的 `spec-driven.md` 里提到「Branching for Exploration」——从同一份 spec 生成多个面向不同优化目标(性能、可维护性、成本)的实现方案,可作为后期发散的手段。
+- **Spec Kit 相关**:Spec Kit 的 `spec-driven.md` 里提到「Branching for Exploration」——从同一份 spec 生成多个面向不同优化目标(性能、可维护性、成本)的实现方案。
 
 ---
 
@@ -75,14 +76,16 @@ Spec Kit 的关键特性:
 
 ## 阶段 5 — Plan 计划
 
+- **`writing-plans` skill（本流程推荐，v1.2+）**: superpowers 内置 skill,结构化多步实现计划(phase 排序、依赖、风险标记、测试策略),比 AI 自由写计划更稳。
 - **Spec Kit `/speckit.plan`**:接收已确认的 spec 加上你提供的技术栈 / 架构方向,产出尊重这些约束的详细技术计划。
 - **Claude Code「Plan 模式」**:在做任何编辑之前,先做一次只读的规划 pass。
-- **架构治理扩展**:Spec Kit 社区有持续架构治理类扩展,审查 spec、plan 和代码的架构漂移,产出结构化的重构任务与演进提案。
+- **架构治理扩展**:Spec Kit 社区有持续架构治理类扩展,审查 spec、plan 和代码的架构漂移。
 
 ---
 
 ## 阶段 6 — Tasks 任务(人工关卡)
 
+- **`to-issues` skill**:把 plan / spec 拆成 GitHub issue 等可独立 grab 的工单单元。
 - **Spec Kit `/speckit.tasks`**:把 spec + plan 拆成一份可执行的任务清单。
 - **Claude Code 原生任务追踪**:Claude Code 有内建的 task / todo 追踪,适合实时反映 Implementation 阶段的进度。
 - **Codex**:云端任务本身就是工作单元,适合把任务清单逐项派发。
@@ -92,16 +95,23 @@ Spec Kit 的关键特性:
 
 ## 阶段 7 — Implementation 实现
 
+- **`verification-before-completion` skill（本流程强制于 Stage 7→8 过渡，v1.2+）**: superpowers 系列内置 skill,核心是"声明完成前必须跑验证命令并确认输出"——证据先于断言。**直接针对 AI 误把字面 AC PASS 当成行为 AC PASS 的盲区**(见 specification §6 的「字面 AC vs 行为 AC 脱节」失败模式)。
+- **`executing-plans` skill / `subagent-driven-development` skill**: 按已写好的实施计划在独立 session 中执行,带 review checkpoints;或派 subagent 各做独立 task。
+- **`test-driven-development` skill / `tdd` skill**: 当实现路径不确定 / 复杂逻辑时,先写测试再实现的 red-green-refactor。
+- **`systematic-debugging` skill / `diagnose` skill**: 遇到 bug 或测试失败时的结构化诊断,而非乱试。
+- **`using-git-worktrees` skill**: 隔离实验性 / 风险性改动到独立工作树,不污染主分支。
 - **Claude Code**:目前最成熟的终端 agent,适合按任务清单逐项推进;支持 subagent、hooks、worktree 隔离、以及对每个代理的工具权限做细粒度配置。
 - **Codex**:终端 + IDE + 云端三种形态;云端 agent 适合把多个独立任务并行交出去跑。
 - **Spec Kit `/speckit.implement`**:按计划执行整个任务清单。
 - **实现中途提交扩展**:Spec Kit 社区有扩展会在实现过程中途提交,让你最后得到一串映射到任务的、可审查的提交,而不是一个巨大的 diff。
-- **底层自动化**:无论哪个环境,Implementation 阶段都应让 agent 同时跑测试运行器、linter、类型检查器。
+- **底层自动化**:Implementation 阶段都应让 agent 同时跑测试运行器、linter、类型检查器。
 
 ---
 
 ## 阶段 8 — Human QA 人工质检(人工关卡)
 
+- **`requesting-code-review` skill（本流程推荐，v1.2+）**: superpowers 系列内置 skill,模仿"工程师准备 PR 给 reviewer"的格式来组织质检就绪摘要,让用户更快扫到重点。Stage 8 入场摘要默认走这个 skill 的结构。
+- **`receiving-code-review` skill**: 收到 review 反馈后用——技术严谨地验证、不盲从、不演戏式同意。
 - **Spec Kit 实现后质量门扩展**:审查改动、自动修掉琐碎问题、为中等问题建任务、为大问题生成分析报告。
 - **Staff 级代码审查 subagent**:Spec Kit 社区有「staff-engineer-level code review」扩展,对照 spec 验证实现,并检查安全、性能、测试覆盖率。Claude Code 可直接用 subagent 跑这种审查代理。
 - **人工检查之下的自动化层**:测试运行器、linter、类型检查器、CI;端到端用 Playwright / Cypress;UI 状态用 Storybook。这些是必要的底座,但不替代「人去看」。
