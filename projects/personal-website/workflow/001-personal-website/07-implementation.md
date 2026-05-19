@@ -10,11 +10,15 @@
 
 ### P1 项目骨架
 
-- [x] **T1 — 初始化 Astro 项目（astro-paper starter）** ｜ commit: 待填
+- [x] **T1 — 初始化 Astro 项目（astro-paper starter）** ｜ commit: `45a0b45`
   - Astro 6.3.3 + Tailwind 4 + TypeScript 6 + Pagefind 搜索 + sitemap 等
   - 起步用 `git clone satnaing/astro-paper` 拉取，选择性拷贝（保留我们的 README/CLAUDE/workflow）
   - `pnpm install` + `pnpm rebuild esbuild sharp`（postinstall 授权）后 `pnpm build` 成功，生成 45 页 + sitemap + pagefind 搜索索引
-- [ ] **T2 — 删除 starter demo 内容 + 锁定 Node 版本**
+- [x] **T2 — 删除 starter demo 内容 + 锁定 Node 版本** ｜ commit: 待填
+  - 清空 `src/content/posts/*`（保留 `.gitkeep` 占位），重 build 通过（7 页）
+  - `package.json` 重命名 `astro-paper-v6` → `personal-website`，加 description + private + 版本起步 0.1.0
+  - `engines.node` starter 默认已是 `>=22.12.0`（强于 SPEC 的 ≥20，OK）
+  - **发现 SPEC 偏差**：starter 默认用 `src/content/posts/` 集合 + `/posts` URL；SPEC 原写 `/blog`。打 SPEC v1.0.1 patch（命名层、不影响行为，已记在 SPEC 修订日志），见同次提交序列。
 
 ### P2 Content Schema
 

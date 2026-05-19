@@ -1,7 +1,9 @@
 {
-  "name": "astro-paper-v6",
+  "name": "personal-website",
+  "description": "李旺的个人网站 — vibe-coding-lab 第一个实战项目（基于 astro-paper starter）",
+  "private": true,
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "node": ">=22.12.0"
   },
