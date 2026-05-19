@@ -96,7 +96,7 @@
 3. **访客读博客**：从首页或 `/blog` 点文章 → 跳 `/blog/<slug>` → 阅读正文 + 标签
 4. **维护者发新博客**：
    ```
-   1. 在 src/content/blog/ 创建 my-post.md（frontmatter: title, pubDate, description, tags, draft）
+   1. 在 src/content/posts/ 创建 my-post.md（frontmatter: title, pubDate, description, tags, draft）
    2. 本地 pnpm dev 预览检查
    3. git add → commit → push
    4. CF Pages 自动 build & deploy（约 1–3 分钟）
@@ -125,7 +125,7 @@
 - **静态站生成器**：Astro 4.x+（LTS）
 - **样式**：Tailwind CSS（不引入 daisyUI / shadcn）
 - **包管理**：pnpm
-- **内容存储**：Markdown / MDX in `src/content/{blog,projects}/`（Astro Content Collections）
+- **内容存储**：Markdown / MDX in `src/content/{posts,projects}/`（Astro Content Collections）
 - **Starter**：`astro-paper` 或 Astro 官方 blog template 任选其一
 - **不引入**：React / Vue / Svelte 等组件运行时（仅 Astro 原生组件）
 
@@ -162,7 +162,7 @@
 
 ### 内容工作流
 
-- 新增内容路径：`src/content/blog/*.md` 或 `src/content/projects/*.md` + git push
+- 新增内容路径：`src/content/posts/*.md` 或 `src/content/projects/*.md` + git push
 - 全程零后台、零脚本
 - 草稿用 `draft: true` frontmatter，生产 build 跳过
 
@@ -182,12 +182,12 @@
 > Stage 9 会逐条核对。每条必须二选一可判定。
 
 1. **AC1（部署可达）**：访问 `https://znlm1229.pages.dev/` 返回 HTTP 200，浏览器看到非空首页内容
-2. **AC2（页面齐全）**：以下 URL 全部返回 200 且渲染正确：`/`、`/about`、`/projects`、`/blog`，至少 1 个 `/projects/<slug>`，至少 1 个 `/blog/<slug>`
+2. **AC2（页面齐全）**：以下 URL 全部返回 200 且渲染正确：`/`、`/about`、`/projects`、`/posts`，至少 1 个 `/projects/<slug>`，至少 1 个 `/posts/<slug>`
 3. **AC3（首页结构）**：首页 DOM 中可见以下区块：hero（含一句自我定位 + 头像）、精选项目区（≥ 1 张卡）、最近博客区（≥ 1 篇）、联系入口（包含邮箱链接）
 4. **AC4（MVP 内容齐）**：站点至少含 1 张真项目卡（vibe-coding-lab）、1 张 "More coming" 占位卡、1 篇 hello/intro 博客、完整 about 页
 5. **AC5（暗黑模式）**：在网站可见位置有暗黑 / 浅色切换控件；点击后整站颜色切换；刷新页面后偏好保持
 6. **AC6（移动端）**：iPhone SE 视口（375×667）打开首页与 1 个博客详情页，不出现横向滚动条，文字可读（≥ 14px 等效）
-7. **AC7（内容工作流）**：在本地新建一个 `src/content/blog/test-acceptance.md` 含合法 frontmatter，`pnpm dev` 能本地渲染；删除该文件不影响其它
+7. **AC7（内容工作流）**：在本地新建一个 `src/content/posts/test-acceptance.md` 含合法 frontmatter，`pnpm dev` 能本地渲染；删除该文件不影响其它
 8. **AC8（草稿隔离）**：把任意博客文章 frontmatter 改 `draft: true` 后，本地 `pnpm build && pnpm preview` 中该文章不出现；去掉后又出现
 9. **AC9（中文与字体）**：所有可见页面中文字符正常渲染（无方块 / 缺字），中文字体回退到系统字体（不引入 web font 远程加载）
 10. **AC10（隐私守则）**：HTML 源码 `view-source:` 中**不**含明文邮箱字符串 `xxx@xxx.xxx`；联系入口的邮箱通过 `mailto:` + JS 混淆 或 图片渲染
@@ -203,3 +203,22 @@
 - ⬜ ~~等待确认~~
 
 > 本 SPEC 已为契约。后续 Plan / Tasks / Implementation 全部对照本文件；Stage 9 Acceptance 对照本节 13 条 AC 逐条核对。修改本 SPEC 需显式重新确认（不允许静默漂移）。
+
+## SPEC 修订日志
+
+> 修订必须**可见、刻意**。每次修订都登记在此。
+
+### v1.0.1 — 2026-05-19（implementation 期）
+
+**触发**：T2 实施时发现 astro-paper starter 默认用 `src/content/posts/` 集合 + `/posts` URL，与 SPEC 原写法 `src/content/blog/` + `/blog` 冲突。
+
+**变更**（命名层，不影响行为）：
+- Behavior § Key flows 第 4 步：`src/content/blog/` → `src/content/posts/`
+- Constraints § 技术栈 - 内容存储：`{blog,projects}` → `{posts,projects}`
+- Constraints § 内容工作流：`src/content/blog/*.md` → `src/content/posts/*.md`
+- AC2：URL 列表 `/blog` → `/posts`、`/blog/<slug>` → `/posts/<slug>`
+- AC7：`src/content/blog/test-acceptance.md` → `src/content/posts/test-acceptance.md`
+
+**理由**：采纳 starter 默认避免大量改名 refactor（涉及 collection 定义、几十处页面引用），用户在 Stage 6 确认了"按 AI 想法走"，命名细节按起步技术现实落地，对用户可见行为零影响（站点仍是博客 + 项目卡 + about）。
+
+**用户再确认**：本次为命名 SPEC patch，**不阻塞**实施推进；若用户认为应当使用 `/blog` 命名，可显式回退并触发 T11 中的目录/URL refactor。
