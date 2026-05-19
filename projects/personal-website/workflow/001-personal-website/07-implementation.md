@@ -64,7 +64,14 @@
 
 ### P6 首页
 
-- [ ] T12, T13
+- [x] **T12 — dicebear 头像下载到 public/** ｜ commit: 待填（与 T13 合并）
+  - `curl https://api.dicebear.com/9.x/initials/svg?seed=李旺&backgroundColor=3b82f6&textColor=ffffff` → `public/avatar.svg`
+  - 1109 字节（≤ SPEC 20KB 上限），CC0 1.0 授权（dicebear initials 标准协议）
+  - 蓝底白字「李旺」initials；运行时不调外链
+- [x] **T13 — 首页改造为聚合页（hero + 精选项目 + 最近博客 + 联系）** ｜ commit: 待填（与 T12 合并）
+  - 全量替换 `src/pages/index.astro` starter "Mingalaba" 默认页
+  - 4 个 `<section>`：hero（头像 + 名字 + 一句自我定位）/ featured-projects（取最多 2 张项目卡）/ recent-posts（最近 2 篇博客）/ contact（GitHub + EmailLink 混淆邮箱）
+  - 验证：AC3 4 区块全在 dist/index.html；AC10 首页 grep `617809914@qq.com` 计数 = 0；avatar.svg 引用 OK
 
 ### P7 元数据
 
