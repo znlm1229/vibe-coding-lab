@@ -28,7 +28,7 @@
 
 > 可观察的最终结果。每条都是"做到 / 没做到"二元可判定。
 
-1. 网站可通过 `https://znlm1229.pages.dev/` 公网访问，HTTP 200
+1. 网站可通过 `https://lw-personal.pages.dev/` 公网访问，HTTP 200
 2. 网站包含且仅包含以下三类一等公民内容：
    - **About 页**：李旺的自我介绍 + 联系方式
    - **Projects 页**：项目卡片网格 + 每张卡可跳详情页
@@ -132,7 +132,7 @@
 ### 托管 / 部署
 
 - Cloudflare Pages（接 GitHub 仓库自动部署）
-- 域名：MVP 用 `znlm1229.pages.dev`；正式域名推上线 1–2 月后再决定
+- 域名：MVP 用 `lw-personal.pages.dev`；正式域名推上线 1–2 月后再决定
 - HTTPS 由 CF 自动签发
 
 ### 性能预算（MVP 不强求 100% 达成，但是 Stage 9 验收基线）
@@ -181,7 +181,7 @@
 
 > Stage 9 会逐条核对。每条必须二选一可判定。
 
-1. **AC1（部署可达）**：访问 `https://znlm1229.pages.dev/` 返回 HTTP 200，浏览器看到非空首页内容
+1. **AC1（部署可达）**：访问 `https://lw-personal.pages.dev/` 返回 HTTP 200，浏览器看到非空首页内容
 2. **AC2（页面齐全）**：以下 URL 全部返回 200 且渲染正确：`/`、`/about`、`/projects`、`/posts`，至少 1 个 `/projects/<slug>`，至少 1 个 `/posts/<slug>`
 3. **AC3（首页结构）**：首页 DOM 中可见以下区块：hero（含一句自我定位 + 头像）、精选项目区（≥ 1 张卡）、最近博客区（≥ 1 篇）、联系入口（包含邮箱链接）
 4. **AC4（MVP 内容齐）**：站点至少含 1 张真项目卡（vibe-coding-lab）、1 张 "More coming" 占位卡、1 篇 hello/intro 博客、完整 about 页
@@ -207,6 +207,17 @@
 ## SPEC 修订日志
 
 > 修订必须**可见、刻意**。每次修订都登记在此。
+
+### v1.0.2 — 2026-05-19（T17 部署时）
+
+**触发**：用户在 Cloudflare Pages 新建项目时选了项目名 `lw-personal`（不是 SPEC 原假设的 `znlm1229`），CF Pages 子域名规则是 `<项目名>.pages.dev`，所以实际公网 URL 是 `https://lw-personal.pages.dev/` 而非原写法。
+
+**变更**（URL 层）：
+- AC1 / AC2 涉及的 URL：`znlm1229.pages.dev` → `lw-personal.pages.dev`（全文 replace_all）
+- Goals #1 同步
+- 同步更新 `astro-paper.config.ts` 的 `site.url` 字段
+
+**理由**：项目名是 CF Pages 创建时的硬绑定，事后改要重建项目。用户的选择合理（`lw-personal` 比 `znlm1229` 可读性更好），SPEC 跟着调整即可。
 
 ### v1.0.1 — 2026-05-19（implementation 期）
 
