@@ -17,7 +17,7 @@ Brainstorm → Grill Me → Prototype → SPEC → Plan → Tasks → Implementa
 | 文件 | 版本 | 面向 | 用途 |
 |---|---|---|---|
 | [`specification.md`](./specification.md) | **v1.2**（正本） | 团队成员 | 标准规范的可读 Markdown 版（推荐起点） |
-| [`specification.docx`](./specification.docx) | v1.0（滞后） | 客户 / 团队分享 | 同上的 Word 原件；分发前确认是否要按 md 重新生成 |
+| [`specification.docx`](./specification.docx) | **v1.2**（pandoc 重生成） | 客户 / 团队分享 | 同 md 内容；通过 `pandoc specification.md -o specification.docx --toc --toc-depth=2` 重生成；下次 md 改动后重跑此命令同步 |
 | [`SKILL.md`](./SKILL.md) | v1.2 | AI 编码代理 | 可被 Claude Code 等 agent 自动加载的 skill 文件 |
 | [`references/spec-template.md`](./references/spec-template.md) | — | 写 SPEC 时参考 | 阶段 4 SPEC 文档模板与可测试验收标准写法 |
 | [`references/plan-and-tasks.md`](./references/plan-and-tasks.md) | — | 拆 Plan/Tasks 时参考 | 阶段 5 / 6 的结构与任务拆分准则 |
