@@ -113,7 +113,11 @@
 
 - **T1**：`pnpm install` 时 esbuild / sharp 的 postinstall 默认被忽略（pnpm 11.x 安全策略变化），需要 `pnpm approve-builds` 显式授权。不算 SPEC 偏离，是依赖工具行为；T17 CF Pages build settings 中需保证此授权生效（或把 build 命令改为 `corepack enable && pnpm install --no-frozen-lockfile` 类）。
 - **T2**：发现 starter 默认用 `src/content/posts/` + `/posts` URL，SPEC 原写 `/blog`。已在 SPEC v1.0.1 patch 中对齐为 `posts`/`/posts`。
-- **T9（待修）**：starter `src/components/Footer.astro` 含硬编码 socials（X、LinkedIn、`mailto:yourmail@gmail.com`），违反 AC10（HTML 不含明文邮箱）。**T14 / T16 阶段必须替换 footer**：至少移除/替换 mailto 那条；其它 socials 看用户最终保留情况。
+- **T9（已修 T16）**：starter `src/components/Footer.astro` 含硬编码 socials（X、LinkedIn、`mailto:yourmail@gmail.com`），违反 AC10。T16 通过 `astro-paper.config.ts.socials = [github only]` 修复。
+- **T17（CF 部署）**：
+  1. 用户项目名选 `lw-personal`（不是 SPEC 原假设 `znlm1229`），打 SPEC v1.0.2 patch 把 AC1 URL 改为 `lw-personal.pages.dev`。
+  2. CF 首次 build 失败：`pnpm install --frozen-lockfile` 报 `packages field missing or empty`，因 `pnpm approve-builds` 在 pnpm 11 时自动创建的 `pnpm-workspace.yaml` 含 `allowBuilds:` 但缺 `packages:`。CF 使用 pnpm 10.11.1 拒绝。
+  3. **修复**：删除 `pnpm-workspace.yaml`；package.json 加 `packageManager: "pnpm@10.11.1"`（pin 让 corepack 在本地 + CF 用同一版本）+ `pnpm.onlyBuiltDependencies: ["esbuild", "sharp"]`（pnpm 10 读这个字段；pnpm 11 不读但已弃用）。本地用 pnpm 10.11.1 复跑 `install --frozen-lockfile` + `build` 全绿，与 CF 等效。
 
 ## 已运行的自动化检查
 

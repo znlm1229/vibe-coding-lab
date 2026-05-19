@@ -2,7 +2,7 @@ import { defineAstroPaperConfig } from "./src/types/config";
 
 export default defineAstroPaperConfig({
   site: {
-    url: "https://znlm1229.pages.dev/",
+    url: "https://lw-personal.pages.dev/",
     title: "李旺 · 个人网站",
     description:
       "李旺的个人网站：后端开发者，业余在用 AI 辅助开发做点东西。含项目卡片与博客。",
