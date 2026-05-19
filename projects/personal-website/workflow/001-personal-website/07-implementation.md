@@ -41,7 +41,16 @@
 
 ### P4 Projects
 
-- [ ] T6, T7, T8, T9
+- [x] **T6 — vibe-coding-lab 项目卡 markdown** ｜ commit: 待填
+  - `src/content/projects/vibe-coding-lab.md`：含 frontmatter（title / summary / tech / githubUrl / status=active / pubDate / featured=true / order=1）+ 正文（项目背景、九步流程做了什么、关键技术取舍、完整 artifact 链路）
+  - 字数约 700（≤ SPEC 限的 800）；按 OQ4 聚焦"九步工作流如何应用到本站搭建"
+- [x] **T7 — More coming 占位项目卡** ｜ commit: 待填
+  - `src/content/projects/more-coming.md`：frontmatter（status=wip / order=99）+ 一句话说明"作品集陆续补充中"
+- [x] **T8 — /projects 索引页（卡片网格）** ｜ commit: 待填
+  - `src/pages/projects/index.astro`：取 `getCollection('projects')` 排序（featured 先 → order 升序 → title 字母兜底）；Tailwind grid（sm:cols-2 lg:cols-3）；卡片含 title / summary / tech tag / status badge
+- [x] **T9 — /projects/[...slug] 详情页** ｜ commit: 待填
+  - `src/pages/projects/[...slug].astro`：getStaticPaths 遍历 projects；渲染 frontmatter 元数据行（status / pubDate）+ tech tags + GitHub / liveUrl 链接 + Content 正文
+  - 两个详情页 `/projects/vibe-coding-lab/` 与 `/projects/more-coming/` 均构建成功
 
 ### P5 Blog
 
@@ -67,7 +76,9 @@
 
 <!-- 实现中如发现 SPEC 错 / 不全，记录在此并触发 SPEC 修订（回 Stage 4） -->
 
-- T1：`pnpm install` 时 esbuild / sharp 的 postinstall 默认被忽略（pnpm 11.x 安全策略变化），需要 `pnpm approve-builds` 显式授权。这不算 SPEC 偏离，是依赖工具行为；记下在 README 或 CF Pages build settings 中要保证此授权生效。
+- **T1**：`pnpm install` 时 esbuild / sharp 的 postinstall 默认被忽略（pnpm 11.x 安全策略变化），需要 `pnpm approve-builds` 显式授权。不算 SPEC 偏离，是依赖工具行为；T17 CF Pages build settings 中需保证此授权生效（或把 build 命令改为 `corepack enable && pnpm install --no-frozen-lockfile` 类）。
+- **T2**：发现 starter 默认用 `src/content/posts/` + `/posts` URL，SPEC 原写 `/blog`。已在 SPEC v1.0.1 patch 中对齐为 `posts`/`/posts`。
+- **T9（待修）**：starter `src/components/Footer.astro` 含硬编码 socials（X、LinkedIn、`mailto:yourmail@gmail.com`），违反 AC10（HTML 不含明文邮箱）。**T14 / T16 阶段必须替换 footer**：至少移除/替换 mailto 那条；其它 socials 看用户最终保留情况。
 
 ## 已运行的自动化检查
 

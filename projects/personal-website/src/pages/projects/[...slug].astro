@@ -1,0 +1,84 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Main from "@/components/Main.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import config from "@/config";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+  return projects.map(project => ({
+    params: { slug: project.id },
+    props: { project },
+  }));
+}
+
+type Props = { project: CollectionEntry<"projects"> };
+
+const { project } = Astro.props;
+const { title, summary, tech, githubUrl, liveUrl, status, pubDate } = project.data;
+const { Content } = await render(project);
+---
+
+<Layout
+  title={`${title} | ${config.site.title}`}
+  description={summary}
+>
+  <Header />
+  <Breadcrumb />
+  <Main pageTitle={title} pageDesc={summary}>
+    {/* 元数据行 */}
+    <div class="text-muted-foreground my-3 flex flex-wrap items-center gap-3 text-sm">
+      {status === "wip" && (
+        <span class="bg-muted rounded px-2 py-0.5">🚧 进行中</span>
+      )}
+      {status === "archived" && (
+        <span class="bg-muted rounded px-2 py-0.5">已归档</span>
+      )}
+      {pubDate && <span>{pubDate.toISOString().slice(0, 10)}</span>}
+    </div>
+
+    {/* 技术栈标签 */}
+    {tech.length > 0 && (
+      <div class="my-3 flex flex-wrap gap-2">
+        {tech.map(t => (
+          <span class="bg-muted rounded px-2 py-1 text-xs">{t}</span>
+        ))}
+      </div>
+    )}
+
+    {/* 链接行 */}
+    {(githubUrl || liveUrl) && (
+      <div class="my-3 flex flex-wrap gap-4 text-sm">
+        {githubUrl && (
+          <a
+            href={githubUrl}
+            class="text-accent underline"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            GitHub →
+          </a>
+        )}
+        {liveUrl && (
+          <a
+            href={liveUrl}
+            class="text-accent underline"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            线上访问 →
+          </a>
+        )}
+      </div>
+    )}
+
+    {/* 正文 */}
+    <article class="app-prose mt-8 max-w-app" data-pagefind-body>
+      <Content />
+    </article>
+  </Main>
+  <Footer />
+</Layout>
