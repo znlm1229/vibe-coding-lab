@@ -1,5 +1,7 @@
 # Plan & Tasks (Stages 5 and 6)
 
+> Aligned with workflow-spec **v1.2** — adds commit conventions including `fix(TX):` for Stage-8 回路.
+
 ## Stage 5: The Plan
 
 The Plan answers **how** and **in what order** — it turns the confirmed SPEC into a technical route. Where the SPEC is the destination, the Plan is the path.
@@ -71,3 +73,28 @@ Use this structure:
 ## Using the task list in Implementation
 
 Once the user confirms the task list, it becomes the unit of progress tracking for Stage 7. Work through it in order, complete one task at a time, and mark each task done as you finish it — keeping the list a live, accurate picture of where things stand. Map commits to tasks so the diff stays reviewable.
+
+## Commit conventions (v1.2)
+
+每个 commit 必须明确归属——是新 task 工作、阶段产出、还是 bug 回路修复：
+
+| 前缀 | 用于 | 例 |
+|---|---|---|
+| `task-TX:` | 新 task 的首次实现 | `task-T5: implement EmailLink obfuscation component` |
+| `stage-N:` | 阶段转换、artifact 提交、确认动作 | `stage-4: SPEC confirmed; OQ1-4 resolved` |
+| `fix(TX):` | 已完成 task 的 bug 修复（通常来自 Stage 8 回路） | `fix(T5): EmailLink script never runs under ClientRouter` |
+| `chore:` | 仓库治理、依赖、配置修改（非业务 task） | `chore: pin pnpm@10.11.1 for CF Pages compat` |
+| `docs:` | 仅文档改动 | `docs: align spec template with v1.2` |
+| `spec(vX.Y):` | workflow-spec 自身的版本演化 | `spec(v1.2): add 4 stage-skill bindings` |
+
+**为什么 `fix(TX):` 重要**：把 bug 修复回路从 task 首次实现里分出来，git 历史能诚实反映"实现一次、修一次"的迭代真相，方便后续做 task 复盘 / 回归分析 / 估算下次类似 task 的实际工时（首次 vs 回路）。
+
+## 任务 done-when 包含验证证据（v1.2）
+
+每个 task 的 "Done when" 不能只写「功能实现了」这种主观断言，必须能跑出验证证据：
+
+- ✅ Good: `pnpm build` 通过 + 新页面 `/projects/<slug>/` 返回 200 + 截图见 evidence/
+- ❌ Bad: 项目卡片实现完成 / 功能正常 / 看起来不错
+
+进入 Stage 8 之前，**必须调 `verification-before-completion` skill**（v1.2 强制）核对每个 task 的 done-when 都有对应证据。AI 自己说"完成"不算。
+

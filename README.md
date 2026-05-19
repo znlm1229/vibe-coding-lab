@@ -10,11 +10,20 @@ Vibe coding 学习经验、踩坑笔记与项目记录。
 
 ## 内容索引
 
-| 目录 | 说明 |
-|---|---|
-| [`workflow-spec/`](./workflow-spec/) | AI 原生开发九步工作流规范（团队规范 + AI skill + 模板 + 工具推荐） |
-| [`projects/`](./projects/) | 用上述工作流跑出来的实战项目集合 |
-| └ [`projects/personal-website/`](./projects/personal-website/) | 个人网站（vibe-coding-lab 第一个项目，进行中） |
+| 目录 | 状态 | 说明 |
+|---|---|---|
+| [`workflow-spec/`](./workflow-spec/) | **v1.2** | AI 原生开发九步工作流规范（团队规范 + AI skill + 模板 + 工具推荐） |
+| [`projects/`](./projects/) | 1 已上线 | 用上述工作流跑出来的实战项目集合 |
+| └ [`projects/personal-website/`](./projects/personal-website/) | ✅ 已上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/) | 第一个端到端实战项目（001 task closed 2026-05-19）|
+
+## 工作流规范当前状态
+
+[`workflow-spec/`](./workflow-spec/) **v1.2**（2026-05-19）：
+
+- 九阶段：Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Implementation → Human QA ★ → Acceptance ★
+- 5 个 stage 绑了 skill：`brainstorming` / `grill-me`（强制）/ `writing-plans` / `verification-before-completion`（强制）/ `requesting-code-review`
+- 经一次完整端到端实战验证（personal-website 任务 001）
+- 详细 changelog 见 [`specification.md#8-更新记录`](./workflow-spec/specification.md#8-更新记录)
 
 ## 后续规划
 

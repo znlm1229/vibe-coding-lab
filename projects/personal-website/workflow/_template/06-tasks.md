@@ -4,6 +4,14 @@
 > 标准模板见 [`plan-and-tasks.md`](../../../../workflow-spec/references/plan-and-tasks.md)
 >
 > **要点**：每个任务**可独立完成**；标 Touches / Done when / Depends on；**用户未确认前不得进入 Stage 7**。
+>
+> **v1.2 commit 前缀约定**：
+> - `task-TX:` 新 task 首次实现
+> - `stage-N:` 阶段产出 / 转换
+> - `fix(TX):` 已完成 task 的 bug 修复（Stage 8 回路用）
+> - `chore:` / `docs:` / `spec(vX.Y):` 其它治理
+>
+> **每个 task 的 Done when 必须可验证**（不能写"功能完成"这种主观断言，要写能跑出证据的条件）。
 
 ---
 
