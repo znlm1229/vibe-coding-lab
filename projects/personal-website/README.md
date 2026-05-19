@@ -40,4 +40,4 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 | # | 任务 | 状态 | 当前阶段 |
 |---|---|---|---|
-| 001 | [`001-personal-website`](./workflow/001-personal-website/) | 进行中 | Stage 7 Implementation（T1 起步） |
+| 001 | [`001-personal-website`](./workflow/001-personal-website/) | 进行中 | **Stage 8 Human QA ★** ｜ 上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/) |

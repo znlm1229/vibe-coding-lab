@@ -93,19 +93,32 @@
 
 ### P8 部署
 
-- [ ] T17, T18
+- [x] **T17 — 接 Cloudflare Pages 仓库 + 配置 build** ｜ commit: 由用户在 CF dashboard 操作
+  - 用户首次创建了 **Worker**（不是 Pages）→ wrangler 自动塞 `@astrojs/cloudflare` adapter → SSR build 失败（sharp 在 Workers runtime 不可用）
+  - 修复：用户删 Worker，重建为 **Pages** 项目；项目名 `lw-personal` → 子域名 `lw-personal.pages.dev`
+  - 项目配置：Build command `pnpm install && pnpm build`；Root dir `projects/personal-website`；Output `dist`；Env `NODE_VERSION=22`
+  - 配套修复：删除 pnpm-workspace.yaml + 加 `packageManager: pnpm@10.11.1` 让 corepack 在 CF 用同版本（防 `packages field missing` 报错）
+- [x] **T18 — 触发首次部署并验证** ｜ commit: 待填
+  - 公网验证（2026-05-19）：
+    - `curl https://lw-personal.pages.dev/` → **HTTP 200**, 18.6KB, 988ms
+    - `<title>` = 「李旺 · 个人网站」
+    - 6 个 key URL 全部 200：`/`、`/about/`、`/projects/`、`/posts/`、`/projects/vibe-coding-lab/`、`/posts/hello-and-the-nine-stages/`
+    - 4 个首页 section id 全在生产 HTML 中（AC3）
+    - 生产 HTML 中邮箱字符串匹配 = 0（AC10）
 
 ### P9 自检
 
-- [x] **T19（部分）— Stage 9 前 AI 自检** ｜ commit: 待填
-  - **10/13 AC 本地达成**：AC2 / AC3 / AC4 / AC5 / AC7 / AC8 / AC9 / AC10 / AC12 / AC13 ✓
-  - **3/13 AC 待上线后验证**：AC1（公网 URL 200）/ AC6（375px 移动端无横滚）/ AC11（Lighthouse 桌面四项 ≥ 90）
+- [x] **T19 — Stage 9 前 AI 自检** ｜ commit: 待填
+  - **11/13 AC AI 已验证**：AC1 / AC2 / AC3 / AC4 / AC5（toggle 按钮 + theme.ts 存在）/ AC7 / AC8 / AC9 / AC10 / AC12 / AC13 ✓
+  - **2/13 AC 需 Stage 8 人工在浏览器 DevTools 验证**：AC6（375px 移动端无横滚 / 文字可读）+ AC11（Lighthouse 桌面 4 项 ≥ 90）
   - 程序化验证脚本结果：
+    - AC1 生产：HTTP 200, 18.6KB, 6 个 key URL 全 200
     - AC7 内容工作流：临时新增 `test-acceptance.md` → build → 出现 → 删除 → build → 不出现 ✓
     - AC8 draft 隔离：`draft: true` → 生产 build 不出现；去掉 draft → 出现 ✓
-    - AC10 site-wide HTML grep 邮箱 = 0 ✓
+    - AC10 site-wide HTML grep 邮箱 = 0（本地 + 生产 HTML 都验证）✓
     - AC9 html lang=zh-CN + 0 个外部 web font CDN ✓
-  - T17 + T18 deploy 完成后回来打勾剩余 3 条
+    - AC3 4 sections id 都在生产 HTML 中 ✓
+  - 剩余 AC6 / AC11 转交 Stage 8 Human QA 阶段（人工在 Chrome DevTools 跑）
 
 ## 偏离 SPEC 的发现
 
