@@ -97,7 +97,15 @@
 
 ### P9 自检
 
-- [ ] T19
+- [x] **T19（部分）— Stage 9 前 AI 自检** ｜ commit: 待填
+  - **10/13 AC 本地达成**：AC2 / AC3 / AC4 / AC5 / AC7 / AC8 / AC9 / AC10 / AC12 / AC13 ✓
+  - **3/13 AC 待上线后验证**：AC1（公网 URL 200）/ AC6（375px 移动端无横滚）/ AC11（Lighthouse 桌面四项 ≥ 90）
+  - 程序化验证脚本结果：
+    - AC7 内容工作流：临时新增 `test-acceptance.md` → build → 出现 → 删除 → build → 不出现 ✓
+    - AC8 draft 隔离：`draft: true` → 生产 build 不出现；去掉 draft → 出现 ✓
+    - AC10 site-wide HTML grep 邮箱 = 0 ✓
+    - AC9 html lang=zh-CN + 0 个外部 web font CDN ✓
+  - T17 + T18 deploy 完成后回来打勾剩余 3 条
 
 ## 偏离 SPEC 的发现
 
@@ -110,13 +118,37 @@
 ## 已运行的自动化检查
 
 - [x] `pnpm install` 成功（包数 ~615）
-- [x] `pnpm build` 成功（45 页生成，含 sitemap + pagefind）
-- [ ] `pnpm dev` 启动验证（暂跳过，build 通过推断 dev 也能跑）
-- [ ] `pnpm astro check` 类型检查（T3 后做）
-- [ ] Lighthouse 桌面四项（T19 阶段）
+- [x] `pnpm build` 成功（每个 task 后均跑，全程绿）
+- [x] `pnpm astro check` 类型检查通过（T3 后做，0 errors 2 hints）
+- [ ] `pnpm dev` 交互启动验证（跳过，build 通过推断 dev 也能跑）
+- [ ] Lighthouse 桌面四项（待 T18 上线后跑）
 
 ## Stage 8 入场摘要预备
 
-> 完成本阶段前先准备好给 Stage 8 的"质检就绪摘要"草稿：改了什么、入口在哪、自动化通过情况。
+> 给 Stage 8 Human QA 的"质检就绪摘要"草稿。
 
-待 T19 完成后填写。
+### 改了什么
+
+完整端到端搭建 personal-website：基于 [astro-paper](https://github.com/satnaing/astro-paper) starter 二次开发，含 about / projects / blog 三个一等公民内容线 + 暗黑模式 + 邮箱混淆 + dicebear 头像 + 中文化配置。共 16 个 task commit + 1 个 SPEC v1.0.1 patch + 1 个 stage-6 确认 commit。
+
+### 如何操作 / 入口
+
+- 公网：**待 T17/T18 上线后填 URL**，预期 `https://znlm1229.pages.dev/`
+- 本地：`cd projects/personal-website && pnpm install && pnpm dev` → 默认 http://localhost:4321
+- 关键 URL：`/`、`/about`、`/projects`、`/posts`、`/projects/vibe-coding-lab`、`/posts/hello-and-the-nine-stages`、`/404`（试访 `/nonexistent`）
+
+### 已通过的自动化检查
+
+- AC2 / AC3 / AC4 / AC5 / AC7 / AC8 / AC9 / AC10 / AC12 / AC13 本地全部 ✓
+- AC1 / AC6 / AC11 待上线后跑
+
+### 建议人工重点测什么
+
+1. **暗黑模式切换 + 持久化**：点击右上角 theme-btn，再刷新页面，看主题是否保留（AC5）
+2. **移动端 375px 视图**：DevTools 切 iPhone SE 视口，看首页 / about / 项目详情 / 博客详情有无横滚 / 文字断裂（AC6）
+3. **邮箱点击实际触发邮件客户端**：点击首页 / about 页的邮箱链接，看是否弹出默认邮件应用且收件人正确（AC10 配套）
+4. **首页项目卡 + 博客卡 hover 反馈**：鼠标悬停时是否有边框 / 阴影变化
+5. **菜单导航**：Header 菜单 Posts / Tags / About / Archives / Search 各点一遍，404 触发自定义页（AC2）
+6. **首屏感觉**：第一眼是否清爽、字号 / 行高是否舒适、暗黑下对比度是否够（视觉品味，AI 看不准）
+7. **Lighthouse 桌面 4 项**：DevTools → Lighthouse → Categories: Performance / Accessibility / Best Practices / SEO → Run Audit，确认全 ≥ 90（AC11）
+8. **任何文案错别字 / 表达别扭**：about 页 / hello 文 / vibe-coding-lab 项目卡详情
