@@ -22,7 +22,11 @@
 
 ### P2 Content Schema
 
-- [ ] T3
+- [x] **T3 — 定义 blog / projects Content Collection schema** ｜ commit: 待填
+  - starter 已有 `posts`（保留）+ `pages`（about 用）；本 task 新增 `projects` collection
+  - projects schema 字段：title / summary / tech[] / githubUrl / liveUrl / screenshot / status (active|wip|archived) / pubDate / featured / order / draft
+  - 创建 `src/content/projects/.gitkeep` 占位
+  - `pnpm astro check` 通过：0 errors（2 hints 是 z.string().url() 在新 zod 中改为 z.url() 的废弃提示，不影响构建）
 
 ### P3 About 页
 
