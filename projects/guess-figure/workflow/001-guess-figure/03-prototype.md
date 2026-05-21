@@ -49,18 +49,16 @@
 - **V1 主模型应用 gemini-3.1-flash-lite**（同时用于内容生产 + 运行时模糊匹配，统一架构最简）
 - prompt 加严约束（"难度 1-5 全段禁止异称" / "难度 1 禁标志性事件"）有效，gemini 5 人输出全部规避了之前 deepseek-v4-flash 的"卧龙暴露"问题
 
-### Prototype B：🟡 进行中
+### Prototype B：✅ 通过
 
-**已验证**：
+**完整验证**：
 - ✅ SvelteKit 5 + `adapter-cloudflare` 项目骨架建立
 - ✅ `pnpm install` + `pnpm dev` 本地启动成功
 - ✅ `$env/dynamic/private` 读 .env 工作正常
 - ✅ 前端 → `+server.ts` → 云雾 LLM API → 返回 `{correct, reason}` 链路本地通
-
-**待最终验证**（用户的协作步骤）：
-- ⏳ `pnpm build` 编译通过（adapter-cloudflare 输出 `.svelte-kit/cloudflare/`）
-- ⏳ CF Pages dashboard 创建 project `guess-figure-proto` + 配 env vars + 触发 deploy
-- ⏳ 线上 https://guess-figure-proto.pages.dev 测试用例全通过
+- ✅ `pnpm build` 通过、adapter-cloudflare 输出生成
+- ✅ CF Pages dashboard 创建 project `guess-figure-proto` + Root directory + env vars 配置
+- ✅ 线上 https://guess-figure-proto.pages.dev 部署成功 + 测试用例通过
 
 **踩过的坑（V1 实施时可少走）**：
 - pnpm 11+ 把 `package.json` 的 `pnpm` 字段移到了 `pnpm-workspace.yaml`，字段名 `allowBuilds`（不是 `onlyBuiltDependencies`）
