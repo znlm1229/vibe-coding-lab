@@ -82,6 +82,9 @@ node_modules/
 # Cloudflare CLI
 .wrangler/
 
+# Claude Code 本地配置（hooks / settings / 等，个人偏好不进同步）
+.claude/
+
 # Misc
 *.bak
 *.swp
