@@ -65,6 +65,23 @@ Thumbs.db
 .env.local
 *.local
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.Python
+
+# Node
+node_modules/
+
+# SvelteKit / Vite
+.svelte-kit/
+
+# Cloudflare CLI
+.wrangler/
+
 # Misc
 *.bak
 *.swp
