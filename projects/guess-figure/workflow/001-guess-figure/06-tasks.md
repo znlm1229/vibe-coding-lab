@@ -23,9 +23,9 @@
 
 ### Phase 1 — 项目初始化 + CI/CD（~1d）
 
-- [ ] **T1 — SvelteKit 项目骨架（独立于 prototype/B-deploy）**
-  - Touches: `projects/guess-figure/package.json`, `svelte.config.js`, `vite.config.ts`, `tsconfig.json`, `pnpm-workspace.yaml`, `app.html`, `app.d.ts`, `src/routes/+page.svelte`（占位首页）, `.gitignore`, `.env.example`
-  - Done when: `pnpm install && pnpm build` 全部通过 + `pnpm dev` 本地访问 http://localhost:5173 看到占位首页
+- [x] **T1 — SvelteKit 项目骨架（独立于 prototype/B-deploy）** ✅ 2026-05-21
+  - Touches: `projects/guess-figure/package.json`, `svelte.config.js`, `vite.config.ts`, `tsconfig.json`, `pnpm-workspace.yaml`, `app.html`, `app.d.ts`, `src/routes/+page.svelte`（占位首页）, `.env.example`
+  - Done when: `pnpm install && pnpm build` 全部通过 + `pnpm dev` 本地访问 http://localhost:5173 看到占位首页 ✅
   - Depends on: nothing
 
 - [ ] **T2 — CF Pages production project 创建 + 第一次 deploy**
