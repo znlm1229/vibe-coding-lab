@@ -1,0 +1,138 @@
+[
+  {
+    "name": "李白",
+    "aliases": [
+      "李太白",
+      "青莲居士",
+      "诗仙",
+      "谪仙人"
+    ],
+    "clues": [
+      {
+        "text": "此人身世籍贯存疑，早年曾长期游历于西南山水之间，后怀揣济世之志辞亲远游，一生足迹遍布大半个疆域。",
+        "difficulty": 1
+      },
+      {
+        "text": "他曾凭借卓越的文采获得最高统治者赏识，被召入宫廷供职，却因性格疏狂不羁，最终未能实现政治抱负而离去。",
+        "difficulty": 2
+      },
+      {
+        "text": "其文学创作风格以浪漫主义著称，想象力极其丰富，常将神仙道教元素融入作品，被后世誉为文学史上的巅峰人物。",
+        "difficulty": 3
+      },
+      {
+        "text": "他曾因卷入皇室内部的权力斗争而获罪，被判流放至偏远之地，在途中获得赦免，晚年于漂泊中度过余生。",
+        "difficulty": 4
+      },
+      {
+        "text": "这位盛唐时期的杰出文人，以豪迈奔放的乐府歌行体闻名于世，与另一位同代大诗人并称为文学史上的双子星。",
+        "difficulty": 5
+      },
+      {
+        "text": "他是唐朝最负盛名的浪漫主义诗人，曾写下《蜀道难》等名篇，被后人尊称为“诗仙”，常与杜甫并称。",
+        "difficulty": 6
+      },
+      {
+        "text": "他曾受唐玄宗赏识入翰林，一生好酒且嗜好炼丹，留下了《静夜思》、《将进酒》等脍炙人口的千古绝唱。",
+        "difficulty": 7
+      }
+    ],
+    "id": "李白",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q7071",
+    "wiki_url": "https://zh.wikipedia.org/wiki/李白",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:17:25Z",
+      "usage": {
+        "prompt_tokens": 992,
+        "completion_tokens": 416,
+        "total_tokens": 1408,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 992,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "诸葛亮",
+    "aliases": [
+      "孔明",
+      "卧龙",
+      "武乡侯",
+      "忠武侯"
+    ],
+    "clues": [
+      {
+        "text": "此人早年隐居于山林之中，常以古代名臣自比，其才华被当时名士所推崇，后受邀出山辅佐一方势力。",
+        "difficulty": 1
+      },
+      {
+        "text": "他曾为君主规划出三分天下的宏伟蓝图，促成了跨区域的政治军事联盟，是该政权建立与稳固的核心决策者。",
+        "difficulty": 2
+      },
+      {
+        "text": "作为一名杰出的行政官员，他通过严明的法治整顿内部，并致力于改善民生，在边境地区推行屯田以充实军资。",
+        "difficulty": 3
+      },
+      {
+        "text": "他不仅在政治上展现出卓越的统筹能力，还改良了多种军事装备，如运粮工具与连发弩机，极大地提升了部队效能。",
+        "difficulty": 4
+      },
+      {
+        "text": "他一生为辅佐幼主呕心沥血，在多次北伐战争中积劳成疾，最终在军营中病逝，被后世视为忠诚与智慧的化身。",
+        "difficulty": 5
+      },
+      {
+        "text": "在三国时期，他作为蜀汉丞相，曾留下“鞠躬尽瘁，死而后已”的千古名句，并因在五丈原病逝而令人扼腕叹息。",
+        "difficulty": 6
+      },
+      {
+        "text": "他是罗贯中笔下“智绝”的代表，曾受刘备三顾茅庐之请，并因其“卧龙”之名与“草船借箭”等传说广为人知。",
+        "difficulty": 7
+      }
+    ],
+    "id": "诸葛亮",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q198211",
+    "wiki_url": "https://zh.wikipedia.org/wiki/诸葛亮",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:17:14Z",
+      "usage": {
+        "prompt_tokens": 1024,
+        "completion_tokens": 414,
+        "total_tokens": 1438,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 1024,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 414,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  }
+]

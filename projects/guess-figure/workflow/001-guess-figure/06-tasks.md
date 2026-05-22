@@ -36,9 +36,11 @@
 
 ### Phase 2 — 内容 pipeline + 50 人题库（~3d）
 
-- [ ] **T3 — 生产化 generate_figures.py + merge.py（从 prototype A 提升）**
-  - Touches: `projects/guess-figure/scripts/generate_figures.py`, `scripts/merge.py`, `scripts/requirements.txt`, `.env.example`
-  - Done when: 跑 `python scripts/generate_figures.py --names "诸葛亮,李白"` 输出 2 个完整 figure 到 `figures-new.json` + 跑 `python scripts/merge.py figures-new.json` 合并到 `src/lib/data/figures.json` 成功
+- [x] **T3 — 生产化 generate_figures.py + merge.py（从 prototype A 提升）** ✅ 2026-05-22
+  - Touches: `projects/guess-figure/scripts/generate_figures.py`, `scripts/merge.py`, `scripts/requirements.txt`, `scripts/README.md`, `.gitignore`
+  - Done when: 跑 `python scripts/generate_figures.py --names "诸葛亮,李白"` 输出 2 个完整 figure 到 `figures-new.json` + 跑 `python scripts/merge.py figures-new.json` 合并到 `src/lib/data/figures.json` 成功 ✅
+  - 2 人 baseline 入库，质量 5/5（含 _meta 模型 / 时间 / token 用量）
+  - 改进：argparse / 重试指数退避 / 增量保存 / log 文件 / finish_reason=length 检测
   - Depends on: nothing（可跟 T1 并行）
 
 - [ ] **T4 — quality_check.py + 修复 prototype A 的 false positive**
