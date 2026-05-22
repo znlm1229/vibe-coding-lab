@@ -6,10 +6,13 @@
 
 ## 1. 项目状态
 
-🟡 **Stage 1 Brainstorm 进行中** —— 项目定位：**猜历史人物程序**。玩家根据 AI 给出的若干条线索猜出目标人物。形态（Web / CLI / Chat / 移动端）、机制（LLM 实时生成线索 vs 预设题库 vs 混合）、技术栈待 Stage 1 Brainstorm + Stage 2 Grill Me 后定型。
+🟢 **上线运行中** —— V1 已上线 [guess-figure.pages.dev](https://guess-figure.pages.dev)（2026-05-22）。
 
-- **进行中任务**：[`001-guess-figure/`](./workflow/001-guess-figure/) — Stage 1 Brainstorm
-- 技术栈、目录结构尚未确定 —— 待第一个任务的 Stage 4 SPEC 在 `Constraints` 节写明
+- **001-guess-figure ✅ 已完成（2026-05-22 用户验收通过）**
+- 公网 URL：https://guess-figure.pages.dev
+- 完整链路：Stage 1 Brainstorm → 2 Grill Me（10 轮）→ 3 Prototype A+B → 4 SPEC v1.0 → 5 Plan（8 phase）→ 6 Tasks（22 task）→ 7 Implementation（31+ commit）→ 8 Human QA（3 issue 修复 + SPEC v1.0→v1.1）→ 9 Acceptance（15/15 AC + 用户签收）→ 10 Retrospective
+- **技术栈**：SvelteKit 5 + adapter-cloudflare + CF Pages Functions + gemini-3.1-flash-lite via 云雾中转 + JSON-in-git 题库 + Python 内容生产 pipeline
+- 后续候选任务：002（账号 + 排行榜）、003（自定义域名 + 品牌化）、004（V2 题库扩展到 200 人）
 - 任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）

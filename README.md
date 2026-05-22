@@ -13,8 +13,9 @@ Vibe coding 学习经验、踩坑笔记与项目记录。
 | 目录 | 状态 | 说明 |
 |---|---|---|
 | [`workflow-spec/`](./workflow-spec/) | **v1.2** | AI 原生开发九步工作流规范（团队规范 + AI skill + 模板 + 工具推荐） |
-| [`projects/`](./projects/) | 1 已上线 | 用上述工作流跑出来的实战项目集合 |
+| [`projects/`](./projects/) | 2 已上线 | 用上述工作流跑出来的实战项目集合 |
 | └ [`projects/personal-website/`](./projects/personal-website/) | ✅ 已上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/) | 第一个端到端实战项目（001 task closed 2026-05-19）|
+| └ [`projects/guess-figure/`](./projects/guess-figure/) | ✅ 已上线 [guess-figure.pages.dev](https://guess-figure.pages.dev/) | 第二个端到端实战项目，猜历史人物 Web 游戏（001 task closed 2026-05-22）|
 
 ## 工作流规范当前状态
 
