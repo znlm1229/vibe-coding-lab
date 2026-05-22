@@ -72,9 +72,10 @@
   - **范围调整**：Vitest 自动化测试推到 T15（后端 API task）一起设置 testing infra；T7 用浏览器手动 IME 测试 + Stage 8 Human QA AC14 真机验证兜底
   - Depends on: T6
 
-- [ ] **T8 — 异称表精确匹配（前端）+ 输入规范化**
-  - Touches: `src/lib/match-exact.ts`, `src/lib/components/AnswerInput.svelte`
-  - Done when: 单元测试覆盖"诸葛亮"/"孔明"/"卧龙"/"  孔明  "/"孔 明"/"孔明（誤入空格）"全 PASS；"诸葛梁"/"曹操"全 FAIL
+- [x] **T8 — 异称表精确匹配（前端）+ 输入规范化** ✅ 2026-05-22
+  - Touches: `src/lib/match-exact.ts`, `src/routes/play/+page.svelte`
+  - Done when: `matchExactly()` 函数覆盖"诸葛亮"/"孔明"/"卧龙"+ normalize 去空白 / 去标点 / 全→半角；"诸葛梁"/"曹操" → false；集成 play page 显示 ✅/❌ 实时反馈 ✅
+  - Vitest 自动化测试推到 T15（同 T7）
   - Depends on: T6
 
 - [ ] **T9 — 调 /api/check-answer + mock fallback**

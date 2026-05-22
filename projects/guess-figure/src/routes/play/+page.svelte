@@ -2,24 +2,31 @@
   import figures from "$lib/data/figures.json";
   import type { Figure } from "$lib/types";
   import { createGameState, pickRandomFigure } from "$lib/game-state.svelte";
+  import { matchExactly } from "$lib/match-exact";
   import AnswerInput from "$lib/components/AnswerInput.svelte";
 
   // 随机抽一个人物作为当前局
   let game = $state(createGameState(pickRandomFigure(figures as Figure[])));
   let userInput = $state("");
-  let lastSubmit = $state<string | null>(null); // T8+ 后接异称匹配 / LLM
+  let lastResult = $state<{ input: string; correct: boolean; via: "exact" | "llm-pending"; reason?: string } | null>(null);
 
   function startNewGame() {
     game = createGameState(pickRandomFigure(figures as Figure[]));
     userInput = "";
-    lastSubmit = null;
+    lastResult = null;
   }
 
   function handleSubmit(text: string) {
-    lastSubmit = text;
-    // T8: 异称表精确匹配
-    // T9: LLM fallback
-    console.log("[T7] 提交答案:", text, "（T8 之后会接异称匹配 + LLM）");
+    // T8: 第一道 — 异称表精确匹配（前端，无 LLM 成本）
+    if (matchExactly(text, game.figure)) {
+      lastResult = { input: text, correct: true, via: "exact", reason: "异称表命中" };
+      // T10 加计分 / T9 加 LLM fallback / T11 进 win 状态
+      return;
+    }
+
+    // T9 会接 LLM fallback。当前先标记"待 LLM"。
+    lastResult = { input: text, correct: false, via: "llm-pending", reason: "异称表未命中（T9 接 LLM fallback）" };
+    userInput = "";
   }
 </script>
 
@@ -55,9 +62,10 @@
 
   <section class="input">
     <AnswerInput bind:value={userInput} onsubmit={handleSubmit} />
-    {#if lastSubmit}
-      <p class="submit-hint">
-        ⏳ 上次提交「{lastSubmit}」（T8/T9 接入后会显示对/错）
+    {#if lastResult}
+      <p class="result result-{lastResult.correct ? 'ok' : 'no'}">
+        {lastResult.correct ? "✅ 算对" : "❌ 不算"}「{lastResult.input}」 —
+        <small>{lastResult.reason}（{lastResult.via}）</small>
       </p>
     {/if}
   </section>
@@ -167,14 +175,25 @@ canNextRescueClue: {game.canNextRescueClue}</pre>
   .input {
     margin-bottom: 1.25rem;
   }
-  .submit-hint {
+  .result {
     margin: 0.6rem 0 0;
-    padding: 0.5rem 0.8rem;
-    background: #fffbeb;
-    border-left: 3px solid #f59e0b;
-    color: #92400e;
-    font-size: 0.85rem;
-    border-radius: 3px;
+    padding: 0.6rem 0.85rem;
+    border-radius: 4px;
+    font-size: 0.92rem;
+  }
+  .result-ok {
+    background: #ecfdf5;
+    border-left: 3px solid #10b981;
+    color: #065f46;
+  }
+  .result-no {
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+    color: #991b1b;
+  }
+  .result small {
+    color: inherit;
+    opacity: 0.75;
   }
   .actions {
     display: flex;
