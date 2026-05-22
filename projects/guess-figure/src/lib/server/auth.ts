@@ -73,8 +73,15 @@ export async function verifyCookie(
 
 export interface GetUserIdResult {
   user_id: string;
-  /** 若新建 user 或验签失败需重发, 返回 Set-Cookie header value (供 hook 加到响应) */
-  set_cookie?: string;
+  /**
+   * Set-Cookie header value (供 hook 加到响应).
+   *
+   * **总会**返回 (SPEC B1 步骤 4 滚动续期):
+   *   - 新建 user 时: 发首次 cookie
+   *   - 已存合法 cookie: 重签同一 uuid + buildSetCookie 续期 Max-Age (365 天向后滚动)
+   * 这样保证 active 用户的 cookie expires 时间不断推进, 1 年后才会"无活动"过期.
+   */
+  set_cookie: string;
 }
 
 interface GetUserIdEnv {
@@ -110,7 +117,9 @@ export async function getUserId(
 
   const verification = await verifyCookie(gfUid, secret);
   if (verification.valid && verification.uuid) {
-    return { user_id: verification.uuid };
+    // SPEC B1 步骤 4: 已存合法 cookie 也续期 (重新 sign + buildSetCookie 推后 Max-Age)
+    const refreshed = await signCookie(verification.uuid, secret);
+    return { user_id: verification.uuid, set_cookie: buildSetCookie(refreshed) };
   }
 
   // 验签失败或无 cookie — 新建 user

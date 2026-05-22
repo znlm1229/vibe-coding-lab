@@ -109,7 +109,7 @@ describe("getUserId", () => {
     expect(runCalls[0].args).toEqual([result.user_id]);
   });
 
-  it("case 6: 已存合法 cookie 复用 user (D1 不再 INSERT)", async () => {
+  it("case 6: 已存合法 cookie 复用 user (D1 不再 INSERT, 但 set_cookie 仍返回为滚动续期)", async () => {
     const { db, runCalls } = mockD1();
     const cookie = await signCookie(FIXED_UUID, TEST_SECRET);
     const request = new Request("https://test.local/api/daily", {
@@ -119,7 +119,10 @@ describe("getUserId", () => {
     const result = await getUserId(request, { AUTH_HMAC_SECRET: TEST_SECRET, GF_DB: db });
 
     expect(result.user_id).toBe(FIXED_UUID);
-    expect(result.set_cookie).toBeUndefined(); // 不需要重发 cookie
+    // SPEC B1 步骤 4: 滚动续期 — 即使 cookie 合法也重发 Set-Cookie 推后 Max-Age
+    expect(result.set_cookie).toBeDefined();
+    expect(result.set_cookie).toContain(`gf_uid=${FIXED_UUID}.`); // 同 uuid, 重 sign
+    expect(result.set_cookie).toContain("Max-Age=31536000");
     expect(runCalls).toHaveLength(0); // 不 INSERT
   });
 
