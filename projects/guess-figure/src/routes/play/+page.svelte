@@ -3,12 +3,19 @@
   import type { Figure } from "$lib/types";
   import { createGameState, pickRandomFigure } from "$lib/game-state.svelte";
   import { matchExactly } from "$lib/match-exact";
+  import { checkAnswerViaLLM } from "$lib/check-answer-client";
   import AnswerInput from "$lib/components/AnswerInput.svelte";
 
   // 随机抽一个人物作为当前局
   let game = $state(createGameState(pickRandomFigure(figures as Figure[])));
   let userInput = $state("");
-  let lastResult = $state<{ input: string; correct: boolean; via: "exact" | "llm-pending"; reason?: string } | null>(null);
+  let checking = $state(false);
+  let lastResult = $state<{
+    input: string;
+    correct: boolean;
+    via: "exact" | "llm" | "error";
+    reason?: string;
+  } | null>(null);
 
   function startNewGame() {
     game = createGameState(pickRandomFigure(figures as Figure[]));
@@ -16,17 +23,31 @@
     lastResult = null;
   }
 
-  function handleSubmit(text: string) {
+  async function handleSubmit(text: string) {
     // T8: 第一道 — 异称表精确匹配（前端，无 LLM 成本）
     if (matchExactly(text, game.figure)) {
       lastResult = { input: text, correct: true, via: "exact", reason: "异称表命中" };
-      // T10 加计分 / T9 加 LLM fallback / T11 进 win 状态
+      // T10 加计分 / T11 进 win 状态
       return;
     }
 
-    // T9 会接 LLM fallback。当前先标记"待 LLM"。
-    lastResult = { input: text, correct: false, via: "llm-pending", reason: "异称表未命中（T9 接 LLM fallback）" };
-    userInput = "";
+    // T9: 第二道 — LLM 模糊匹配
+    checking = true;
+    const r = await checkAnswerViaLLM(text, game.figure);
+    checking = false;
+
+    if ("error" in r) {
+      lastResult = { input: text, correct: false, via: "error", reason: r.error };
+      return;
+    }
+
+    lastResult = {
+      input: text,
+      correct: r.correct,
+      via: "llm",
+      reason: r.reason,
+    };
+    if (!r.correct) userInput = "";
   }
 </script>
 
@@ -61,10 +82,12 @@
   </section>
 
   <section class="input">
-    <AnswerInput bind:value={userInput} onsubmit={handleSubmit} />
-    {#if lastResult}
-      <p class="result result-{lastResult.correct ? 'ok' : 'no'}">
-        {lastResult.correct ? "✅ 算对" : "❌ 不算"}「{lastResult.input}」 —
+    <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
+    {#if checking}
+      <p class="result result-checking">⏳ LLM 判定中...</p>
+    {:else if lastResult}
+      <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
+        {lastResult.correct ? "✅ 算对" : lastResult.via === "error" ? "⚠️ 出错" : "❌ 不算"}「{lastResult.input}」 —
         <small>{lastResult.reason}（{lastResult.via}）</small>
       </p>
     {/if}
@@ -190,6 +213,16 @@ canNextRescueClue: {game.canNextRescueClue}</pre>
     background: #fef2f2;
     border-left: 3px solid #ef4444;
     color: #991b1b;
+  }
+  .result-err {
+    background: #fefce8;
+    border-left: 3px solid #eab308;
+    color: #854d0e;
+  }
+  .result-checking {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    color: #1e40af;
   }
   .result small {
     color: inherit;

@@ -78,9 +78,10 @@
   - Vitest 自动化测试推到 T15（同 T7）
   - Depends on: T6
 
-- [ ] **T9 — 调 /api/check-answer + mock fallback**
+- [x] **T9 — 调 /api/check-answer + 集成 play page** ✅ 2026-05-22
   - Touches: `src/lib/check-answer-client.ts`, `src/routes/play/+page.svelte`
-  - Done when: 异称匹配失败时调 `POST /api/check-answer`（mock：fetch 返回固定 JSON）+ 前端正确展示 correct/reason；真后端 T13 完成后切到真调用
+  - Done when: 异称匹配失败时调 `POST /api/check-answer` + 前端正确展示 correct/reason；checking 状态显示 + 错误降级 UI ✅
+  - 合并 T13 一起做（mock 步骤跳过，直接调真后端）
   - Depends on: T8
 
 - [ ] **T10 — 计分显示 + 标准范围 5 条游戏流跑通**
@@ -102,10 +103,11 @@
 
 ### Phase 5 — 后端 API（~1d）
 
-- [ ] **T13 — /api/check-answer 完整版**
+- [x] **T13 — /api/check-answer 完整版** ✅ 2026-05-22
   - Touches: `src/routes/api/check-answer/+server.ts`
-  - Done when: 调云雾 LLM（gemini-3.1-flash-lite）+ prompt 沿用 prototype B 草案 + JSON 解析容错 + HTTP 5xx → 502 / 超时 10s → 504 / 非 JSON → 兜底返回 `{correct:false}` + 部署后从前端调用真实生效
-  - Depends on: T2（生产环境 env vars 已配）
+  - Done when: 调云雾 LLM + prompt 沿用 prototype B + JSON 解析容错（剥 markdown / 抠首 {} 块）+ HTTP 5xx → 502 / 超时 10s → 504（AbortSignal.timeout）/ 非 JSON → `{correct:false, reason:"无法解析"}` 兜底 ✅
+  - 跟 T9 合并 commit；部署后从 https://guess-figure.pages.dev/play 直接调真后端验证
+  - Depends on: T2
 
 - [ ] **T14 — /api/daily 路由（按 UTC 16:00 切换）**
   - Touches: `src/routes/api/daily/+server.ts`
