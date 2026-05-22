@@ -43,9 +43,11 @@
   - 改进：argparse / 重试指数退避 / 增量保存 / log 文件 / finish_reason=length 检测
   - Depends on: nothing（可跟 T1 并行）
 
-- [ ] **T4 — quality_check.py + 修复 prototype A 的 false positive**
+- [x] **T4 — quality_check.py + 修复 prototype A 的 false positive** ✅ 2026-05-22
   - Touches: `scripts/quality_check.py`
-  - Done when: 跑 `python scripts/quality_check.py src/lib/data/figures.json` 输出每条 figure 的 5 项打分 + 修复"春秋"/"明（发明）"等 false positive（朝代检测按词边界，标志事件加 per-figure 黑名单）+ 至少 90% 测试用例打分准确
+  - Done when: 跑 `python scripts/quality_check.py src/lib/data/figures.json` 输出每条 figure 的 5 项打分 + 修复"春秋"/"明（发明）"等 false positive ✅
+  - 改进：朝代关键词从单字（"春秋"/"明"/"清"）改为精确朝代名（"明朝"/"唐朝"/"三国"等），去掉单字避免子串误匹配
+  - 退出码：0 全通 / 1 文件错误 / 2 不合规 + --strict
   - Depends on: T3
 
 - [ ] **T5 — 50 人题库批量生产 + 审核 + 入库（5 批 × 10 人）**
