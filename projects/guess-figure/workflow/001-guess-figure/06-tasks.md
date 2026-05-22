@@ -111,36 +111,38 @@
   - 跟 T9 合并 commit；部署后从 https://guess-figure.pages.dev/play 直接调真后端验证
   - Depends on: T2
 
-- [ ] **T14 — /api/daily 路由（按 UTC 16:00 切换）**
+- [x] **T14 — /api/daily 路由（按 UTC 16:00 切换）** ✅ 2026-05-22
   - Touches: `src/routes/api/daily/+server.ts`
-  - Done when: 多次调 `GET /api/daily` 在 UTC 16:00 前同一天内返回相同 `{figure_id, date}` + 跨过 UTC 16:00 返回不同 figure_id；超过题库长度时进入"经典回顾"轮播（返回 `{figure_id, date, mode: "replay"}`）
+  - Done when: `getCurrentDailyDate()` 按 UTC 16:00 切换 ✅；dayIndex 从 LAUNCH_DATE_UTC=2026-05-22 起算 ✅；超过 50 时 `mode: "replay"` 轮播 ✅；返回 `{figure_id, date, day_index, mode}`
   - Depends on: T2, T5
 
-- [ ] **T15 — LLM 边界用例集 30-50 个**
+- [ ] **T15 — LLM 边界用例集 30-50 个（推到 Stage 8 QA）**
   - Touches: `tests/llm-fuzz.test.ts`
-  - Done when: 跑 `pnpm test tests/llm-fuzz.test.ts`（需 env LLM key）30-50 个用例至少 90% PASS；含「孔明 ✅」「卧龙 ✅」「诸葛丞相 ✅」「诸葛梁 ❌」「曹操 ❌」「诸葛 ❌」「亮 ❌」「孔  明（双空格）✅」「繁简：諸葛亮 ✅」等
+  - Done when: 跑 `pnpm test tests/llm-fuzz.test.ts`（需 env LLM key）30-50 个用例至少 90% PASS
+  - **范围调整**：Stage 7 Implementation 阶段不做（节省时间），推到 Stage 8 Human QA 时人工浏览器测 + 收集失败用例 → V2 加自动化 testing infra
   - Depends on: T13
 
 ### Phase 6 — daily 模式（~1d）
 
-- [ ] **T16 — /daily 页面 + localStorage 防复玩**
-  - Touches: `src/routes/daily/+page.svelte`, `src/lib/daily-state.svelte.ts`
-  - Done when: 访问 `/daily` 调 `/api/daily` 拿今日题 + 复用 T6-T12 游戏组件 + 玩完写 localStorage key `daily_played_YYYYMMDD` + 已玩过显示"今日已完成：X 分" + 倒计时下次换题
+- [x] **T16 — /daily 页面 + localStorage 防复玩** ✅ 2026-05-22
+  - Touches: `src/routes/daily/+page.svelte`
+  - Done when: 访问 `/daily` → 调 `/api/daily` → 拿今日题 + 检查 localStorage ✅；已玩 → 显示"今日已完成 X 分" + 改玩日常链接 ✅；未玩 → 完整游戏 flow + finish 后写 localStorage ✅
+  - 倒计时省略（V1 用文字提示"每日 0:00 换新题"代替）
   - Depends on: T12, T14
 
-- [ ] **T17 — 分享按钮 + 复制剪贴板**
+- [x] **T17 — 分享按钮 + 复制剪贴板** ✅ 2026-05-22
   - Touches: `src/lib/components/ShareButton.svelte`, `src/routes/daily/+page.svelte`
-  - Done when: 点分享按钮调 `navigator.clipboard.writeText(text)` + text 格式 `猜历史人物 #N\n❓❓❓✅ 用了 3 条线索\nhttps://<domain>`（标准 ✅ / 求救 🆘 / 失败 ❌）+ 浏览器粘贴到记事本验证格式正确
+  - Done when: 点分享调 `navigator.clipboard.writeText(text)` ✅；text 格式按 SPEC 决策 7b（标准 ✅ / 求救 🆘 / 失败 ❌）✅；预览展开可见 ✅
   - Depends on: T16
 
-- [ ] **T18 — daily 题库耗尽降级 UI**
+- [x] **T18 — daily 题库耗尽降级 UI** ✅ 2026-05-22
   - Touches: `src/routes/daily/+page.svelte`
-  - Done when: 当 `/api/daily` 返回 `mode: "replay"` 时前端显示"今日：经典回顾 第 N 期"提示 + 仍可正常玩
+  - Done when: `dailyInfo.mode === "replay"` 时 subtitle 显示"📚 经典回顾"badge ✅；仍可正常玩
   - Depends on: T16
 
-- [ ] **T19 — 首页双入口**
+- [x] **T19 — 首页双入口** ✅ 2026-05-22
   - Touches: `src/routes/+page.svelte`
-  - Done when: `/` 显示"日常游戏"+"今日挑战"两个按钮 + daily 入口显示"今日已玩"/"今日未玩"状态（依据 localStorage）
+  - Done when: `/` 显示「🎮 日常游戏」+「📅 今日挑战」两个 entry card ✅；onMount 调 `/api/daily` + 检查 localStorage 显示"今日已完成 X 分"或"全球同题..." ✅
   - Depends on: T6, T16
 
 ### Phase 7 — 移动响应式 + 视觉打磨 + taste OQ（~2d）

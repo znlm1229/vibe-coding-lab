@@ -1,57 +1,130 @@
 <script lang="ts">
-  // T1 占位首页 — V1 开发中。
-  // T19 会重写为正式的"日常游戏 / 今日挑战"双入口首页。
+  // T19: 首页双入口
+  import { onMount } from "svelte";
+
+  let dailyPlayedToday = $state(false);
+  let dailyScore = $state<number | null>(null);
+  let dailyDate = $state<string | null>(null);
+
+  onMount(async () => {
+    // 检查 daily 今日是否已玩
+    try {
+      const r = await fetch("/api/daily");
+      if (!r.ok) return;
+      const info = (await r.json()) as { date: string };
+      dailyDate = info.date;
+      const raw = localStorage.getItem(`daily_played_${info.date}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        dailyPlayedToday = true;
+        dailyScore = typeof parsed.score === "number" ? parsed.score : null;
+      }
+    } catch {
+      // 静默失败 — 首页不依赖 daily 状态展示
+    }
+  });
 </script>
 
-<main>
-  <h1>猜历史人物</h1>
-  <p class="tagline">5 条线索，你能猜出他是谁？</p>
+<svelte:head>
+  <title>猜历史人物</title>
+</svelte:head>
 
-  <section class="status">
-    <p><strong>🚧 V1 开发中</strong></p>
-    <p>当前阶段：Stage 7 Implementation（T1 项目骨架已就绪）</p>
-    <p>
-      项目工作流见
-      <a href="https://github.com/znlm1229/vibe-coding-lab/tree/main/projects/guess-figure" target="_blank" rel="noopener">
-        github.com/znlm1229/vibe-coding-lab
-      </a>
-    </p>
+<main>
+  <header>
+    <h1>猜历史人物</h1>
+    <p class="tagline">5 条线索，你能猜出他是谁？</p>
+  </header>
+
+  <section class="entries">
+    <a href="/play" class="entry entry-play">
+      <h2>🎮 日常游戏</h2>
+      <p>从 50 个中国历史人物中随机抽题，无限玩。</p>
+    </a>
+
+    <a href="/daily" class="entry entry-daily">
+      <h2>📅 今日挑战</h2>
+      {#if dailyPlayedToday && dailyScore !== null}
+        <p>今日已完成：<strong>{dailyScore} 分</strong>（明日 0:00 换新题）</p>
+      {:else}
+        <p>全球同题，每日 1 次，可分享成绩。</p>
+      {/if}
+    </a>
   </section>
+
+  <footer>
+    <p>
+      <small>
+        V1 题库 50 中国史人物 ·
+        <a href="https://github.com/znlm1229/vibe-coding-lab" target="_blank" rel="noopener">源码 / 工作流</a>
+      </small>
+    </p>
+  </footer>
 </main>
 
 <style>
   main {
-    max-width: 640px;
+    max-width: 680px;
     margin: 3rem auto;
     padding: 2rem;
     font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
     line-height: 1.7;
     color: #1f2937;
   }
-  h1 {
+  header h1 {
     font-size: 2.2rem;
-    margin: 0 0 0.5rem;
+    margin: 0;
+    text-align: center;
   }
   .tagline {
+    text-align: center;
     color: #6b7280;
+    margin: 0.5rem 0 2.5rem;
     font-size: 1.05rem;
-    margin: 0 0 2rem;
   }
-  .status {
-    background: #fff7ed;
-    border-left: 4px solid #f59e0b;
-    padding: 1rem 1.25rem;
-    border-radius: 4px;
+  .entries {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .entry {
+    display: block;
+    padding: 1.5rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.15s;
+  }
+  .entry:hover {
+    border-color: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    transform: translateY(-1px);
+  }
+  .entry h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.3rem;
+  }
+  .entry p {
+    margin: 0;
+    color: #6b7280;
     font-size: 0.95rem;
   }
-  .status p {
-    margin: 0.4rem 0;
+  .entry-play:hover {
+    border-color: #2563eb;
   }
-  a {
-    color: #2563eb;
-    text-decoration: none;
+  .entry-daily:hover {
+    border-color: #10b981;
   }
-  a:hover {
-    text-decoration: underline;
+  .entry-daily strong {
+    color: #065f46;
+  }
+  footer {
+    text-align: center;
+    color: #9ca3af;
+    margin-top: 3rem;
+  }
+  footer a {
+    color: #6b7280;
   }
 </style>
