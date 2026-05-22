@@ -84,21 +84,23 @@
   - 合并 T13 一起做（mock 步骤跳过，直接调真后端）
   - Depends on: T8
 
-- [ ] **T10 — 计分显示 + 标准范围 5 条游戏流跑通**
-  - Touches: `src/lib/score.ts`, `src/routes/play/+page.svelte`
-  - Done when: 单元测试 `score(usedClues, isRescue)` 返回 100/80/60/40/20/10/0；浏览器实测 1 条线索猜中显示 100、2 条 80、...、5 条 20
+- [x] **T10 — 计分显示 + 标准范围 5 条游戏流跑通** ✅ 2026-05-22
+  - Touches: `src/lib/score.ts`, `src/lib/game-state.svelte.ts`, `src/routes/play/+page.svelte`
+  - Done when: `calculateScore()` 返回 100/80/60/40/20/10/0；game.markWon() / score derived；按钮上显示"用 N 条得 X 分"实时提示 ✅
+  - Vitest 单测推到 T15
   - Depends on: T9
 
 ### Phase 4 — 求救机制 + 失败 / 放弃路径（~1d）
 
-- [ ] **T11 — 求救模式 UI + 状态**
+- [x] **T11 — 求救模式 UI + 状态** ✅ 2026-05-22
   - Touches: `src/lib/game-state.svelte.ts`, `src/routes/play/+page.svelte`
-  - Done when: 5 条标准用完未猜中显示"再要 2 条线索（求救）" + "放弃看答案"双按钮 + 点求救显示线索 6 + 可再点显示线索 7 + 求救范围内猜中得 10 分
+  - Done when: 5 条用完显示"🆘 求救（再要 2 条最高 10 分）"+ "放弃看答案"双按钮 ✅；求救后第 6 条出 / 可再求 1 次出第 7 条 ✅；求救范围内猜中得 10 分（via calculateScore）✅
   - Depends on: T10
 
-- [ ] **T12 — 失败 / 放弃显示答案 + 维基链接**
+- [x] **T12 — 失败 / 放弃显示答案 + 维基链接** ✅ 2026-05-22
   - Touches: `src/lib/components/FailReveal.svelte`, `src/routes/play/+page.svelte`
-  - Done when: 7 条全用完未猜中或点"放弃" → 显示人物名 + Wikidata description 一句话 + 维基链接（点击新 tab 打开维基中文）+ "再玩一局"按钮可重置游戏
+  - Done when: 7 条用完未猜中 / 点放弃 / 猜中 三种状态都进 FailReveal 组件 ✅；显示人物名 + aliases + 维基链接（target="_blank"）+ "换一个人物再玩"按钮 ✅
+  - SPEC OQ5 一句话简介推到 V2（V1 极简版用 name + aliases）
   - Depends on: T11
 
 ### Phase 5 — 后端 API（~1d）

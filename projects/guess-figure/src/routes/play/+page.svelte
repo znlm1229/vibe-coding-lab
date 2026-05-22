@@ -5,6 +5,7 @@
   import { matchExactly } from "$lib/match-exact";
   import { checkAnswerViaLLM } from "$lib/check-answer-client";
   import AnswerInput from "$lib/components/AnswerInput.svelte";
+  import FailReveal from "$lib/components/FailReveal.svelte";
 
   // 随机抽一个人物作为当前局
   let game = $state(createGameState(pickRandomFigure(figures as Figure[])));
@@ -24,21 +25,21 @@
   }
 
   async function handleSubmit(text: string) {
-    // T8: 第一道 — 异称表精确匹配（前端，无 LLM 成本）
+    // 第一道 — 异称表精确匹配（前端，无 LLM 成本）
     if (matchExactly(text, game.figure)) {
       lastResult = { input: text, correct: true, via: "exact", reason: "异称表命中" };
-      // T10 加计分 / T11 进 win 状态
+      game.markWon();
       return;
     }
 
-    // T9: 第二道 — LLM 模糊匹配
+    // 第二道 — LLM 模糊匹配
     checking = true;
     const r = await checkAnswerViaLLM(text, game.figure);
     checking = false;
 
     if ("error" in r) {
       lastResult = { input: text, correct: false, via: "error", reason: r.error };
-      return;
+      return; // 不消耗线索，不进 won 状态
     }
 
     lastResult = {
@@ -47,7 +48,11 @@
       via: "llm",
       reason: r.reason,
     };
-    if (!r.correct) userInput = "";
+    if (r.correct) {
+      game.markWon();
+    } else {
+      userInput = "";
+    }
   }
 </script>
 
@@ -81,39 +86,48 @@
     {/each}
   </section>
 
-  <section class="input">
-    <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
-    {#if checking}
-      <p class="result result-checking">⏳ LLM 判定中...</p>
-    {:else if lastResult}
-      <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
-        {lastResult.correct ? "✅ 算对" : lastResult.via === "error" ? "⚠️ 出错" : "❌ 不算"}「{lastResult.input}」 —
-        <small>{lastResult.reason}（{lastResult.via}）</small>
-      </p>
-    {/if}
-  </section>
+  {#if game.finished}
+    <FailReveal
+      figure={game.figure}
+      won={game.won}
+      score={game.score}
+      revealedCount={game.revealedCount}
+      onretry={startNewGame}
+    />
+  {:else}
+    <section class="input">
+      <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
+      {#if checking}
+        <p class="result result-checking">⏳ LLM 判定中...</p>
+      {:else if lastResult}
+        <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
+          {lastResult.correct ? "✅ 算对" : lastResult.via === "error" ? "⚠️ 出错" : "❌ 不算"}「{lastResult.input}」 —
+          <small>{lastResult.reason}（{lastResult.via}）</small>
+        </p>
+      {/if}
+    </section>
 
-  <section class="actions">
-    {#if game.canNextClue}
-      <button class="btn-secondary" onclick={() => game.nextClue()}>
-        再来一条线索
-      </button>
-    {:else if game.canRescue}
-      <button class="btn-rescue" onclick={() => game.startRescue()}>
-        🆘 求救（再要 2 条线索）
-      </button>
-    {:else if game.canNextRescueClue}
-      <button class="btn-rescue" onclick={() => game.nextRescueClue()}>
-        再要一条求救线索
-      </button>
-    {:else}
-      <p class="exhausted">📚 7 条线索全部展示完。（T11/T12 后续：放弃看答案 UI）</p>
-    {/if}
+    <section class="actions">
+      {#if game.canNextClue}
+        <button class="btn-secondary" onclick={() => game.nextClue()}>
+          再来一条线索（用 {game.revealedCount + 1} 条得 {(6 - (game.revealedCount + 1)) * 20} 分）
+        </button>
+      {:else if game.canRescue}
+        <button class="btn-rescue" onclick={() => game.startRescue()}>
+          🆘 求救（再要 2 条线索，最高 10 分）
+        </button>
+      {:else if game.canNextRescueClue}
+        <button class="btn-rescue" onclick={() => game.nextRescueClue()}>
+          再要一条求救线索
+        </button>
+      {:else}
+        <p class="exhausted">📚 7 条线索全部展示完</p>
+      {/if}
 
-    <button class="btn-link" onclick={startNewGame}>
-      换一个人物
-    </button>
-  </section>
+      <button class="btn-link" onclick={() => game.giveUp()}>放弃看答案</button>
+      <button class="btn-link" onclick={startNewGame}>换一个人物</button>
+    </section>
+  {/if}
 
   <details class="debug">
     <summary>🔧 调试信息（开发期）</summary>
