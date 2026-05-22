@@ -98,11 +98,16 @@
     <section class="input">
       <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
       {#if checking}
-        <p class="result result-checking">⏳ LLM 判定中...</p>
+        <p class="result result-checking">⏳ 判定中...</p>
       {:else if lastResult}
         <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
-          {lastResult.correct ? "✅ 算对" : lastResult.via === "error" ? "⚠️ 出错" : "❌ 不算"}「{lastResult.input}」 —
-          <small>{lastResult.reason}（{lastResult.via}）</small>
+          {#if lastResult.correct}
+            ✅ 算对「{lastResult.input}」
+          {:else if lastResult.via === "error"}
+            ⚠️ 提交失败，请稍后再试
+          {:else}
+            ❌ 不算「{lastResult.input}」
+          {/if}
         </p>
       {/if}
     </section>
@@ -129,16 +134,6 @@
     </section>
   {/if}
 
-  <details class="debug">
-    <summary>🔧 调试信息（开发期）</summary>
-    <pre>当前人物: {game.figure.name}
-异称: {game.figure.aliases.join("、")}
-revealedCount: {game.revealedCount}
-status: {game.status}
-canNextClue: {game.canNextClue}
-canRescue: {game.canRescue}
-canNextRescueClue: {game.canNextRescueClue}</pre>
-  </details>
 </main>
 
 <style>
@@ -277,21 +272,5 @@ canNextRescueClue: {game.canNextRescueClue}</pre>
     color: var(--color-text-soft);
     margin: 0;
     font-size: 0.9rem;
-  }
-  .debug {
-    margin-top: 2rem;
-    padding: 0.8rem;
-    background: var(--color-bg-card);
-    border-radius: 4px;
-    font-size: 0.85rem;
-    color: var(--color-text-soft);
-  }
-  .debug summary {
-    cursor: pointer;
-    user-select: none;
-  }
-  .debug pre {
-    margin: 0.5rem 0 0;
-    white-space: pre-wrap;
   }
 </style>

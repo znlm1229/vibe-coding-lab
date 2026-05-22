@@ -204,11 +204,16 @@
       <section class="input">
         <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
         {#if checking}
-          <p class="result result-checking">⏳ LLM 判定中...</p>
+          <p class="result result-checking">⏳ 判定中...</p>
         {:else if lastResult}
           <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
-            {lastResult.correct ? "✅ 算对" : lastResult.via === "error" ? "⚠️ 出错" : "❌ 不算"}「{lastResult.input}」
-            <small>— {lastResult.reason}</small>
+            {#if lastResult.correct}
+              ✅ 算对「{lastResult.input}」
+            {:else if lastResult.via === "error"}
+              ⚠️ 提交失败，请稍后再试
+            {:else}
+              ❌ 不算「{lastResult.input}」
+            {/if}
           </p>
         {/if}
       </section>
