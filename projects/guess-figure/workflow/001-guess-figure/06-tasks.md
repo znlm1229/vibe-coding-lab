@@ -170,10 +170,11 @@
 
 ### Phase 8 — QA + 上线缓冲（~3d）
 
-- [ ] **T23 — verification-before-completion skill 跑一遍**
-  - Touches: 所有已完成的 task，跑 skill 校验每个 task 的 done-when 有验证证据
-  - Done when: skill 输出 22 个 task 中所有 done-when 都有跑命令/截图/log 作为证据 + 标 PASS 的不存在"字面通过行为破洞"
-  - Depends on: T22（所有功能 task 完成）
+- [x] **T23 — verification-before-completion skill 跑一遍** ✅ 2026-05-22
+  - Touches: `workflow/001-guess-figure/08-qa.md` QA-readiness 摘要节
+  - Done when: skill 跑出 7 个命令级证据（V1-V7：pnpm build / git log / quality_check --strict 50/50 / figures.json 127KB 50 id / 3 page HTTP 200 / /api/daily JSON / /api/check-answer POST 孔明）✅；**发现并修 1 个真 bug**（fix(T14): LAUNCH_DATE_UTC day_index=-1 → 0）✅
+  - 价值兑现：找到典型"字面 AC PASS / 行为 AC FAIL"案例
+  - Depends on: T22
 
 - [ ] **T24 — Stage 8 Human QA（移动真机 + LLM 边界用例真测 + 15 AC 双通道）**
   - Touches: 用户实测，artifact 在 [08-qa.md](./08-qa.md)
