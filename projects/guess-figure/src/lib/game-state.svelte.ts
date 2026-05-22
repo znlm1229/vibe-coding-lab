@@ -77,6 +77,22 @@ export function createGameState(figure: Figure) {
     }
   }
 
+  /**
+   * 答错时调用 — 自动消耗一条线索（SPEC v1.1 行为）。
+   * 标准范围内（1-5）→ nextClue；求救范围内（6-7）→ nextRescueClue；
+   * 第 5 / 7 条已展示时不自动推进（让玩家显式选求救 / 放弃）。
+   */
+  function consumeOnWrongAnswer() {
+    if (finished) return;
+    if (canNextClue) {
+      nextClue();
+    } else if (canNextRescueClue) {
+      nextRescueClue();
+    }
+    // canRescue (第 5 用完) 时不自动求救 — 玩家手动选
+    // 第 7 用完时不能再推进 — 让玩家放弃 / 继续猜
+  }
+
   return {
     figure,
     get revealedCount() {
@@ -123,6 +139,7 @@ export function createGameState(figure: Figure) {
     nextRescueClue,
     markWon,
     giveUp,
+    consumeOnWrongAnswer,
   };
 }
 

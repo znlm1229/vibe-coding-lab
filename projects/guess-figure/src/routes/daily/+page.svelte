@@ -109,6 +109,7 @@
       game.markWon();
       onGameFinish();
     } else {
+      game.consumeOnWrongAnswer(); // SPEC v1.1: 答错自动消耗一条线索
       userInput = "";
     }
   }
