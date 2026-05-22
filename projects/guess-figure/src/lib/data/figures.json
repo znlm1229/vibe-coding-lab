@@ -1,5 +1,551 @@
 [
   {
+    "name": "刘彻",
+    "aliases": [
+      "汉武帝",
+      "世宗",
+      "孝武皇帝",
+      "武帝"
+    ],
+    "clues": [
+      {
+        "text": "他通过推行分化诸侯势力的政策，极大地加强了中央集权，并确立了以儒家思想为核心的官僚选拔与治理体系。",
+        "difficulty": 1
+      },
+      {
+        "text": "他开创了以年号纪年的先河，在位期间通过设置刺史制度与改革财政，使帝国疆域向四周大幅度扩张。",
+        "difficulty": 2
+      },
+      {
+        "text": "他任用多位出身寒微的官吏牵制相权，通过盐铁官营等经济手段，为长期的边疆军事行动提供了物质保障。",
+        "difficulty": 3
+      },
+      {
+        "text": "他曾派遣使者出使西域，打通了连接东西方的交通要道，并在此后设立了管理西域事务的专门机构。",
+        "difficulty": 4
+      },
+      {
+        "text": "他晚年因宫廷内部的政治斗争而深感悔恨，最终颁布罪己诏，停止了大规模的对外征伐与民休息。",
+        "difficulty": 5
+      },
+      {
+        "text": "这位西汉皇帝任用卫青、霍去病等将领，在马邑之变后彻底改变了对匈奴的战略，并最终封禅泰山。",
+        "difficulty": 6
+      },
+      {
+        "text": "作为汉景帝之子，他因巫蛊之祸导致太子刘据自尽，晚年立幼子刘弗陵为嗣，并留下了著名的轮台罪己诏。",
+        "difficulty": 7
+      }
+    ],
+    "id": "刘彻",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q7225",
+    "wiki_url": "https://zh.wikipedia.org/wiki/汉武帝",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:34:17Z",
+      "usage": {
+        "prompt_tokens": 1376,
+        "completion_tokens": 385,
+        "total_tokens": 1761,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 1376,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "刘邦",
+    "aliases": [
+      "刘季",
+      "汉高祖",
+      "太祖",
+      "高皇帝",
+      "赤帝子"
+    ],
+    "clues": [
+      {
+        "text": "此人出身于平民阶层，早年担任过基层治安官吏，在乱世中凭借卓越的用人眼光与政治手腕，最终终结了群雄割据的局面。",
+        "difficulty": 1
+      },
+      {
+        "text": "他曾因押送劳役途中多人逃亡，索性释放剩余人员并选择亡命山泽，此举使其在当地积累了极高的声望与追随者。",
+        "difficulty": 2
+      },
+      {
+        "text": "在争夺天下的过程中，他虽屡次在正面战场失利，却善于采纳谋士建议，通过分封诸侯与联合各方势力，最终扭转乾坤。",
+        "difficulty": 3
+      },
+      {
+        "text": "他曾与宿敌在广武对峙，通过外交手段与战略包围，迫使对方在乌江边陷入绝境，从而确立了其统治天下的合法地位。",
+        "difficulty": 4
+      },
+      {
+        "text": "作为一位布衣出身的统治者，他在称帝后定都关中，制定了休养生息的政策，为后世长达四百年的基业奠定了基础。",
+        "difficulty": 5
+      },
+      {
+        "text": "他是汉朝的开国皇帝，在楚汉战争中击败了西楚霸王项羽，并留下了“大风起兮云飞扬”的千古名句。",
+        "difficulty": 6
+      },
+      {
+        "text": "作为汉朝的建立者，他曾斩白蛇起义，在鸿门宴中侥幸脱身，最终在垓下之战中彻底击败了项羽。",
+        "difficulty": 7
+      }
+    ],
+    "id": "刘邦",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q7210",
+    "wiki_url": "https://zh.wikipedia.org/wiki/刘邦",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:34:08Z",
+      "usage": {
+        "prompt_tokens": 707,
+        "completion_tokens": 423,
+        "total_tokens": 1130,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 707,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "司马迁",
+    "aliases": [
+      "子长",
+      "太史公",
+      "史迁",
+      "史圣"
+    ],
+    "clues": [
+      {
+        "text": "他因遭受极刑而身心俱创，却在屈辱中完成了对往昔岁月的系统性梳理，确立了后世两千年记录历史的叙事范式。",
+        "difficulty": 1
+      },
+      {
+        "text": "他不仅是一位严谨的记录者，更是一位深情的叙事者，通过对人物命运的深刻洞察，将冷冰冰的编年史转化为富有生命力的文学篇章。",
+        "difficulty": 2
+      },
+      {
+        "text": "他继承了父亲未竟的遗志，在极度艰难的处境下，以一人之力构建起涵盖数千年文明演进的宏大叙事体系。",
+        "difficulty": 3
+      },
+      {
+        "text": "他开创了以人物为中心的叙事结构，这种独特的体裁不仅影响了后世所有正史的编纂，更成为中国文学史上的一座丰碑。",
+        "difficulty": 4
+      },
+      {
+        "text": "他曾担任掌管天文历法与修撰史书的官职，因替一位战败投降的将领辩护而触怒君主，最终在隐忍中完成了传世巨著。",
+        "difficulty": 5
+      },
+      {
+        "text": "西汉时期著名的史学家，他撰写的《史记》是中国第一部纪传体通史，被后世尊称为史圣。",
+        "difficulty": 6
+      },
+      {
+        "text": "他因李陵之祸受腐刑，在狱中发愤著书，完成了被誉为史家之绝唱的《史记》，是西汉时期伟大的文学家。",
+        "difficulty": 7
+      }
+    ],
+    "id": "司马迁",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q9372",
+    "wiki_url": "https://zh.wikipedia.org/wiki/司马迁",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:35:08Z",
+      "usage": {
+        "prompt_tokens": 697,
+        "completion_tokens": 406,
+        "total_tokens": 1103,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 697,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "孔子",
+    "aliases": [
+      "仲尼",
+      "孔夫子",
+      "文宣王",
+      "至圣先师",
+      "万世师表"
+    ],
+    "clues": [
+      {
+        "text": "他曾试图推行一套基于道德与礼制的社会秩序方案，尽管在当时并未被各国统治者完全采纳，却深刻塑造了后世两千年的文明内核。",
+        "difficulty": 1
+      },
+      {
+        "text": "他主张通过修身养性达到理想的政治境界，强调个人在社会关系中的责任与义务，其教育理念主张因材施教与有教无类。",
+        "difficulty": 2
+      },
+      {
+        "text": "他曾在晚年整理古代文献，通过修订史书表达了对社会秩序崩坏的忧虑，其思想核心被后世弟子整理成册并广为流传。",
+        "difficulty": 3
+      },
+      {
+        "text": "他出生于鲁国，曾带领弟子周游列国以寻求推行政治抱负的机会，最终回到故乡专注于教育事业并整理古代经典。",
+        "difficulty": 4
+      },
+      {
+        "text": "作为儒家学派的开创者，他被后世尊奉为至圣，其言行被门人记录在一部著名的语录体著作中，成为中国传统文化的基石。",
+        "difficulty": 5
+      },
+      {
+        "text": "他曾担任鲁国大司寇，在春秋末期周游列国，其思想被收录在《论语》中，后世尊其为万世师表。",
+        "difficulty": 6
+      },
+      {
+        "text": "他是春秋时期鲁国人，儒家的创始人，被尊称为至圣先师，其弟子编纂的《论语》记录了他与学生的对话。",
+        "difficulty": 7
+      }
+    ],
+    "id": "孔子",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q4604",
+    "wiki_url": "https://zh.wikipedia.org/wiki/孔子",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:30:40Z",
+      "usage": {
+        "prompt_tokens": 852,
+        "completion_tokens": 405,
+        "total_tokens": 1257,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 852,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "孟子",
+    "aliases": [
+      "孟轲",
+      "亚圣",
+      "子舆",
+      "邹国公"
+    ],
+    "clues": [
+      {
+        "text": "他主张人性本善，认为人皆有不忍人之心，并提出通过扩充四端来达到道德完善的境界。",
+        "difficulty": 1
+      },
+      {
+        "text": "他曾游说多国君主，强调仁政与王道，主张民贵君轻，认为统治者应以百姓福祉为核心。",
+        "difficulty": 2
+      },
+      {
+        "text": "他将道德修养视为立身之本，强调大丈夫应具备富贵不能淫、贫贱不能移、威武不能屈的节操。",
+        "difficulty": 3
+      },
+      {
+        "text": "他极力推崇先圣之道，在学术争鸣中严厉批评杨朱与墨翟的学说，捍卫了儒家思想的正统地位。",
+        "difficulty": 4
+      },
+      {
+        "text": "他出生于鲁国附近的邹地，一生致力于传道授业，其言行被后世弟子编纂成册，成为儒家经典。",
+        "difficulty": 5
+      },
+      {
+        "text": "他是战国时期著名的思想家，被后世尊称为亚圣，与孔子并称为孔孟，其语录收录于同名著作中。",
+        "difficulty": 6
+      },
+      {
+        "text": "他曾提出性善论，主张民为贵，社稷次之，君为轻，是儒家学派仅次于孔子的代表人物。",
+        "difficulty": 7
+      }
+    ],
+    "id": "孟子",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q188903",
+    "wiki_url": "https://zh.wikipedia.org/wiki/孟子",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:31:19Z",
+      "usage": {
+        "prompt_tokens": 736,
+        "completion_tokens": 363,
+        "total_tokens": 1099,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 736,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "屈原",
+    "aliases": [
+      "屈平",
+      "靈均",
+      "羋原",
+      "三閭大夫"
+    ],
+    "clues": [
+      {
+        "text": "他自稱是上古五帝之一的後裔，曾擔任輔佐君王的近臣，主張聯合他國以抗衡強權，卻因直言進諫而遭到排擠與流放。",
+        "difficulty": 1
+      },
+      {
+        "text": "他曾任職於朝廷，負責掌管王族事務，因反對與強鄰講和而觸怒權貴，最終被放逐至偏遠的南方地區長達十八年之久。",
+        "difficulty": 2
+      },
+      {
+        "text": "他在流放期間深入民間，接觸了豐富的地域文化，將滿腔憂國憂民的情懷寄託於筆端，創作出極具個人風格的文學篇章。",
+        "difficulty": 3
+      },
+      {
+        "text": "他目睹都城被外敵攻破，深感報國無門，在絕望中寫下最後的賦作，最終選擇在江邊投水自盡，以身殉國。",
+        "difficulty": 4
+      },
+      {
+        "text": "他是戰國時期著名的政治家與文學家，其作品開創了浪漫主義文學的先河，後世常在五月五日以特定習俗紀念其高潔品格。",
+        "difficulty": 5
+      },
+      {
+        "text": "這位楚國貴族曾任左徒，因《離騷》而名垂青史，後世為紀念他投汨羅江而有了端午節吃粽子的習俗。",
+        "difficulty": 6
+      },
+      {
+        "text": "他是戰國時期楚國的愛國詩人，因懷石投江而死，被視為端午節龍舟競渡與吃粽子習俗的起源人物。",
+        "difficulty": 7
+      }
+    ],
+    "id": "屈原",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q313330",
+    "wiki_url": "https://zh.wikipedia.org/wiki/屈原",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:33:07Z",
+      "usage": {
+        "prompt_tokens": 993,
+        "completion_tokens": 428,
+        "total_tokens": 1421,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 993,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "庄子",
+    "aliases": [
+      "庄周",
+      "南华真人",
+      "微妙元通真君",
+      "漆园吏"
+    ],
+    "clues": [
+      {
+        "text": "此人曾于偏远之地担任管理园圃的小吏，其思想体系深刻影响了后世对于自然与个体自由的哲学探讨。",
+        "difficulty": 1
+      },
+      {
+        "text": "他与同时代的另一位思想家并称，主张摒弃世俗功名，追求精神上的绝对超脱与物我合一的境界。",
+        "difficulty": 2
+      },
+      {
+        "text": "他擅长通过寓言故事阐述深奥的哲理，其文字风格汪洋恣肆，极具想象力，常以荒诞之言论述大道。",
+        "difficulty": 3
+      },
+      {
+        "text": "作为道家学派的重要代表人物，他继承并发展了先贤的思想，强调顺应自然，反对人为的束缚与干预。",
+        "difficulty": 4
+      },
+      {
+        "text": "他出生于宋国蒙地，其著作被后世尊奉为经典，书中记载了许多关于大鹏展翅与蝴蝶梦境的著名传说。",
+        "difficulty": 5
+      },
+      {
+        "text": "战国时期的思想家，著有同名哲学著作，书中包含《逍遥游》、《齐物论》等篇章，被唐玄宗封为南华真人。",
+        "difficulty": 6
+      },
+      {
+        "text": "他是战国时期道家学派的集大成者，以“梦蝶”的故事闻名于世，后世常将其与老子并称为“老庄”。",
+        "difficulty": 7
+      }
+    ],
+    "id": "庄子",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q47739",
+    "wiki_url": "https://zh.wikipedia.org/wiki/庄子",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:32:21Z",
+      "usage": {
+        "prompt_tokens": 681,
+        "completion_tokens": 380,
+        "total_tokens": 1061,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 681,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "张衡",
+    "aliases": [
+      "平子",
+      "张河间",
+      "文宪侯",
+      "张太史"
+    ],
+    "clues": [
+      {
+        "text": "他曾任职于中央史官机构，致力于观测天象并推演宇宙运行规律，其科学成就被后世誉为古代百科全书式的通才。",
+        "difficulty": 1
+      },
+      {
+        "text": "他不仅在天文学领域造诣深厚，还通过对几何学的研究，将圆周率的数值推算至更为精确的范畴。",
+        "difficulty": 2
+      },
+      {
+        "text": "他曾绘制出一幅包含数千颗星体的星图，并从物理学角度深刻阐述了日食与月食产生的自然机理。",
+        "difficulty": 3
+      },
+      {
+        "text": "他设计并制造了利用水力驱动的精密仪器，能够准确演示天体运行，是古代机械制造史上的杰出代表。",
+        "difficulty": 4
+      },
+      {
+        "text": "他不仅是杰出的科学家，在辞赋创作上也极具影响力，被后世文坛公认为汉代辞赋四大家之一。",
+        "difficulty": 5
+      },
+      {
+        "text": "东汉时期，他发明了世界上第一台测定地震方位的仪器，并创作了著名的《二京赋》与《归田赋》。",
+        "difficulty": 6
+      },
+      {
+        "text": "这位东汉时期的太史令，因发明了候风地动仪而闻名于世，是古代中国科学技术史上的标志性人物。",
+        "difficulty": 7
+      }
+    ],
+    "id": "张衡",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q197206",
+    "wiki_url": "https://zh.wikipedia.org/wiki/张衡",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:35:15Z",
+      "usage": {
+        "prompt_tokens": 741,
+        "completion_tokens": 361,
+        "total_tokens": 1102,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 741,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
     "name": "李白",
     "aliases": [
       "李太白",
@@ -51,6 +597,144 @@
         "prompt_tokens_details": {
           "cached_tokens": 0,
           "text_tokens": 992,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "秦始皇",
+    "aliases": [
+      "秦王政",
+      "趙政",
+      "始皇帝",
+      "祖龍",
+      "嬴政"
+    ],
+    "clues": [
+      {
+        "text": "他出生于异国都城，早年曾作为质子寄居他乡，归国后铲除权臣并亲政，最终终结了长达数百年的诸侯割据局面。",
+        "difficulty": 1
+      },
+      {
+        "text": "他废除了分封制，在全国范围内推行郡县制，并建立了一套以皇权为核心的中央集权官僚体系，影响了后世两千余年。",
+        "difficulty": 2
+      },
+      {
+        "text": "他下令统一了全国的度量衡与货币，并推行书同文政策，将原本差异巨大的文字规范为小篆，极大地促进了文化交流。",
+        "difficulty": 3
+      },
+      {
+        "text": "他为了巩固边防，将北方各国的防御工事连接起来，并大规模征发民力修建宏伟的宫殿与陵墓，导致民怨沸腾。",
+        "difficulty": 4
+      },
+      {
+        "text": "他开创了「皇帝」这一称号，希望自己的统治能够传至万世，被后世评价为千古一帝，但也因严苛统治而备受争议。",
+        "difficulty": 5
+      },
+      {
+        "text": "这位秦朝的开国君主在巡游途中病逝于沙丘，其死后不久，他建立的庞大帝国便在农民起义的浪潮中迅速走向了灭亡。",
+        "difficulty": 6
+      },
+      {
+        "text": "作为中国历史上首位统一六国的皇帝，他修筑了万里长城，并留下了规模宏大的兵马俑陪葬坑，是著名的历史统治者。",
+        "difficulty": 7
+      }
+    ],
+    "id": "秦始皇",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q7192",
+    "wiki_url": "https://zh.wikipedia.org/wiki/秦始皇",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:33:17Z",
+      "usage": {
+        "prompt_tokens": 952,
+        "completion_tokens": 418,
+        "total_tokens": 1370,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 952,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      }
+    }
+  },
+  {
+    "name": "老子",
+    "aliases": [
+      "李耳",
+      "老聃",
+      "李聃",
+      "李伯阳",
+      "玄元皇帝"
+    ],
+    "clues": [
+      {
+        "text": "他曾于王室档案馆担任史官，后因目睹政局动荡而选择西行，最终不知所踪。",
+        "difficulty": 1
+      },
+      {
+        "text": "他主张顺应自然规律，认为治理国家应当采取不干扰民众生活的策略。",
+        "difficulty": 2
+      },
+      {
+        "text": "他提出了关于宇宙本源的深刻见解，强调柔弱胜刚强，被后世尊为哲学宗师。",
+        "difficulty": 3
+      },
+      {
+        "text": "他与另一位著名的思想家在洛阳有过关于礼制的探讨，并留下了深奥的教诲。",
+        "difficulty": 4
+      },
+      {
+        "text": "作为道家学派的创始人，他留下的五千言著作对中国传统文化产生了深远影响。",
+        "difficulty": 5
+      },
+      {
+        "text": "这位春秋时期的思想家留下了传世经典《道德经》，被后人尊称为道家学派的开创者。",
+        "difficulty": 6
+      },
+      {
+        "text": "他是道教中被尊奉为太上玄元皇帝的圣人，常与庄周并称为道家思想的代表人物。",
+        "difficulty": 7
+      }
+    ],
+    "id": "老子",
+    "source": "wikipedia+wikidata",
+    "wikidata_id": "Q9333",
+    "wiki_url": "https://zh.wikipedia.org/wiki/老子",
+    "_meta": {
+      "model": "gemini-3.1-flash-lite",
+      "generated_at": "2026-05-22T03:32:12Z",
+      "usage": {
+        "prompt_tokens": 877,
+        "completion_tokens": 315,
+        "total_tokens": 1192,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 877,
           "audio_tokens": 0,
           "image_tokens": 0
         },
