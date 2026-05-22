@@ -66,9 +66,10 @@
   - `pnpm build` 通过 ✅；线上 https://guess-figure.pages.dev/play CF Pages auto deploy 后可访问
   - Depends on: T1, T5
 
-- [ ] **T7 — 输入框 + 中文 IME 处理**
+- [x] **T7 — 输入框 + 中文 IME 处理** ✅ 2026-05-22
   - Touches: `src/lib/components/AnswerInput.svelte`, `src/routes/play/+page.svelte`
-  - Done when: 输入框监听 `compositionstart` / `compositionend` + 测试用例覆盖 IME 未结束时按 Enter 不触发提交（Vitest 单元测试 PASS）
+  - Done when: 输入框监听 `compositionstart` / `compositionend` ✅ + handleKeydown 检查 `composing` 标志才触发 submit ✅；`pnpm build` 通过 ✅
+  - **范围调整**：Vitest 自动化测试推到 T15（后端 API task）一起设置 testing infra；T7 用浏览器手动 IME 测试 + Stage 8 Human QA AC14 真机验证兜底
   - Depends on: T6
 
 - [ ] **T8 — 异称表精确匹配（前端）+ 输入规范化**

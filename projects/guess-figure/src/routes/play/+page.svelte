@@ -2,12 +2,24 @@
   import figures from "$lib/data/figures.json";
   import type { Figure } from "$lib/types";
   import { createGameState, pickRandomFigure } from "$lib/game-state.svelte";
+  import AnswerInput from "$lib/components/AnswerInput.svelte";
 
   // 随机抽一个人物作为当前局
   let game = $state(createGameState(pickRandomFigure(figures as Figure[])));
+  let userInput = $state("");
+  let lastSubmit = $state<string | null>(null); // T8+ 后接异称匹配 / LLM
 
   function startNewGame() {
     game = createGameState(pickRandomFigure(figures as Figure[]));
+    userInput = "";
+    lastSubmit = null;
+  }
+
+  function handleSubmit(text: string) {
+    lastSubmit = text;
+    // T8: 异称表精确匹配
+    // T9: LLM fallback
+    console.log("[T7] 提交答案:", text, "（T8 之后会接异称匹配 + LLM）");
   }
 </script>
 
@@ -41,6 +53,15 @@
     {/each}
   </section>
 
+  <section class="input">
+    <AnswerInput bind:value={userInput} onsubmit={handleSubmit} />
+    {#if lastSubmit}
+      <p class="submit-hint">
+        ⏳ 上次提交「{lastSubmit}」（T8/T9 接入后会显示对/错）
+      </p>
+    {/if}
+  </section>
+
   <section class="actions">
     {#if game.canNextClue}
       <button class="btn-secondary" onclick={() => game.nextClue()}>
@@ -55,7 +76,7 @@
         再要一条求救线索
       </button>
     {:else}
-      <p class="exhausted">📚 7 条线索全部展示完。（T7 后续：输入答案 / 放弃看答案 UI）</p>
+      <p class="exhausted">📚 7 条线索全部展示完。（T11/T12 后续：放弃看答案 UI）</p>
     {/if}
 
     <button class="btn-link" onclick={startNewGame}>
@@ -142,6 +163,18 @@ canNextRescueClue: {game.canNextRescueClue}</pre>
   }
   .text {
     margin: 0.2rem 0 0;
+  }
+  .input {
+    margin-bottom: 1.25rem;
+  }
+  .submit-hint {
+    margin: 0.6rem 0 0;
+    padding: 0.5rem 0.8rem;
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+    color: #92400e;
+    font-size: 0.85rem;
+    border-radius: 3px;
   }
   .actions {
     display: flex;
