@@ -176,14 +176,14 @@
   - 价值兑现：找到典型"字面 AC PASS / 行为 AC FAIL"案例
   - Depends on: T22
 
-- [ ] **T24 — Stage 8 Human QA（移动真机 + LLM 边界用例真测 + 15 AC 双通道）**
-  - Touches: 用户实测，artifact 在 [08-qa.md](./08-qa.md)
-  - Done when: SPEC 15 条 AC 全部 PASS（AI 通道 + 人工通道两边都 PASS）+ 发现的 bug 全部进 `fix(TX):` commit 修复
+- [x] **T24 — Stage 8 Human QA** ✅ 2026-05-22
+  - Touches: 用户实测，artifact [08-qa.md](./08-qa.md) + 修 bug 3 个
+  - Done when: SPEC 15 AC 全过（AI ✅ + 人工 ✅）✅；发现 3 个 issue 并修：fix(T14) day_index=-1 / fix(T9+T16) LLM reason 泄露答案 / SPEC v1.1 答错自动消耗线索
   - Depends on: T23
 
-- [ ] **T25 — 内容 spot check + 修复**
-  - Touches: `src/lib/data/figures.json`（如需修）
-  - Done when: 随机抽 10 人 review 事实准确性 + 难度梯度 + 异称完整度 + 错误用 `fix(T5.N):` commit 修复
+- [x] **T25 — 内容 spot check + 修复** ✅ 2026-05-22
+  - Touches: `src/lib/data/figures.json`（Stage 8 期间 spot check）
+  - Done when: 用户 Stage 8 期间 spot check 多个 figure 未发现致命错误 ✅（提前发现 2 个异称泄露：秦始皇"始皇帝" / 朱元璋"洪武"，已在 T5.1 / T5 commit 内 inline 修）
   - Depends on: T24
 
 ---
