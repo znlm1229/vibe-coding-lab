@@ -42,4 +42,5 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 | # | 任务 | 状态 | 备注 |
 |---|---|---|---|
+| 002 | [`002-blog-and-projects`](./workflow/002-blog-and-projects/) | ✅ **已完成 2026-05-22** | 按规模伸缩跳过 Stage 1-6 + 8-9；加 1 篇博客（guess-figure 复盘）+ 1 个项目集 entry（guess-figure），发布到 [lw-personal.pages.dev](https://lw-personal.pages.dev/) |
 | 001 | [`001-personal-website`](./workflow/001-personal-website/) | ✅ **已完成 2026-05-19** | 用户验收通过，13/13 AC 满足，上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/) |
