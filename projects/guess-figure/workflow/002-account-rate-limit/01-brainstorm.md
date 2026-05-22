@@ -17,6 +17,10 @@
 - **账号"完全可选"**：匿名也能玩、能看题、能提交答案；登录只是为了存档、个人战绩、未来排行榜。**直接含义**：限流默认按 IP 起步，账号上线后可叠加 user 维度（已登录用户拿更高额度或专属池）。
 - 现状无任何用户态；题库在 git（`figures-batch*.json`）；前端是 SvelteKit 5 + adapter-cloudflare。
 - 用户群是**非技术休闲玩家**（中国历史人物猜谜），不是开发者社区——这条会偏置某些方向的可用性评分。
+- ⚠️ **限流的真实关切是 LLM 调用成本**（用户 Stage 1 反馈，2026-05-22）。现状 [`src/routes/api/check-answer/+server.ts`](../../src/routes/api/check-answer/+server.ts) 每次提交都打云雾中转 → gemini-3.1-flash-lite，**真金白银**；`/api/daily` 只读 JSON 不烧钱。**当前完全没有 server 端 LLM 结果缓存，也没有每日预算上限**——理论上挂脚本一夜可刷光预算。因此「限流」一节实际拆成两条**强相关但目标不同**的主线：
+  - **主线 1：入口防滥用**（防机器人 / 防 DDoS / 防爬题库）— 传统按 IP/路径/时窗限流
+  - **主线 2：LLM 调用成本控制**（核心是省钱，钱袋子兜底）— 缓存 + 全局预算 + 预筛 + 单点上限
+  - 二者不互斥，最终方案大概率组合使用。
 
 ---
 
@@ -56,30 +60,58 @@
 
 ## 方向 — 限流系统
 
-### P — Cloudflare Rate Limiting Rules（dashboard 配，无代码）
+> 用户 Stage 1 反馈：**限流的真实关切是 LLM 调用成本，不是普通 API 防爬虫**。因此分两条主线展示。两条主线**不互斥**，最终方案大概率是「主线 1 选一两个 + 主线 2 选一两个」组合。
+
+### 主线 1：入口防滥用（防机器人 / 防 DDoS / 防爬题库）
+
+#### P — Cloudflare Rate Limiting Rules（dashboard 配，无代码）
 
 - **核心思路**：在 Pages 项目的 Cloudflare dashboard 配 Rate Limiting Rules——按 IP × Path × 时窗自动 429。零代码、零部署。
 - **主要权衡**：边缘原生、零运维；但 Pages 免费 plan 的 rate limiting rule 数量有上限（需印证当前 2026 政策）、规则灵活度有限、**无法按 user 维度限流**（dashboard 不知 session）→ 账号上线后必须再叠加方向 Q/R。
 
-### Q — Workers KV 计数器（在 Functions 里手写）
+#### Q — Workers KV 计数器（在 Functions 里手写）
 
 - **核心思路**：每次 `/api/check-answer` / `/api/daily` 调用，按 `ratelimit:<ip-or-user>:<endpoint>:<window>` 在 KV 做 INCR，超阈值返 429。窗口实现可选 fixed window / sliding window log。
 - **主要权衡**：完全可控（按 IP / user / endpoint 灵活分桶）、易理解、与账号方案天然兼容（已登录则用 user，未登录用 IP）；但 **KV 是最终一致**——计数跨边缘有延迟，高并发下漏判；KV 写入有成本（每次请求 = 1 写）；50 人题库的小项目这点 cost 可忽略。
 
-### R — Durable Objects（强一致 token bucket / sliding window）
+#### R — Durable Objects（强一致 token bucket / sliding window）
 
 - **核心思路**：每个 IP / user 路由到唯一的 DO 实例做 token bucket 或精确 sliding window；DO 内的 storage 强一致，counter 不会有 race。
 - **主要权衡**：限流精确度最高、可做复杂策略（如逐 endpoint 多桶）；但 DO 有 invocation cost + 冷启动 + 实现复杂度——对 50 人题库 + 单人小项目是**过度工程**；DO storage 也按读写计费，长尾 IP 会撑出垃圾对象需 TTL 清理。
 
-### S — Cloudflare Turnstile（人机验证替代限流）
+#### S — Cloudflare Turnstile（人机验证替代限流）
 
 - **核心思路**：在 `/api/check-answer` 前要求合法 Turnstile token（前端透明渲染 → 提交时附带），server 校验通过才放行。理论上挡住机器人后限流压力下降。
 - **主要权衡**：防自动化滥用最强、用户体感几乎无感（Turnstile 大多 invisible challenge）；但**不是传统时窗限流**——单个人类用户疯狂手动点也能打爆配额，需要叠加 Q/R 才完整；Turnstile 也有调用成本与 CF 端配额。**与 P/Q/R 不互斥，是补强**。
 
-### T — Cloudflare WAF Custom Rules（域名级边缘规则）
+#### T — Cloudflare WAF Custom Rules（域名级边缘规则）
 
 - **核心思路**：在 Pages 自定义域名（V1 没自定义域名，是 `*.pages.dev` 子域）的 WAF 上配 custom rules，如"同 IP 30 秒内 > N 次 POST `/api/*` 拒绝"。
 - **主要权衡**：边缘拦截、SQL 注入 / 常见攻击规则一并享受；但 **WAF custom rules 主要在 Pro / Business plan 上**（免费 plan 仅 managed rules），且 `*.pages.dev` 子域受 CF 全局 WAF 管，自己加规则受限；任务 003-自定义域名之前优先级排不上。
+
+### 主线 2：LLM 调用成本控制（钱袋子兜底）
+
+> 现状回顾：`/api/check-answer` 是唯一 LLM 端点，调云雾中转 gemini-3.1-flash-lite；客户端有 `match-exact.ts` 前置精确匹配，**只在 exact match 失败时才调 LLM**——这是现有节流；但 server 端**无任何 LLM 结果缓存**，也**无每日预算上限**。主线 2 是在这个现状上再叠保险。
+
+#### U — 服务端 LLM 结果缓存（高复用降本）
+
+- **核心思路**：进入 LLM 前先查 KV `llm-cache:<figure_id>:<sha256(normalized_input)>`；命中直接返回缓存结果；未命中调 LLM 后写回缓存（TTL 30-90 天）。题库 50 人 × 常见猜测（含字号、错答、同名干扰），冷启动 1-2 周后命中率可期 60-80%。
+- **主要权衡**：节省 LLM 调用最直接（命中即省钱）、对 UX 无负面影响（命中反而更快）；但 KV 写有成本（远低于 LLM）、需考虑题库迭代时 cache invalidation（key 含 `figure_id` 自然按题隔离，安全）、`reason` 字段可能"看起来像 LLM 实时生成"实则缓存复读——可接受。
+
+#### V — 每日全局 LLM 预算 + 降级模式
+
+- **核心思路**：KV 存 `llm-quota:<UTC日期>` 计数器，每次 LLM 实际调用前 INCR；达到阈值（如 5000/天，对应钱袋子日限）后 `/api/check-answer` 进入"降级模式"——只走 exact match，模糊匹配一律返 `correct: false` + `reason: "今日服务繁忙，请明日再试"`。前端可在响应里检测降级标志，给出明显提示。
+- **主要权衡**：钱袋子最硬兜底（理论上花不超日上限）、可观测性强（每日触发与否一查 KV 即知）；但触发后**合法用户被误伤**（晚来的用户体验雪崩）、阈值定多少需估算单次成本 × 容忍消费；与 U（缓存）天然互补——U 降低分子，V 锁分母。
+
+#### W — Server 端预筛 blocklist（在调 LLM 前加一道服务端过滤）
+
+- **核心思路**：在 `/api/check-answer` 入口、调 LLM 之前，先跑一遍 server 维护的 normalized blocklist——纯单字（"亮"）、纯姓氏（"诸葛"）、纯空白、长度 > 20 字、明显乱码、特定字符比例异常等模式 → 直接返 `correct: false`，**不调 LLM**。等于把客户端 `match-exact.ts` 的精神延伸到 server，再加一层"明显不合理"的拒绝。
+- **主要权衡**：节省 LLM 调用、防止"输 1 个字符不停换"的低成本骚扰；但 blocklist 维护成本（边界 case：单字"操"是不是要拒？历史上有人确实叫一个字）、**可能误拒怪但合法的指代方式**（如生僻号），需配 allowlist 或人工兜底。
+
+#### X — 单 IP / 单 session 的 LLM 调用硬上限
+
+- **核心思路**：在主线 1 的 Q（KV 计数）基础上加一个**专门针对 LLM 端点**的更严桶——每 IP（或匿名 cookie ID / 登录 user）每日最多 N 次 LLM 调用（如 30 次），超出后**该用户**进入 W 描述的"仅 exact match"降级。与 V 的区别：V 是**全站日上限**，X 是**单点日上限**。
+- **主要权衡**：精确控制单点滥用成本上限、即使全站量不大也防"个体爆刷"；但合法重玩用户（一天玩 daily + 多次自由模式 + 多次猜错）可能被限、阈值 N 难定；实现上是 Q 的一种具体配置（按 LLM 端点 + 单点维度专门加桶），不是独立机制。
 
 ---
 
@@ -88,7 +120,8 @@
 不评胜者，但有一组「**最值得在 Stage 2 拷问到底**」的候选：
 
 - **账号侧的高频候选**：**B（Magic Link）** + **A（匿名持久 ID）**——B 是真账号的低摩擦版（最符合"完全可选"语境），A 可作 B 还没登录前的 fallback；两者可**并存**而非互斥。
-- **限流侧的高频候选**：**P（CF 原生 Rules，先开起来）** + **Q（KV 计数，给 API 层精细控制）**——P 是当下零代码兜底，Q 是为 user 维度（账号上线后）做准备。
+- **限流侧主线 1（入口防滥用）高频候选**：**P（CF 原生 Rules，先开起来）** + **Q（KV 计数，给 API 层精细控制）**——P 是当下零代码兜底，Q 是为 user 维度（账号上线后）做准备。
+- **限流侧主线 2（LLM 成本）高频候选**：**U（结果缓存）** + **V（日预算）** + **X（单点 LLM 上限）**——三者互补：U 降单次成本概率分布、V 锁全站日上限、X 锁单点日上限。W（server 预筛）作为常规优化可顺手加。
 
 **Stage 2 Grill Me 重点要拷问的开放问题（先列出来，由 `grill-me` skill 在下一阶段正式驱动）**：
 
@@ -98,8 +131,12 @@
 4. 限流**触发后的 UX**：429 直接弹错误？还是冷却倒计时？还是降级模式（只能看不能提交）？
 5. **session 存哪、TTL 多长**：cookie 直接放 signed token（无服务端 session 表）vs server 端 session 表（D1 / KV）—— 这影响登出、强制下线、跨设备会话管理。
 6. 账号与现有 **`game-state.svelte.ts`（客户端 reactive state）的接缝**：登录后状态怎么 reconcile？匿名期的进度上传策略？
-7. **PII 与隐私**：邮箱算 PII，CF 数据驻留地点 / 是否需要隐私声明 / 是否触发 GDPR（项目无 EU 地区屏蔽）？
-8. **限流"按 user"前的过渡**：账号上线第一天，老的匿名 IP-based 限流要不要立刻替换？还是叠加运行一段时间？切换风险？
+7. **LLM 缓存的命中率假设**：60-80% 是猜的；缓存 key 用 `normalized_input` 还是 `raw_input`？大小写 / 空格 / 标点 / 简繁如何 normalize？冷启动期（前 2 周）缓存基本不命中，期间 V/X 是不是更关键？
+8. **日 LLM 预算阈值如何定**：5000/天 是拍脑袋；要算云雾计费单价 × token 估算 × 日容忍消费；触发后的"降级模式"需要前端 UI 配合（提示文案 / 是否禁用提交按钮 / 是否可选邮件订阅"恢复通知"）。
+9. **V 与 X 的相互关系**：同时启用时如何排序？应该 X 先（单点抢光自己额度，不影响全站）还是 V 先（全站接近上限时整体降级）？
+10. **缓存 vs 题库迭代的冲突**：当 `figures-batch*.json` 增/改某个 figure 的 aliases 时，旧缓存条目（key 含 figure_id 但内容已变）会不会返"过时"裁判结果？需要按 figure 版本号清空？
+11. **PII 与隐私**：邮箱算 PII，CF 数据驻留地点 / 是否需要隐私声明 / 是否触发 GDPR（项目无 EU 地区屏蔽）？
+12. **限流"按 user"前的过渡**：账号上线第一天，老的匿名 IP-based 限流要不要立刻替换？还是叠加运行一段时间？切换风险？
 
 这些问题不要在本阶段回答——**Stage 2 由 `grill-me` skill 驱动**逐条拷问。
 
@@ -111,3 +148,4 @@
 - **调用方式**：通过 Skill 工具加载 `C:\Users\61780\.claude\skills\brainstorming` 的指令上下文，借用其"一次一个 clarifying 问题 + 多方向发散"框架。
 - **校准说明**：brainstorming skill 默认会驱动「发散 → design doc → 调用 writing-plans」端到端流程；与 vibe-coding-lab workflow-spec v1.2 的「Stage 1 仅发散，Stage 2 用 grill-me 拷问，Stage 4 才写 SPEC」冲突。本次只采用 skill 的发散框架，**不**写 design doc 到 `docs/superpowers/specs/`，**不**自动调用 writing-plans——这些动作由 workflow-spec 的后续阶段在自己的关卡处理。
 - **唯一 clarifying 问题**：账号强制度（完全可选 / 半强制 / 全强制 / 不确定）。用户答：**完全可选**——直接锁定限流默认按 IP，账号方案需支持匿名上手。
+- **Stage 1 内部一轮迭代**（2026-05-22）：初稿展示后用户反馈"限流主要针对接口调用，比如 LLM 调用可能被人无限调用"。据此追加查证 [`src/routes/api/check-answer/+server.ts`](../../src/routes/api/check-answer/+server.ts) 确认现状无 server LLM 缓存 / 无日预算上限，遂将限流方向从 5 个（P-T）扩到 9 个，新增主线 2「LLM 调用成本控制」: U（结果缓存）/ V（日预算）/ W（server 预筛）/ X（单点 LLM 上限）；Stage 2 待拷问开放问题从 8 条扩到 12 条（加入命中率假设、阈值定法、V/X 排序、缓存与题库迭代冲突等）。
