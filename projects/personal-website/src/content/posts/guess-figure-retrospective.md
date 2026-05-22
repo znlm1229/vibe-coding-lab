@@ -1,7 +1,7 @@
 ---
 title: "2 天做出公开上线的猜历史人物游戏 — 第二次跑九步工作流的复盘"
 description: "用 vibe-coding-lab 九步 AI 原生开发工作流 v1.2 端到端做出 guess-figure（猜历史人物 Web 游戏）。第二次跑工作流明显提速，但也暴露了 5 个新的失败模式 —— 给下一版 workflow-spec 的反馈。"
-pubDatetime: 2026-05-22T20:00:00+08:00
+pubDatetime: 2026-05-22T08:00:00+08:00
 author: "李旺"
 tags: ["vibe-coding", "workflow", "retrospective", "sveltekit", "llm", "cloudflare"]
 featured: true
