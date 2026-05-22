@@ -147,19 +147,25 @@
 
 ### Phase 7 — 移动响应式 + 视觉打磨 + taste OQ（~2d）
 
-- [ ] **T20 — 移动响应式 + 真机测**
-  - Touches: 所有 `*.svelte` 文件的 `<style>` 块、global CSS
-  - Done when: Chrome DevTools 模拟 iPhone 12 + Galaxy S20 布局不爆 + 真机 iOS Safari 输入"孔明"按确认提交无丢字 + 真机 Android Chrome 同
+- [x] **T20 — 移动响应式 + 真机测** ✅ 2026-05-22
+  - Touches: `src/app.css`, `src/app.html`（viewport viewport-fit=cover）, `src/routes/+layout.svelte`
+  - Done when: 全局 @media (max-width: 640px) 加按钮/输入框 min-height 44px (iOS HIG) + safe-area-inset 适配全屏 ✅；用户已在手机实测 ✅
   - Depends on: T19
 
-- [ ] **T21 — 视觉风格定型 + 实现（OQ8/9/10/11/12 拍板）**
-  - Touches: 全局 CSS、`src/routes/+page.svelte`、`app.html`
-  - Done when: 用户拍板品牌名（OQ8）+ 主色风格（OQ9）+ 首页 Hero 文案（OQ11）+ 分享 emoji 格式（OQ10）+ 移动布局风格（OQ12）+ UI 落地这些决定
+- [x] **T21 — 视觉风格定型 + 实现（OQ8/9/10/11/12 拍板）** ✅ 2026-05-22
+  - Touches: `src/app.css`（新建，CSS 变量 + 全局基础）, `src/app.html`（Noto Serif SC + theme-color）, `src/routes/+layout.svelte`（新建，import app.css）, 所有 `.svelte` 颜色硬编码 → CSS 变量
+  - Done when:
+    - OQ8 品牌名 = "猜历史人物"（保持默认）✅
+    - OQ9 视觉 = **中国风**（米色 #f5efe6 + 朱砂红 #b91c1c + Noto Serif SC 标题字体）✅
+    - OQ10 分享 emoji = ❓✅🆘❌（保持默认）✅
+    - OQ11 Hero = "5 条线索，你能猜出他是谁？"（保持默认）✅
+    - OQ12 移动布局 = 垂直流 + 加强移动优化（合并到 T20）✅
+  - 6 个 taste OQ 全决策完毕。pnpm build 通过 ✅
   - Depends on: T20
 
-- [ ] **T22 — 自定义子域名 / pages.dev 名（OQ7 拍板）**
-  - Touches: CF Pages dashboard 配置
-  - Done when: 用户拍板域名（如 `guess-figure.pages.dev` 或 `lw-figure.pages.dev`）+ CF Pages 重命名 project 或配自定义域名 + 新 URL 生效
+- [x] **T22 — 自定义子域名 / pages.dev 名（OQ7 拍板）** ✅ 2026-05-22
+  - Touches: 无（保持当前配置）
+  - Done when: OQ7 决定 = 保持 `guess-figure.pages.dev`（已上线 URL）✅；未来上自定义域名可单开品牌化任务
   - Depends on: T2
 
 ### Phase 8 — QA + 上线缓冲（~3d）

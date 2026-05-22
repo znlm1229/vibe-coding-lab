@@ -68,7 +68,7 @@
     padding: 2rem;
     font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
     line-height: 1.7;
-    color: #1f2937;
+    color: var(--color-text);
   }
   header h1 {
     font-size: 2.2rem;
@@ -77,7 +77,7 @@
   }
   .tagline {
     text-align: center;
-    color: #6b7280;
+    color: var(--color-text-soft);
     margin: 0.5rem 0 2.5rem;
     font-size: 1.05rem;
   }
@@ -89,15 +89,15 @@
   .entry {
     display: block;
     padding: 1.5rem;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--color-bg-card);
+    border: 2px solid var(--color-border-soft);
     border-radius: 10px;
     text-decoration: none;
     color: inherit;
     transition: all 0.15s;
   }
   .entry:hover {
-    border-color: #2563eb;
+    border-color: var(--color-primary);
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
     transform: translateY(-1px);
   }
@@ -107,24 +107,24 @@
   }
   .entry p {
     margin: 0;
-    color: #6b7280;
+    color: var(--color-text-soft);
     font-size: 0.95rem;
   }
   .entry-play:hover {
-    border-color: #2563eb;
+    border-color: var(--color-primary);
   }
   .entry-daily:hover {
-    border-color: #10b981;
+    border-color: var(--color-success-border);
   }
   .entry-daily strong {
-    color: #065f46;
+    color: var(--color-success);
   }
   footer {
     text-align: center;
-    color: #9ca3af;
+    color: var(--color-text-soft);
     margin-top: 3rem;
   }
   footer a {
-    color: #6b7280;
+    color: var(--color-text-soft);
   }
 </style>

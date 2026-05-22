@@ -56,7 +56,7 @@
   }
   button {
     padding: 0.6rem 1.3rem;
-    background: #2563eb;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 4px;
@@ -64,17 +64,17 @@
     font-size: 0.95rem;
   }
   button:hover {
-    background: #1d4ed8;
+    background: var(--color-primary-dark);
   }
   details {
     margin-top: 0.6rem;
     font-size: 0.85rem;
-    color: #6b7280;
+    color: var(--color-text-soft);
   }
   pre {
     margin: 0.4rem 0 0;
     padding: 0.6rem;
-    background: #f3f4f6;
+    background: var(--color-bg-card);
     border-radius: 4px;
     white-space: pre-wrap;
     font-family: ui-monospace, monospace;

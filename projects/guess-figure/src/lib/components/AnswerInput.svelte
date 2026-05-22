@@ -77,29 +77,29 @@
     flex: 1;
     padding: 0.65rem 0.85rem;
     font-size: 1rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
     font-family: inherit;
   }
   input:focus {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--color-primary);
     outline-offset: -1px;
   }
   input:disabled {
-    background: #f3f4f6;
+    background: var(--color-bg-card);
     cursor: not-allowed;
   }
   button {
     padding: 0.65rem 1.25rem;
     font-size: 0.95rem;
-    background: #2563eb;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
   }
   button:disabled {
-    background: #cbd5e1;
+    background: var(--color-border);
     cursor: not-allowed;
   }
 </style>

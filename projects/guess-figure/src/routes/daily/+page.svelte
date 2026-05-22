@@ -238,20 +238,20 @@
     padding: 1.5rem;
     font-family: system-ui, -apple-system, "Microsoft YaHei", sans-serif;
     line-height: 1.7;
-    color: #1f2937;
+    color: var(--color-text);
   }
   header h1 {
     font-size: 1.6rem;
     margin: 0;
   }
   .subtitle {
-    color: #6b7280;
+    color: var(--color-text-soft);
     margin: 0.3rem 0 1.5rem;
     font-size: 0.95rem;
   }
   .badge-replay {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
     padding: 0.1rem 0.5rem;
     border-radius: 3px;
     font-size: 0.85em;
@@ -260,14 +260,14 @@
   .error {
     text-align: center;
     padding: 2rem;
-    color: #6b7280;
+    color: var(--color-text-soft);
   }
   .error {
-    color: #991b1b;
+    color: var(--color-error);
   }
   .already-played {
-    background: #ecfdf5;
-    border: 1px solid #10b981;
+    background: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
     padding: 1.5rem;
     border-radius: 8px;
     text-align: center;
@@ -278,10 +278,10 @@
   }
   .already-played strong {
     font-size: 2rem;
-    color: #1f2937;
+    color: var(--color-text);
   }
   .hint {
-    color: #6b7280;
+    color: var(--color-text-soft);
     font-size: 0.9rem;
   }
   .meta {
@@ -289,13 +289,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.6rem 0.9rem;
-    background: #f9fafb;
+    background: var(--color-bg-card);
     border-radius: 6px;
     font-size: 0.9rem;
     margin-bottom: 1.5rem;
   }
   .meta strong {
-    color: #2563eb;
+    color: var(--color-primary);
   }
   .clues {
     display: flex;
@@ -305,20 +305,20 @@
   }
   .clue {
     padding: 0.85rem 1rem;
-    background: #fff;
-    border-left: 4px solid #e5e7eb;
+    background: var(--color-bg-card);
+    border-left: 4px solid var(--color-border-soft);
     border-radius: 4px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
   .clue-d6,
   .clue-d7 {
-    border-left-color: #fbbf24;
-    background: #fffbeb;
+    border-left-color: var(--color-accent);
+    background: var(--color-warning-bg);
   }
   .badge {
     display: inline-block;
-    background: #eef;
-    color: #4338ca;
+    background: var(--color-bg-card);
+    color: var(--color-primary);
     padding: 0.1rem 0.5rem;
     border-radius: 3px;
     font-size: 0.75rem;
@@ -334,24 +334,24 @@
     font-size: 0.92rem;
   }
   .result-ok {
-    background: #ecfdf5;
-    border-left: 3px solid #10b981;
-    color: #065f46;
+    background: var(--color-success-bg);
+    border-left: 3px solid var(--color-success-border);
+    color: var(--color-success);
   }
   .result-no {
-    background: #fef2f2;
-    border-left: 3px solid #ef4444;
-    color: #991b1b;
+    background: var(--color-error-bg);
+    border-left: 3px solid var(--color-error-border);
+    color: var(--color-error);
   }
   .result-err {
-    background: #fefce8;
-    border-left: 3px solid #eab308;
-    color: #854d0e;
+    background: var(--color-warning-bg);
+    border-left: 3px solid var(--color-warning-border);
+    color: var(--color-warning);
   }
   .result-checking {
-    background: #eff6ff;
-    border-left: 3px solid #3b82f6;
-    color: #1e40af;
+    background: var(--color-info-bg);
+    border-left: 3px solid var(--color-primary);
+    color: var(--color-primary);
   }
   .actions {
     display: flex;
@@ -365,14 +365,14 @@
   }
   .btn-secondary {
     padding: 0.55rem 1.1rem;
-    background: #2563eb;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 4px;
   }
   .btn-rescue {
     padding: 0.55rem 1.1rem;
-    background: #f59e0b;
+    background: var(--color-accent);
     color: white;
     border: none;
     border-radius: 4px;
@@ -380,16 +380,16 @@
   .btn-link {
     padding: 0.5rem 0.8rem;
     background: none;
-    color: #6b7280;
-    border: 1px solid #d1d5db;
+    color: var(--color-text-soft);
+    border: 1px solid var(--color-border);
     border-radius: 4px;
   }
   .exhausted {
-    color: #6b7280;
+    color: var(--color-text-soft);
     margin: 0;
     font-size: 0.9rem;
   }
   a {
-    color: #2563eb;
+    color: var(--color-primary);
   }
 </style>

@@ -1,0 +1,96 @@
+/* 全局 CSS — 中国风视觉系统（OQ9）+ 移动优化（OQ12）*/
+
+:root {
+  /* 色板 — 中国风 */
+  --color-bg: #f5efe6;            /* 米色背景 */
+  --color-bg-card: #fbf7f0;        /* 卡片更亮米色 */
+  --color-text: #2a1a10;           /* 深褐 */
+  --color-text-soft: #6d5a4a;     /* 柔褐 */
+  --color-primary: #b91c1c;        /* 朱砂红 */
+  --color-primary-dark: #7f1010;
+  --color-accent: #b88a4a;         /* 古金 */
+  --color-border: #d6c4a8;        /* 米黄边 */
+  --color-border-soft: #e8dec9;
+  --color-success: #3d6b48;
+  --color-success-bg: #dde9d8;
+  --color-success-border: #80a08b;
+  --color-error: #8b2929;
+  --color-error-bg: #f4dad3;
+  --color-error-border: #b95a4a;
+  --color-warning: #92591a;
+  --color-warning-bg: #faecd3;
+  --color-warning-border: #d4a64a;
+  --color-info: #3a5772;
+  --color-info-bg: #dde6ef;
+
+  /* 字体 */
+  --font-display: "Noto Serif SC", "Source Han Serif SC", "STSong", "SimSun", serif;
+  --font-body: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+
+  /* 尺寸 */
+  --radius: 4px;
+  --radius-lg: 8px;
+  --min-touch-target: 44px;        /* iOS HIG 推荐最小点击区 */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--color-text);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  -webkit-appearance: none;
+  border-radius: var(--radius);
+}
+
+/* 移动优化 (OQ12) */
+@media (max-width: 640px) {
+  html,
+  body {
+    font-size: 15px;
+  }
+
+  /* 按钮 / 输入框最小高度，符合 iOS HIG */
+  button,
+  input[type="text"] {
+    min-height: var(--min-touch-target);
+  }
+
+  /* 让主内容贴近底部 safe area */
+  main {
+    padding-bottom: calc(1rem + var(--safe-bottom)) !important;
+  }
+}

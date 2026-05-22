@@ -49,12 +49,12 @@
     margin: 1.5rem 0;
   }
   .reveal.won {
-    background: linear-gradient(to bottom, #ecfdf5, #d1fae5);
-    border: 1px solid #10b981;
+    background: linear-gradient(to bottom, var(--color-success-bg), var(--color-success-bg));
+    border: 1px solid var(--color-success-border);
   }
   .reveal.lost {
-    background: linear-gradient(to bottom, #fef2f2, #fee2e2);
-    border: 1px solid #ef4444;
+    background: linear-gradient(to bottom, var(--color-error-bg), var(--color-error-bg));
+    border: 1px solid var(--color-error-border);
   }
   h2 {
     margin: 0 0 0.8rem;
@@ -66,14 +66,14 @@
   }
   .score strong {
     font-size: 1.5rem;
-    color: #1f2937;
+    color: var(--color-text);
   }
   .score small {
-    color: #6b7280;
+    color: var(--color-text-soft);
     font-weight: normal;
   }
   .answer {
-    background: white;
+    background: var(--color-bg-card);
     padding: 1rem 1.2rem;
     border-radius: 6px;
     margin-bottom: 1.2rem;
@@ -82,10 +82,10 @@
     font-size: 1.6rem;
     font-weight: 600;
     margin: 0 0 0.5rem;
-    color: #1f2937;
+    color: var(--color-text);
   }
   .aliases {
-    color: #6b7280;
+    color: var(--color-text-soft);
     font-size: 0.9rem;
     margin: 0 0 0.6rem;
   }
@@ -93,7 +93,7 @@
     margin: 0;
   }
   .link a {
-    color: #2563eb;
+    color: var(--color-primary);
     text-decoration: none;
     font-size: 0.95rem;
   }
@@ -102,7 +102,7 @@
   }
   .btn-retry {
     padding: 0.65rem 1.4rem;
-    background: #2563eb;
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 4px;
