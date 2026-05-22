@@ -60,10 +60,11 @@
 
 ### Phase 3 — 核心游戏组件（~3d）
 
-- [ ] **T6 — 路由 /play + 线索状态机**
-  - Touches: `src/routes/play/+page.svelte`, `src/lib/game-state.svelte.ts`（runes state）
-  - Done when: 访问 `/play` 看到随机抽中的人物的第 1 条线索 + 点"再来一条"显示下一条 + 5 条全展示完后按钮 disabled
-  - Depends on: T1, T5（最少 1 人题库测试，5 人 fixture 更好）
+- [x] **T6 — 路由 /play + 线索状态机** ✅ 2026-05-22
+  - Touches: `src/routes/play/+page.svelte`, `src/lib/game-state.svelte.ts`（runes state）, `src/lib/types.ts`
+  - Done when: 访问 `/play` 看到随机抽中的人物的第 1 条线索 + 点"再来一条"显示下一条 + 5 条全展示完后按钮 disabled（变成"求救"按钮）✅
+  - `pnpm build` 通过 ✅；线上 https://guess-figure.pages.dev/play CF Pages auto deploy 后可访问
+  - Depends on: T1, T5
 
 - [ ] **T7 — 输入框 + 中文 IME 处理**
   - Touches: `src/lib/components/AnswerInput.svelte`, `src/routes/play/+page.svelte`
