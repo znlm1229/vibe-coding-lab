@@ -12,8 +12,10 @@ import type { Figure } from "$lib/types";
 import type { RequestHandler } from "./$types";
 
 // V1 上线锚定日（用作 day index 计算）。
-// 选定：2026-05-22（V1 上线那天）。dayIndex=0 = 第 1 个题（按 figures.json 入库顺序）。
-const LAUNCH_DATE_UTC = "2026-05-22"; // 必须是 UTC 日字符串
+// 选定：2026-05-21 = V1 题库 50 人全量入库 + 上线测试当日的北京 0:00 = UTC 2026-05-21 00:00。
+// dayIndex=0 → figures[0]（按 id 字符串排序后首位）= V1 上线日的题。
+// 注意：每日切换发生在 UTC 16:00 = 北京次日 00:00，所以 UTC 16:00 前 dailyDate 回退一天。
+const LAUNCH_DATE_UTC = "2026-05-21"; // 必须是 UTC 日字符串
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
