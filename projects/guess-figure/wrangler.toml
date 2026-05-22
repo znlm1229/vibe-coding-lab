@@ -1,0 +1,40 @@
+# wrangler.toml — Cloudflare Pages 项目配置 (任务 002-account-rate-limit T1+T2)
+#
+# 用途:
+#   - `wrangler d1 migrations apply` 命令需要 D1 binding 配置
+#   - `wrangler pages dev` local 跑 SvelteKit + Pages Functions 时载入 bindings
+#   - 作为 SPEC v1.0 C5 (D1 schema) + C6 (P 规则集) 之外的 binding source of truth
+#
+# 注意: production 部署仍由 CF Pages dashboard 触发 (git push → auto deploy)。
+# database_id / kv namespace id 在 2026-05-22 由 user 跑 wrangler create 后回填。
+#
+# T17 (Phase 7) 时在 CF Pages dashboard 也需独立配相同 bindings, 让 production runtime 看得到。
+
+name = "guess-figure"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+# ====================================================================
+# D1 — users + games 表 (T1)
+# ====================================================================
+[[d1_databases]]
+binding         = "GF_DB"
+database_name   = "guess-figure-db"
+database_id     = "076b1fb2-a238-4190-8d61-3c5010af2c5b"
+migrations_dir  = "migrations"
+
+# ====================================================================
+# KV — 限流计数器 (T2)
+# TTL 26h 自动过期 (跨 UTC 0:00 留 buffer)
+# ====================================================================
+[[kv_namespaces]]
+binding = "GF_RATELIMIT"
+id      = "797aa9b778dd4a69a970e6befb4ae6b1"
+
+# ====================================================================
+# KV — LLM 结果缓存 (T2)
+# TTL 30 天 (SPEC G3)
+# ====================================================================
+[[kv_namespaces]]
+binding = "GF_LLM_CACHE"
+id      = "c7d92348d3ea4c1aae42d2804c7e13e4"
