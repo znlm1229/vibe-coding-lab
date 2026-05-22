@@ -259,13 +259,11 @@ def name_to_id(name: str) -> str:
     return name.strip().replace(" ", "-").lower()
 
 
-def process_one(name: str, model: str, max_retries: int, log: logging.Logger):
-    """单人物完整流程。返回 figure dict 或 None（skip）。"""
-    log.info(f"━━━ 处理：{name} ━━━")
-
+def _process_one_attempt(name: str, model: str, max_retries: int, log: logging.Logger):
+    """单次尝试：fetch + LLM + parse。任何步骤抛异常往上传。"""
     material, qid = fetch_material(name, log)
     if not material:
-        return None
+        return None  # 维基/Wikidata 真没条目，不重试
 
     prompt = PROMPT_TEMPLATE.format(material=material, name=name)
     llm_result = call_llm_with_retry(model, prompt, max_retries, log)
@@ -273,8 +271,10 @@ def process_one(name: str, model: str, max_retries: int, log: logging.Logger):
     try:
         figure = parse_figure_json(llm_result["content"])
     except json.JSONDecodeError as e:
-        log.error(f"  ❌ JSON 解析失败: {e}\n  raw content 前 500 字: {llm_result['content'][:500]}")
-        raise
+        # 加 raw content 信息便于上层 log
+        raise RuntimeError(
+            f"JSON 解析失败: {e}; raw content 前 300 字: {llm_result['content'][:300]}"
+        ) from e
 
     # 补 V1 schema 必备字段
     figure["id"] = name_to_id(figure.get("name", name))
@@ -286,11 +286,36 @@ def process_one(name: str, model: str, max_retries: int, log: logging.Logger):
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "usage": llm_result["usage"],
     }
-
-    aliases = figure.get("aliases", [])
-    clues = figure.get("clues", [])
-    log.info(f"  ✅ {name} 完成（aliases {len(aliases)} 个，clues {len(clues)} 条）")
     return figure
+
+
+def process_one(name: str, model: str, max_retries: int, log: logging.Logger):
+    """单人物完整流程（带整体 retry）。
+
+    覆盖三类失败：
+    - Wikidata 429 Too Many Requests（cool down 重试）
+    - LLM 返回 JSON 格式不规则（重新调拿新输出）
+    - 网络间歇错误
+    """
+    log.info(f"━━━ 处理：{name} ━━━")
+    last_err = None
+    for attempt in range(max_retries + 1):
+        if attempt > 0:
+            wait_s = 5 * attempt  # 5s, 10s, 15s 递增，cool down 429
+            log.warning(f"  ↻ process_one 整体重试 {attempt}/{max_retries}（等 {wait_s}s）")
+            time.sleep(wait_s)
+        try:
+            figure = _process_one_attempt(name, model, max_retries, log)
+            if figure is None:
+                return None  # skip（维基无条目）
+            aliases = figure.get("aliases", [])
+            clues = figure.get("clues", [])
+            log.info(f"  ✅ {name} 完成（aliases {len(aliases)} 个，clues {len(clues)} 条）")
+            return figure
+        except Exception as e:
+            last_err = f"{type(e).__name__}: {str(e)[:200]}"
+            log.error(f"  ❌ 尝试 {attempt + 1}/{max_retries + 1} 失败: {last_err}")
+    raise RuntimeError(f"重试 {max_retries + 1} 次后仍失败: {last_err}")
 
 
 def main():

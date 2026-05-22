@@ -50,11 +50,13 @@
   - 退出码：0 全通 / 1 文件错误 / 2 不合规 + --strict
   - Depends on: T3
 
-- [ ] **T5 — 50 人题库批量生产 + 审核 + 入库（5 批 × 10 人）**
-  - Touches: `src/lib/data/figures.json`
-  - Done when: `jq 'length' src/lib/data/figures.json` ≥ 50 + 50 人按 SPEC OQ2 准则覆盖朝代+类型+知名度 + `python scripts/quality_check.py` 全部通过
+- [x] **T5 — 50 人题库批量生产 + 审核 + 入库** ✅ 2026-05-22
+  - Touches: `src/lib/data/figures.json`, `scripts/generate_figures.py`（加 process_one 整体 retry）
+  - Done when: `jq 'length' src/lib/data/figures.json` = 50 + 50 人按 SPEC OQ2 准则覆盖朝代+类型+知名度 + `python scripts/quality_check.py --strict` 50/50 全过 ✅
+  - **执行方式**：T5.1 串行 10 人（先秦+汉）；T5.2 并发 4 batch（三国+晋/唐/宋+元/明清+近代）→ Wikidata 429 + JSON 截断 28 人失败 → 串行 retry → 14/15 → 杨贵妃 fill 1 人 = 50/50
+  - 关键改进：generate_figures.py 加 process_one 整体 retry（cover 429 / JSON 格式错误 / 网络间歇），max_retries=3 + sleep 5/10/15s
+  - 失败 1 人：安禄山（4 retry 仍 JSON 格式错误，用杨贵妃唐代补位）
   - Depends on: T3, T4
-  - 子里程碑：每批 10 人单独 commit `task-T5.N: 题库 +10 人物（朝代 X）`
 
 ### Phase 3 — 核心游戏组件（~3d）
 
