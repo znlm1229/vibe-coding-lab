@@ -28,9 +28,10 @@
   - Done when: `pnpm install && pnpm build` 全部通过 + `pnpm dev` 本地访问 http://localhost:5173 看到占位首页 ✅
   - Depends on: nothing
 
-- [ ] **T2 — CF Pages production project 创建 + 第一次 deploy**
-  - Touches: CF Pages dashboard（创建 project `guess-figure` 或 `guess-figure-proto-prod`）+ env vars 配置 + Root directory = `projects/guess-figure`
-  - Done when: `git push` 触发 CF Pages auto deploy，部署成功 + 访问生产 URL 看到占位首页 + 后续 push 能正确触发新 deploy
+- [x] **T2 — CF Pages production project 创建 + 第一次 deploy** ✅ 2026-05-21
+  - Touches: CF Pages dashboard（创建 project `guess-figure`）+ env vars 配置 + Root directory = `projects/guess-figure`
+  - Done when: `git push` 触发 CF Pages auto deploy，部署成功 + 访问生产 URL 看到占位首页 + 后续 push 能正确触发新 deploy ✅
+  - **上线 URL**：https://guess-figure.pages.dev
   - Depends on: T1
 
 ### Phase 2 — 内容 pipeline + 50 人题库（~3d）
