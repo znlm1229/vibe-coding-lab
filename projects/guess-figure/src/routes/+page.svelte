@@ -51,14 +51,6 @@
     </a>
   </section>
 
-  <footer>
-    <p>
-      <small>
-        V1 题库 50 中国史人物 ·
-        <a href="https://github.com/znlm1229/vibe-coding-lab" target="_blank" rel="noopener">源码 / 工作流</a>
-      </small>
-    </p>
-  </footer>
 </main>
 
 <style>
@@ -118,13 +110,5 @@
   }
   .entry-daily strong {
     color: var(--color-success);
-  }
-  footer {
-    text-align: center;
-    color: var(--color-text-soft);
-    margin-top: 3rem;
-  }
-  footer a {
-    color: var(--color-text-soft);
   }
 </style>
