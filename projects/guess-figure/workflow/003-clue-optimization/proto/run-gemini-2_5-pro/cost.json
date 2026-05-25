@@ -1,0 +1,63 @@
+{
+  "figure": "诸葛亮",
+  "strong_model": "gemini-2.5-pro",
+  "flash_model": "gemini-3.1-flash-lite",
+  "wikisource": "三國志/卷35",
+  "calls": [
+    {
+      "step": "profile",
+      "model": "gemini-2.5-pro",
+      "usage": {
+        "prompt_tokens": 10128,
+        "completion_tokens": 3997,
+        "total_tokens": 14125,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 10128,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 3997
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 35.13,
+      "finish_reason": "length"
+    },
+    {
+      "step": "clue",
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "model": "gemini-3.1-flash-lite",
+      "usage": {
+        "prompt_tokens": 681,
+        "completion_tokens": 21,
+        "total_tokens": 702,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 681,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 2.07
+    }
+  ],
+  "material_chars": 10314
+}

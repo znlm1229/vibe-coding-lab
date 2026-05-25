@@ -1,0 +1,92 @@
+{
+  "figure": "诸葛亮",
+  "strong_model": "claude-haiku-4-5-20251001",
+  "flash_model": "gemini-3.1-flash-lite",
+  "wikisource": "三國志/卷35",
+  "calls": [
+    {
+      "step": "profile",
+      "model": "claude-haiku-4-5-20251001",
+      "usage": {
+        "prompt_tokens": 13887,
+        "completion_tokens": 2302,
+        "total_tokens": 16189,
+        "usage_semantic": "openai",
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 13887,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 30.66,
+      "finish_reason": "stop"
+    },
+    {
+      "step": "clue",
+      "model": "gemini-3.1-flash-lite",
+      "usage": {
+        "prompt_tokens": 2363,
+        "completion_tokens": 503,
+        "total_tokens": 2866,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 2363,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 4.61,
+      "finish_reason": "stop"
+    },
+    {
+      "step": "judge",
+      "model": "gemini-3.1-flash-lite",
+      "usage": {
+        "prompt_tokens": 953,
+        "completion_tokens": 355,
+        "total_tokens": 1308,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 953,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 3.26,
+      "finish_reason": "stop"
+    }
+  ],
+  "material_chars": 10314,
+  "total_latency_s": 51.77
+}

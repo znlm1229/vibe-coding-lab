@@ -1,0 +1,78 @@
+{
+  "figure": "诸葛亮",
+  "strong_model": "deepseek-v3.2",
+  "flash_model": "gemini-3.1-flash-lite",
+  "wikisource": "三國志/卷35",
+  "calls": [
+    {
+      "step": "profile",
+      "model": "deepseek-v3.2",
+      "usage": {
+        "prompt_tokens": 9511,
+        "completion_tokens": 1141,
+        "total_tokens": 10652,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "latency_s": 37.77,
+      "finish_reason": "stop"
+    },
+    {
+      "step": "clue",
+      "model": "gemini-3.1-flash-lite",
+      "usage": {
+        "prompt_tokens": 1981,
+        "completion_tokens": 479,
+        "total_tokens": 2460,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 1981,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 4.24,
+      "finish_reason": "stop"
+    },
+    {
+      "step": "judge",
+      "model": "gemini-3.1-flash-lite",
+      "usage": {
+        "prompt_tokens": 906,
+        "completion_tokens": 422,
+        "total_tokens": 1328,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "text_tokens": 906,
+          "audio_tokens": 0,
+          "image_tokens": 0
+        },
+        "completion_tokens_details": {
+          "text_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0
+        },
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "input_tokens_details": null,
+        "claude_cache_creation_5_m_tokens": 0,
+        "claude_cache_creation_1_h_tokens": 0
+      },
+      "latency_s": 3.4,
+      "finish_reason": "stop"
+    }
+  ],
+  "material_chars": 10314,
+  "total_latency_s": 51.23
+}
