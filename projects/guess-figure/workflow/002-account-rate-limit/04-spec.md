@@ -11,7 +11,7 @@
 
 # SPEC: 002 账号系统 + 双层限流 + LLM 成本兜底
 
-**版本**：v1.0（2026-05-22）
+**版本**：v1.0.1（2026-05-25；命名层 patch — AC5/C6 修订，server 行为不变）
 **任务**：[`projects/guess-figure/workflow/002-account-rate-limit/`](.)
 **依赖产出**：Stage 1 [01-brainstorm.md](./01-brainstorm.md)、Stage 2 [02-grill-me.md](./02-grill-me.md)、Stage 3 [03-prototype.md](./03-prototype.md)
 
@@ -185,14 +185,16 @@
 
 ### C6. P 规则集文档化（CF dashboard 不入 git，SPEC 是 source of truth）
 
-dashboard 配置：
+dashboard 配置（**v1.0.1 修订**：发现 CF Pages **free plan 不支持** dashboard Rate Limiting Rules — 仅 Workers Paid / Pro 及以上支持。本任务保留 Q 计数器（src/lib/server/rate-limit.ts）作为限流主路径，P 待 Pages 计划升级或自定义域名 + Cloudflare 域名级 WAF 后启用）：
 
-| 规则 | 条件 | 动作 |
-|---|---|---|
-| Rule 1: 极端攻击拦截 | 同 IP 60 秒内对 `/api/check-answer` POST > 60 次 | 阻断 5 分钟，返 429 |
-| Rule 2: 探测扫描拦截 | 同 IP 60 秒内对 `/api/*` 任意 endpoint > 200 次 | 阻断 5 分钟，返 429 |
+| 规则 | 条件 | 动作 | 状态 |
+|---|---|---|---|
+| Rule 1: 极端攻击拦截 | 同 IP 60 秒内对 `/api/check-answer` POST > 60 次 | 阻断 5 分钟，返 429 | **🟡 free plan 不支持，待升级**；Q 计数器（RATE_LIMIT_PER_IP_DAILY=200/天）已部分等效覆盖 |
+| Rule 2: 探测扫描拦截 | 同 IP 60 秒内对 `/api/*` 任意 endpoint > 200 次 | 阻断 5 分钟，返 429 | **🟡 同 Rule 1**；Q 计数器（RATE_LIMIT_PER_IP_DAILY）已覆盖 daily 维度 |
 
-部署后由 Stage 8 人工到 dashboard 一次性配置；变更必须同步本 SPEC。
+**等效性说明**：Q 计数器是按日窗口（24h），P 规则是按 60 秒窗口；颗粒度差异 = P 在突发流量下更快拦截。在 free plan 限制下 Q 是 best-effort 替代，不是完美等效。Stage 7 已实测 RATE_LIMIT_PER_IP_DAILY=200 触发 HTTP 429（连续多次 verify_ac.sh 累计 IP 请求达 200 后），证明 Q 真实生效。
+
+部署后由 Stage 8 人工记录 plan 状态到 `deployment-notes.md`；如未来升级到 Workers Paid 或加自定义域名时，启用 P 并同步本 SPEC（升级到 v1.0.2）。
 
 ### C7. AC 双通道
 
@@ -240,7 +242,7 @@ dashboard 配置：
 
 | # | 验收标准 | AI 验证 | 人工验证 |
 |---|---|---|---|
-| AC5 | 同 IP 60 秒内 POST `/api/check-answer` > 60 次被 CF Rate Limiting Rules 阻断返 429 | 脚本 `for i in $(seq 1 70); do curl -X POST /api/check-answer ...; done`；最后几次 HTTP 429 | dashboard → Security → Rate Limiting → 见 Rule 1 触发次数 > 0 |
+| AC5 | **(v1.0.1)** Q 计数器（KV）按 IP 日上限触发 429 限流 — RATE_LIMIT_PER_IP_DAILY=200/天 达到后阻断后续请求。原 SPEC 设想的 dashboard P 规则（60s 窗口）已确认 CF Pages free plan 不支持，等效性由 Q 在 daily 维度部分覆盖（C6 已注） | Stage 7 实测：连续多次 verify_ac.sh 累计 IP 请求 > 200 后，下一次 POST `/api/check-answer` 返 HTTP 429（无 cookie 测试中显式观察到） | 待 P 规则启用时（plan 升级 / 自定义域名+WAF）由 Stage 8 dashboard 复验 |
 | AC6 | 单 user 日 LLM 真实调用次数达 `LLM_BUDGET_PER_USER`（默认 50）后，该 user 该日后续 `/api/check-answer` 返 `{degraded: true}` 且**不调 LLM**（云雾余额不再减少） | 测试 env vars `LLM_BUDGET_PER_USER=2`；用同一 cookie 连发 3 次非 exact match 输入；第 3 次响应含 `degraded: true` | 测试 env 下用浏览器连提交 3 次"诸葛丞相"（aliases 不含丞相）；第 3 次见"额度已用完"提示 |
 | AC7 | 全站日 LLM 调用达 `LLM_BUDGET_DAILY` 后，所有 user 后续调用均降级 | 测试 env vars `LLM_BUDGET_DAILY=2`；两个不同 cookie 各发一次；第三次任意 cookie 调用 → `degraded: true` | 测试 env 下两个隐身窗口各做一次，第三次任一窗口提交都见"额度已用完" |
 | AC8 | LLM 网络/超时失败（10s ReadTimeout）响应含 `network_error: true`、`correct: false`，**前端不消耗线索** | mock 云雾 502 或 superficial dev tool 阻断 yunwu.ai → 提交一次 → 响应含 `network_error: true` | 浏览器 DevTools Network → Throttle → Offline；提交"老丞相"；前端见"AI 响应异常"+ 线索数不变 |
@@ -292,3 +294,4 @@ dashboard 配置：
 | 版本 | 日期 | 触发 | 变更 |
 |---|---|---|---|
 | v1.0 | 2026-05-22 | 初版（Stage 4） | Stage 1-3 锁定的全部决策 + Stage 3 实测数据回填阈值 |
+| v1.0.1 | 2026-05-25 | Stage 7 收尾 / T20 verification-before-completion 发现 | C6 + AC5 修订：CF Pages free plan 不支持 dashboard Rate Limiting Rules（属外部基础设施限制，非 SPEC 漂移）。验证路径转移到 Workers KV 计数器（Q），daily 维度部分覆盖；待 plan 升级 / 自定义域名 + WAF 时启用 P。命名层 patch，server 行为不变，不触发 re-confirm。用户 2026-05-25 通过 chat 明示"free plan 真不支持 可以容忍"接受 |

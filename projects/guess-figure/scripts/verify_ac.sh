@@ -70,8 +70,12 @@ skip AC4 "secret-missing 500 (production must have it; verify in wrangler local)
 
 # ---------- AC group B: rate limit / budget ----------
 
-if [ "${SKIP_AC5:-0}" = "1" ]; then
-  skip AC5 "SKIP_AC5=1 set (avoid consuming X budget)"
+if [ "${TEST_AC5:-0}" != "1" ]; then
+  # SPEC v1.0.1: CF Pages free plan does not support dashboard Rate Limiting Rules
+  # P rules path is deferred until plan upgrade or custom domain + WAF
+  # Q counter (RATE_LIMIT_PER_IP_DAILY=200) covers the daily dimension
+  # Set TEST_AC5=1 to force run (will consume 70 LLM calls!)
+  skip AC5 "CF Pages free plan no dashboard rate limit; Q counter (KV, daily) covers; set TEST_AC5=1 to force"
 else
   count_429=0
   for i in $(seq 1 70); do
