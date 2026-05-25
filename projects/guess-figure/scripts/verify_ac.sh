@@ -97,16 +97,23 @@ skip AC10 "KV failure strategy unit tested (rate-limit.test.ts 17 cases)"
 # ---------- AC group C: cache / performance ----------
 
 # AC11: same input second call -> cached: true
+# CF KV has 60s "negative cache" — first GET returns null and runtime caches "null" for 60s.
+# Even after PUT, subsequent GET in same edge returns the cached null until 60s expires.
+# Workaround: sleep 65s between writes and reads. See https://developers.cloudflare.com/kv/api/read-key-value-pairs/
 # Build unique payload: decode template, replace __INPUT__ placeholder (ASCII-safe sed)
 unique_input="test_input_$(date +%s%N)"
 unique_payload=$(echo "$B64_UNIQUE_TEMPLATE" | base64 -d | sed "s/__INPUT__/$unique_input/")
 
 first=$(printf '%s' "$unique_payload" | curl -s -X POST "$BASE/api/check-answer" -b "$COOKIE_JAR" \
   -H "Content-Type: application/json" --data-binary @-)
+
+echo "  (sleeping 65s for KV global propagation + negative-cache expiry ...)"
+sleep 65
+
 second=$(printf '%s' "$unique_payload" | curl -s -X POST "$BASE/api/check-answer" -b "$COOKIE_JAR" \
   -H "Content-Type: application/json" --data-binary @-)
 if echo "$second" | grep -q '"cached":true'; then
-  ok AC11 "second call has cached: true (cache hit)"
+  ok AC11 "second call has cached: true (cache hit after 65s KV propagation)"
 else
   fail AC11 "second response missing cached: true. first=$first second=$second"
 fi
