@@ -9,6 +9,13 @@ declare global {
     }
 
     interface Platform {
+      // CF Workers ExecutionContext (adapter-cloudflare 注入)
+      // 用 waitUntil 让 fire-and-forget promise 在 response 返回后继续执行,
+      // 不被 worker shutdown kill (002 fix: cacheSet / incrementCounters 必需)
+      context?: {
+        waitUntil(promise: Promise<unknown>): void;
+        passThroughOnException(): void;
+      };
       env?: {
         // === 001 (现有 LLM 调用) ===
         YUNWU_API_KEY?: string;

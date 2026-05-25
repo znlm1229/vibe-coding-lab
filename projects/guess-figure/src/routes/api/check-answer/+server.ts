@@ -59,11 +59,11 @@ export const POST: RequestHandler = async ({ request, locals, platform, getClien
     if (!limitResult.ok) {
       throw error(429, `请求过于频繁 (${limitResult.reason})`);
     }
-    // INCR request counters (fire-and-forget, 不阻塞响应路径)
+    // INCR request counters (fire-and-forget — 必须用 waitUntil 让 KV write 在 response 后继续完成,
+    // 否则 CF Workers 会 kill 未完成的 promise, 计数器永不增长)
     if (cfEnv.GF_RATELIMIT) {
-      incrementRequestCounters(cfEnv.GF_RATELIMIT, userId, ip).catch(() => {
-        // silent — failure open (SPEC C8)
-      });
+      const incrPromise = incrementRequestCounters(cfEnv.GF_RATELIMIT, userId, ip).catch(() => {});
+      platform?.context?.waitUntil(incrPromise);
     }
   }
 
@@ -189,17 +189,16 @@ export const POST: RequestHandler = async ({ request, locals, platform, getClien
     };
   }
 
-  // 7. LLM 成功 — INCR LLM counters + 写缓存 (fire-and-forget)
+  // 7. LLM 成功 — INCR LLM counters + 写缓存
+  // 必须用 waitUntil, 否则 KV write 在 response 后被 worker shutdown kill, cache 永远不命中
   if (cfEnv?.GF_RATELIMIT) {
-    incrementLlmCounters(cfEnv.GF_RATELIMIT, userId).catch(() => {
-      // silent
-    });
+    const incrPromise = incrementLlmCounters(cfEnv.GF_RATELIMIT, userId).catch(() => {});
+    platform?.context?.waitUntil(incrPromise);
   }
   if (cfEnv?.GF_LLM_CACHE) {
     const key = await cacheKey(figure.id, figure.aliases, normalized);
-    cacheSet(cfEnv.GF_LLM_CACHE, key, llmResult).catch(() => {
-      // silent
-    });
+    const writePromise = cacheSet(cfEnv.GF_LLM_CACHE, key, llmResult).catch(() => {});
+    platform?.context?.waitUntil(writePromise);
   }
 
   return json(llmResult);
