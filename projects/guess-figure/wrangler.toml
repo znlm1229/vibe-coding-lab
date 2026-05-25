@@ -22,8 +22,10 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 [vars]
 LLM_BUDGET_DAILY = "8000"
 LLM_BUDGET_PER_USER = "50"
-RATE_LIMIT_PER_IP_DAILY = "200"
-RATE_LIMIT_PER_USER_DAILY = "200"
+# Stage 8 期间临时调高 (Stage 7 测试 / Stage 8 真人测都受 200 约束很紧)
+# 上线稳定后改回 200 (验收前 OQ1 SPEC C3 决定最终值)
+RATE_LIMIT_PER_IP_DAILY = "2000"
+RATE_LIMIT_PER_USER_DAILY = "2000"
 # LLM 模型 / endpoint (001 已使用, 但 001 时这些在 dashboard 配; 现统一在此)
 LLM_MODEL = "gemini-3.1-flash-lite"
 YUNWU_BASE_URL = "https://yunwu.ai/v1"
