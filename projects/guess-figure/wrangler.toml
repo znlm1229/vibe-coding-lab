@@ -15,6 +15,26 @@ compatibility_date = "2024-12-01"
 pages_build_output_dir = ".svelte-kit/cloudflare"
 
 # ====================================================================
+# 普通 env vars (非密, 入 git, SPEC C3)
+# ====================================================================
+# 阈值变更 = git commit, 部署后即生效 (不再走 dashboard UI)
+# Stage 3 Prototype 实测云雾单次 ¥0.000526 → V=8000/天 ≈ ¥4.2/天容忍
+[vars]
+LLM_BUDGET_DAILY = "8000"
+LLM_BUDGET_PER_USER = "50"
+RATE_LIMIT_PER_IP_DAILY = "200"
+RATE_LIMIT_PER_USER_DAILY = "200"
+# LLM 模型 / endpoint (001 已使用, 但 001 时这些在 dashboard 配; 现统一在此)
+LLM_MODEL = "gemini-3.1-flash-lite"
+YUNWU_BASE_URL = "https://yunwu.ai/v1"
+
+# 注意: 以下两个 *_SECRET 是密钥, 不入 git, 通过 `wrangler pages secret put NAME` 配置:
+#   - YUNWU_API_KEY        云雾 API Key (001 使用; 若 dashboard 现已配且仍生效则免再配)
+#   - AUTH_HMAC_SECRET     cookie HMAC 签名密钥 (002 新增, SPEC C4)
+# 命令: pnpm exec wrangler pages secret put YUNWU_API_KEY --project-name guess-figure
+#       pnpm exec wrangler pages secret put AUTH_HMAC_SECRET --project-name guess-figure
+
+# ====================================================================
 # D1 — users + games 表 (T1)
 # ====================================================================
 [[d1_databases]]
