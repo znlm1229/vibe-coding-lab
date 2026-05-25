@@ -42,5 +42,6 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 | # | 任务 | 状态 | 备注 |
 |---|---|---|---|
+| 003 | [`003-clue-optimization`](./workflow/003-clue-optimization/) | 🟡 **进行中 2026-05-25 起** | Stage 1 Brainstorm 中。「优化线索」具体方向待 Stage 1/2 收敛 |
 | 002 | [`002-account-rate-limit`](./workflow/002-account-rate-limit/) | ✅ **已完成 2026-05-25** | 用户验收通过，22/22 AC 满足。账号 (HMAC signed cookie + D1 user+games) + 双层限流 (CF dashboard P 受 free plan 限制 acknowledge / Workers KV Q 计数器主路径) + LLM 成本兜底 (KV cache 命中 ~3x 快于 LLM / 日预算 V8000+X50 / degraded 不消耗线索)；SPEC v1.0→v1.0.1（free plan 限制 acknowledge）|
 | 001 | [`001-guess-figure`](./workflow/001-guess-figure/) | ✅ **已完成 2026-05-22** | 用户验收通过，15/15 AC 满足，上线 [guess-figure.pages.dev](https://guess-figure.pages.dev)；SPEC v1.0→v1.1（答错自动消耗一条线索）|
