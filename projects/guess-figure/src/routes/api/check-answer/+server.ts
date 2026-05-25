@@ -1,42 +1,112 @@
-// T13: LLM 模糊匹配 API endpoint（CF Pages Function）
+// 002 T10+T11: /api/check-answer 完整 pipeline 改造
 //
-// SPEC 决策 5 第二道：异称表精确匹配失败时调本 endpoint，让 LLM 判断
-// 用户输入是否在指代目标人物（如"诸葛丞相" → 诸葛亮）。
+// 现状(001) → 002 改造:
+//   - body 从 {input, target: {name, aliases}} 改为 {input, figure_id}
+//   - server 按 figure_id 查 figures.json 拿 aliases (不信任 client 传 target)
+//   - server 跑 normalize + matchExactly 短路 (T10)
+//   - 加 KV 限流 (request 类 IP+user) + LLM 缓存查 + LLM 预算检查 + LLM 调用 + INCR 计数器 (T11)
+//   - 响应增字段: cached / degraded / network_error
 //
-// 输入: { input: string, target: { name: string, aliases: string[] } }
-// 输出: { correct: boolean, reason: string }
+// pipeline 顺序 (SPEC v1.0 B2):
+//   1. 限流检查 (request kind) → 429 if 超
+//   2. server normalize + matchExactly 短路 → {correct:true, reason:"精确匹配"}
+//   3. LLM 缓存查 → 命中 → {...cached_value, cached:true}
+//   4. LLM 预算检查 (llm kind) → 超 → {correct:false, reason:..., degraded:true}
+//   5. 调 LLM (现有 try/catch + JSON 容错保留)
+//   6. LLM 失败 → {correct:false, reason:..., network_error:true} (不 INCR 计数)
+//   7. LLM 成功 → INCR LLM counters + 写 cache + 返响应
 //
-// 沿用 prototype B 已验证的 prompt + JSON 容错策略。
+// 全程: INCR request counters (IP + user) 在 endpoint 入口后立即做 (不阻塞响应路径).
 
 import { json, error } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
+import figures from "$lib/data/figures.json";
+import type { Figure } from "$lib/types";
+import { normalize, matchExactly } from "$lib/match-exact";
+import { cacheGet, cacheSet, cacheKey } from "$lib/server/llm-cache";
+import {
+  checkRateLimits,
+  incrementLlmCounters,
+  incrementRequestCounters,
+} from "$lib/server/rate-limit";
 import type { RequestHandler } from "./$types";
 
-export const POST: RequestHandler = async ({ request }) => {
-  const body = (await request.json()) as {
-    input: string;
-    target: { name: string; aliases: string[] };
-  };
-  const { input, target } = body;
+// V/X 触发时的降级文案 (SPEC OQ2 — taste 类, 用户应自行替换)
+const DEGRADED_REASON_GLOBAL = "今日 AI 裁判额度已用尽，仅接受精确答案（含异称）";
+const DEGRADED_REASON_USER = "你今日 AI 裁判额度已用完，仅接受精确答案（含异称）";
+// LLM 失败文案 (SPEC OQ3 — taste 类)
+const NETWORK_ERROR_REASON = "AI 响应异常，请稍后重试";
 
-  if (!input?.trim()) throw error(400, "input 必填");
-  if (!target?.name) throw error(400, "target.name 必填");
+export const POST: RequestHandler = async ({ request, locals, platform, getClientAddress }) => {
+  // 输入解析
+  const body = (await request.json()) as { input?: string; figure_id?: string };
+  const inputRaw = body.input?.trim();
+  const figureId = body.figure_id?.trim();
+  if (!inputRaw) throw error(400, "input 必填");
+  if (!figureId) throw error(400, "figure_id 必填");
 
+  // 查 figure (题库内不存在 → 400)
+  const figure = (figures as Figure[]).find((f) => f.id === figureId);
+  if (!figure) throw error(400, `figure_id 不存在: ${figureId}`);
+
+  const cfEnv = platform?.env;
+  const userId = locals.user_id;
+  const ip = getClientAddress();
+
+  // 1. 限流检查 (request kind) — 任一超返 429
+  if (cfEnv) {
+    const limitResult = await checkRateLimits(cfEnv, userId, ip, "request");
+    if (!limitResult.ok) {
+      throw error(429, `请求过于频繁 (${limitResult.reason})`);
+    }
+    // INCR request counters (fire-and-forget, 不阻塞响应路径)
+    if (cfEnv.GF_RATELIMIT) {
+      incrementRequestCounters(cfEnv.GF_RATELIMIT, userId, ip).catch(() => {
+        // silent — failure open (SPEC C8)
+      });
+    }
+  }
+
+  // 2. server normalize + match-exact 短路 (T10) — 不调 LLM, 不写缓存, 不增 LLM 计数
+  const normalized = normalize(inputRaw);
+  if (matchExactly(inputRaw, figure)) {
+    return json({ correct: true, reason: "精确匹配" });
+  }
+
+  // 3. LLM 缓存查
+  if (cfEnv?.GF_LLM_CACHE) {
+    const key = await cacheKey(figure.id, figure.aliases, normalized);
+    const cached = await cacheGet(cfEnv.GF_LLM_CACHE, key);
+    if (cached) {
+      return json({ ...cached, cached: true });
+    }
+  }
+
+  // 4. LLM 预算检查
+  if (cfEnv) {
+    const budgetResult = await checkRateLimits(cfEnv, userId, ip, "llm");
+    if (!budgetResult.ok) {
+      const reason =
+        budgetResult.reason === "budget-global" ? DEGRADED_REASON_GLOBAL : DEGRADED_REASON_USER;
+      return json({ correct: false, reason, degraded: true });
+    }
+  }
+
+  // 5. 调 LLM (沿用 001 现有代码, 仅保留)
   const apiKey = env.YUNWU_API_KEY;
   const baseUrlRaw = env.YUNWU_BASE_URL ?? "https://yunwu.ai/v1";
   const model = env.LLM_MODEL ?? "gemini-3.1-flash-lite";
-
-  if (!apiKey) throw error(500, "缺 YUNWU_API_KEY 环境变量（本地: 检查 .env；生产: 检查 CF Pages env vars）");
+  if (!apiKey) throw error(500, "缺 YUNWU_API_KEY 环境变量");
 
   const baseUrl = baseUrlRaw.replace(/\/+$/, "");
   const url = baseUrl.endsWith("/v1") ? `${baseUrl}/chat/completions` : `${baseUrl}/v1/chat/completions`;
 
   const prompt = `你是历史人物姓名识别助手。判断用户输入是否在指代目标人物。
 
-目标人物：${target.name}
-已知异称（字 / 号 / 谥号 / 庙号 / 别号）：${target.aliases.join("、")}
+目标人物：${figure.name}
+已知异称（字 / 号 / 谥号 / 庙号 / 别号）：${figure.aliases.join("、")}
 
-用户输入："${input}"
+用户输入："${inputRaw}"
 
 判定规则：
 - 用户输入是本名 / 字 / 号 / 谥号 / 庙号 / 别号 → YES
@@ -63,16 +133,25 @@ export const POST: RequestHandler = async ({ request }) => {
         temperature: 0.1,
         max_tokens: 300,
       }),
-      signal: AbortSignal.timeout(10_000), // 10s 超时
+      signal: AbortSignal.timeout(10_000),
     });
   } catch (e) {
-    // 网络错误 / 超时
-    throw error(504, `LLM 请求异常: ${e instanceof Error ? e.message : String(e)}`);
+    // 6. 网络/超时失败 — 返 network_error: true, 不 INCR LLM 计数 (云雾失败不扣)
+    return json({
+      correct: false,
+      reason: NETWORK_ERROR_REASON,
+      network_error: true,
+    });
   }
 
   if (!llmResp.ok) {
     const errText = await llmResp.text();
-    throw error(502, `LLM HTTP ${llmResp.status}: ${errText.slice(0, 200)}`);
+    // HTTP 5xx 也算 network_error (云雾服务异常, 用户不该被扣线索)
+    return json({
+      correct: false,
+      reason: `${NETWORK_ERROR_REASON} (HTTP ${llmResp.status})`,
+      network_error: true,
+    });
   }
 
   const data = (await llmResp.json()) as {
@@ -95,17 +174,33 @@ export const POST: RequestHandler = async ({ request }) => {
     if (m) content = m[0];
   }
 
+  let llmResult: { correct: boolean; reason: string };
   try {
     const parsed = JSON.parse(content);
-    return json({
+    llmResult = {
       correct: !!parsed.correct,
       reason: String(parsed.reason ?? ""),
-    });
+    };
   } catch {
-    // LLM 返回非 JSON 兜底
-    return json({
+    // LLM 返非 JSON 兜底 — 视作 false 但不是 network_error (是 LLM 内容错误)
+    llmResult = {
       correct: false,
       reason: `LLM 返回无法解析：${content.slice(0, 100)}`,
+    };
+  }
+
+  // 7. LLM 成功 — INCR LLM counters + 写缓存 (fire-and-forget)
+  if (cfEnv?.GF_RATELIMIT) {
+    incrementLlmCounters(cfEnv.GF_RATELIMIT, userId).catch(() => {
+      // silent
     });
   }
+  if (cfEnv?.GF_LLM_CACHE) {
+    const key = await cacheKey(figure.id, figure.aliases, normalized);
+    cacheSet(cfEnv.GF_LLM_CACHE, key, llmResult).catch(() => {
+      // silent
+    });
+  }
+
+  return json(llmResult);
 };
