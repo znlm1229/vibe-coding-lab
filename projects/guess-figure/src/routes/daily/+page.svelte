@@ -5,7 +5,12 @@
   import type { Figure } from "$lib/types";
   import { createGameState } from "$lib/game-state.svelte";
   import { matchExactly } from "$lib/match-exact";
-  import { checkAnswerViaLLM } from "$lib/check-answer-client";
+  import {
+    checkAnswerViaLLM,
+    classifyResult,
+    shouldConsumeClue,
+    type CheckAnswerOutcome,
+  } from "$lib/check-answer-client";
   import AnswerInput from "$lib/components/AnswerInput.svelte";
   import FailReveal from "$lib/components/FailReveal.svelte";
   import ShareButton from "$lib/components/ShareButton.svelte";
@@ -21,12 +26,68 @@
   let dailyInfo = $state<DailyInfo | null>(null);
   let figure = $state<Figure | null>(null);
   let game = $state<ReturnType<typeof createGameState> | null>(null);
+  // 002 T16: game_id (client 生成, 用于 game/finish 幂等)
+  let gameId = $state(crypto.randomUUID());
   let userInput = $state("");
   let checking = $state(false);
-  let lastResult = $state<{ input: string; correct: boolean; via: string; reason?: string } | null>(null);
+  // 002 T15: loading 双阶段
+  let checkingPhase = $state<"idle" | "fast" | "slow">("idle");
+  let timer200: ReturnType<typeof setTimeout> | null = null;
+  let timer5000: ReturnType<typeof setTimeout> | null = null;
+  // 002 T14: 用 outcome 结构替代旧 {correct, via, reason}
+  let lastResult = $state<{ input: string; outcome: CheckAnswerOutcome } | null>(null);
   let previousScore = $state<number | null>(null); // 已玩过显示历史分数
   let triggeredRescue = $state(false);
   let errorMsg = $state<string | null>(null);
+
+  function startLoadingTimers() {
+    checkingPhase = "idle";
+    timer200 = setTimeout(() => {
+      checkingPhase = "fast";
+    }, 200);
+    timer5000 = setTimeout(() => {
+      checkingPhase = "slow";
+    }, 5000);
+  }
+  function clearLoadingTimers() {
+    if (timer200) clearTimeout(timer200);
+    if (timer5000) clearTimeout(timer5000);
+    timer200 = null;
+    timer5000 = null;
+    checkingPhase = "idle";
+  }
+
+  // 002 T16: 游戏结束自动 POST /api/game/finish + 写 localStorage (二者都覆盖
+  // exhausted 路径; 旧代码只在 markWon/giveUp 后调用 onGameFinish, 漏 exhausted)
+  $effect(() => {
+    if (game?.finished) {
+      // 写 server (幂等)
+      const snapshot = {
+        game_id: gameId,
+        figure_id: game.figure.id,
+        won: game.won,
+        revealed_count: game.revealedCount,
+        score: game.score,
+        given_up: game.gaveUp,
+      };
+      fetch("/api/game/finish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(snapshot),
+      }).catch((e) => console.warn("[game/finish] 失败 (不阻塞 UI):", e));
+
+      // 写 localStorage (daily 防复玩)
+      if (dailyInfo) {
+        saveDailyResult(
+          dailyInfo.date,
+          game.score,
+          game.won,
+          game.revealedCount,
+          triggeredRescue,
+        );
+      }
+    }
+  });
 
   function localStorageKey(date: string) {
     return `daily_played_${date}`;
@@ -89,27 +150,29 @@
     if (!game || !figure) return;
 
     if (matchExactly(text, figure)) {
-      lastResult = { input: text, correct: true, via: "exact", reason: "异称表命中" };
+      lastResult = {
+        input: text,
+        outcome: { kind: "correct", reason: "异称表命中" },
+      };
       game.markWon();
-      onGameFinish();
+      // localStorage + server 写由 $effect(game.finished) 统一触发
       return;
     }
 
     checking = true;
+    startLoadingTimers();
     const r = await checkAnswerViaLLM(text, figure);
     checking = false;
+    clearLoadingTimers();
 
-    if ("error" in r) {
-      lastResult = { input: text, correct: false, via: "error", reason: r.error };
-      return;
-    }
+    const outcome = classifyResult(r);
+    lastResult = { input: text, outcome };
 
-    lastResult = { input: text, correct: r.correct, via: "llm", reason: r.reason };
-    if (r.correct) {
+    // SPEC G7: 仅 outcome.kind === "wrong" 才消耗线索
+    if (outcome.kind === "correct") {
       game.markWon();
-      onGameFinish();
-    } else {
-      game.consumeOnWrongAnswer(); // SPEC v1.1: 答错自动消耗一条线索
+    } else if (shouldConsumeClue(outcome)) {
+      game.consumeOnWrongAnswer();
       userInput = "";
     }
   }
@@ -124,19 +187,8 @@
   function giveUp() {
     if (game) {
       game.giveUp();
-      onGameFinish();
+      // localStorage + server 写由 $effect(game.finished) 统一触发
     }
-  }
-
-  function onGameFinish() {
-    if (!game || !dailyInfo) return;
-    saveDailyResult(
-      dailyInfo.date,
-      game.score,
-      game.won,
-      game.revealedCount,
-      triggeredRescue,
-    );
   }
 </script>
 
@@ -205,15 +257,34 @@
       <section class="input">
         <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
         {#if checking}
-          <p class="result result-checking">⏳ 判定中...</p>
-        {:else if lastResult}
-          <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
-            {#if lastResult.correct}
-              ✅ 算对「{lastResult.input}」
-            {:else if lastResult.via === "error"}
-              ⚠️ 提交失败，请稍后再试
+          <p class="result result-checking">
+            {#if checkingPhase === "slow"}
+              ⏳ AI 正在思考较复杂的输入...
+            {:else if checkingPhase === "fast"}
+              ⏳ AI 裁判中...
             {:else}
+              ⏳
+            {/if}
+          </p>
+        {:else if lastResult}
+          {@const outcome = lastResult.outcome}
+          <p
+            class="result result-{outcome.kind === 'correct'
+              ? 'ok'
+              : outcome.kind === 'wrong'
+                ? 'no'
+                : 'err'}"
+          >
+            {#if outcome.kind === "correct"}
+              ✅ 算对「{lastResult.input}」
+            {:else if outcome.kind === "wrong"}
               ❌ 不算「{lastResult.input}」
+            {:else if outcome.kind === "degraded"}
+              ⚠️ {outcome.reason}
+            {:else if outcome.kind === "network_error"}
+              ⚠️ {outcome.reason}（不消耗线索，请稍后重试）
+            {:else}
+              ⚠️ 提交失败：{outcome.reason}
             {/if}
           </p>
         {/if}

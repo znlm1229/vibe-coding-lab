@@ -3,55 +3,98 @@
   import type { Figure } from "$lib/types";
   import { createGameState, pickRandomFigure } from "$lib/game-state.svelte";
   import { matchExactly } from "$lib/match-exact";
-  import { checkAnswerViaLLM } from "$lib/check-answer-client";
+  import {
+    checkAnswerViaLLM,
+    classifyResult,
+    shouldConsumeClue,
+    type CheckAnswerOutcome,
+  } from "$lib/check-answer-client";
   import AnswerInput from "$lib/components/AnswerInput.svelte";
   import FailReveal from "$lib/components/FailReveal.svelte";
 
   // 随机抽一个人物作为当前局
   let game = $state(createGameState(pickRandomFigure(figures as Figure[])));
+  // 002 T16: 每局 game_id (client 生成, 幂等所需)
+  let gameId = $state(crypto.randomUUID());
   let userInput = $state("");
   let checking = $state(false);
-  let lastResult = $state<{
-    input: string;
-    correct: boolean;
-    via: "exact" | "llm" | "error";
-    reason?: string;
-  } | null>(null);
+  // 002 T15: loading 双阶段 (200ms / 5s 后切换文案)
+  let checkingPhase = $state<"idle" | "fast" | "slow">("idle");
+  let timer200: ReturnType<typeof setTimeout> | null = null;
+  let timer5000: ReturnType<typeof setTimeout> | null = null;
+  // 002 T14: 用 outcome 结构替代旧 {correct, via, reason}
+  let lastResult = $state<{ input: string; outcome: CheckAnswerOutcome } | null>(null);
 
   function startNewGame() {
     game = createGameState(pickRandomFigure(figures as Figure[]));
+    gameId = crypto.randomUUID();
     userInput = "";
     lastResult = null;
   }
 
+  function startLoadingTimers() {
+    checkingPhase = "idle";
+    timer200 = setTimeout(() => {
+      checkingPhase = "fast";
+    }, 200);
+    timer5000 = setTimeout(() => {
+      checkingPhase = "slow";
+    }, 5000);
+  }
+  function clearLoadingTimers() {
+    if (timer200) clearTimeout(timer200);
+    if (timer5000) clearTimeout(timer5000);
+    timer200 = null;
+    timer5000 = null;
+    checkingPhase = "idle";
+  }
+
+  // 002 T16: 游戏结束自动 POST /api/game/finish (幂等, 不阻塞 UI)
+  $effect(() => {
+    if (game.finished) {
+      const snapshot = {
+        game_id: gameId,
+        figure_id: game.figure.id,
+        won: game.won,
+        revealed_count: game.revealedCount,
+        score: game.score,
+        given_up: game.gaveUp,
+      };
+      fetch("/api/game/finish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(snapshot),
+      }).catch((e) => console.warn("[game/finish] 失败 (不阻塞 UI):", e));
+    }
+  });
+
   async function handleSubmit(text: string) {
-    // 第一道 — 异称表精确匹配（前端，无 LLM 成本）
+    // 第一道 — 异称表精确匹配（前端，无 LLM 成本, 不调 server）
     if (matchExactly(text, game.figure)) {
-      lastResult = { input: text, correct: true, via: "exact", reason: "异称表命中" };
+      lastResult = {
+        input: text,
+        outcome: { kind: "correct", reason: "异称表命中" },
+      };
       game.markWon();
       return;
     }
 
-    // 第二道 — LLM 模糊匹配
+    // 第二道 — server pipeline (normalize → server match-exact → cache → LLM)
     checking = true;
+    startLoadingTimers();
     const r = await checkAnswerViaLLM(text, game.figure);
     checking = false;
+    clearLoadingTimers();
 
-    if ("error" in r) {
-      lastResult = { input: text, correct: false, via: "error", reason: r.error };
-      return; // 不消耗线索，不进 won 状态
-    }
+    const outcome = classifyResult(r);
+    lastResult = { input: text, outcome };
 
-    lastResult = {
-      input: text,
-      correct: r.correct,
-      via: "llm",
-      reason: r.reason,
-    };
-    if (r.correct) {
+    // SPEC G7: 仅 outcome.kind === "wrong" 才消耗线索;
+    // correct → markWon; degraded/network_error/client_error 都不消耗
+    if (outcome.kind === "correct") {
       game.markWon();
-    } else {
-      game.consumeOnWrongAnswer(); // SPEC v1.1: 答错自动消耗一条线索
+    } else if (shouldConsumeClue(outcome)) {
+      game.consumeOnWrongAnswer();
       userInput = "";
     }
   }
@@ -99,15 +142,34 @@
     <section class="input">
       <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
       {#if checking}
-        <p class="result result-checking">⏳ 判定中...</p>
-      {:else if lastResult}
-        <p class="result result-{lastResult.correct ? 'ok' : lastResult.via === 'error' ? 'err' : 'no'}">
-          {#if lastResult.correct}
-            ✅ 算对「{lastResult.input}」
-          {:else if lastResult.via === "error"}
-            ⚠️ 提交失败，请稍后再试
+        <p class="result result-checking">
+          {#if checkingPhase === "slow"}
+            ⏳ AI 正在思考较复杂的输入...
+          {:else if checkingPhase === "fast"}
+            ⏳ AI 裁判中...
           {:else}
+            ⏳
+          {/if}
+        </p>
+      {:else if lastResult}
+        {@const outcome = lastResult.outcome}
+        <p
+          class="result result-{outcome.kind === 'correct'
+            ? 'ok'
+            : outcome.kind === 'wrong'
+              ? 'no'
+              : 'err'}"
+        >
+          {#if outcome.kind === "correct"}
+            ✅ 算对「{lastResult.input}」
+          {:else if outcome.kind === "wrong"}
             ❌ 不算「{lastResult.input}」
+          {:else if outcome.kind === "degraded"}
+            ⚠️ {outcome.reason}
+          {:else if outcome.kind === "network_error"}
+            ⚠️ {outcome.reason}（不消耗线索，请稍后重试）
+          {:else}
+            ⚠️ 提交失败：{outcome.reason}
           {/if}
         </p>
       {/if}
