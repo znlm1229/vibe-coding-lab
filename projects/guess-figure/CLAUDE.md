@@ -6,13 +6,18 @@
 
 ## 1. 项目状态
 
-🟢 **上线运行中** —— V1 已上线 [guess-figure.pages.dev](https://guess-figure.pages.dev)（2026-05-22）。
+🟢 **V2 上线运行中** —— V1 + 002 全部上线 [guess-figure.pages.dev](https://guess-figure.pages.dev)（最新 2026-05-25）。
 
-- **001-guess-figure ✅ 已完成（2026-05-22 用户验收通过）**
+- **001-guess-figure ✅ 已完成（2026-05-22 用户验收通过，15/15 AC）**
+- **002-account-rate-limit ✅ 已完成（2026-05-25 用户验收通过，22/22 AC）**
+  - 账号：HMAC signed UUID cookie + 滚动续期 365d + 共享 normalize lib
+  - 限流：CF Pages free plan 不支持 dashboard rate limit → SPEC v1.0.1 acknowledge，用 Workers KV 计数器（IP/user 日窗口）覆盖
+  - LLM 成本兜底：KV 缓存（key 含 figure_id + aliases_hash）+ 全局/单点日预算 + degraded/network_error 不消耗线索
+  - 持久化：CF D1 users + games 表（预留 003 邮箱迁移字段）+ 2 KV namespaces
+  - 单测：54/54 passed（match-exact 9 + auth 12 + hooks 4 + rate-limit 17 + llm-cache 12）
 - 公网 URL：https://guess-figure.pages.dev
-- 完整链路：Stage 1 Brainstorm → 2 Grill Me（10 轮）→ 3 Prototype A+B → 4 SPEC v1.0 → 5 Plan（8 phase）→ 6 Tasks（22 task）→ 7 Implementation（31+ commit）→ 8 Human QA（3 issue 修复 + SPEC v1.0→v1.1）→ 9 Acceptance（15/15 AC + 用户签收）→ 10 Retrospective
-- **技术栈**：SvelteKit 5 + adapter-cloudflare + CF Pages Functions + gemini-3.1-flash-lite via 云雾中转 + JSON-in-git 题库 + Python 内容生产 pipeline
-- 后续候选任务：002（账号 + 排行榜）、003（自定义域名 + 品牌化）、004（V2 题库扩展到 200 人）
+- **技术栈**：SvelteKit 5 + adapter-cloudflare + CF Pages Functions + CF D1 + CF Workers KV + gemini-3.1-flash-lite via 云雾中转 + JSON-in-git 题库 + Python 内容生产 pipeline + wrangler.toml `[vars]` env vars
+- 后续候选任务：003（线索调优）、004（邮箱 magic link + 排行榜）、005（自定义域名 + 品牌化）、006（V2 题库扩展到 200 人）
 - 任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）

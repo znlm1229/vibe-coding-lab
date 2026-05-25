@@ -22,10 +22,10 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 [vars]
 LLM_BUDGET_DAILY = "8000"
 LLM_BUDGET_PER_USER = "50"
-# Stage 8 期间临时调高 (Stage 7 测试 / Stage 8 真人测都受 200 约束很紧)
-# 上线稳定后改回 200 (验收前 OQ1 SPEC C3 决定最终值)
-RATE_LIMIT_PER_IP_DAILY = "2000"
-RATE_LIMIT_PER_USER_DAILY = "2000"
+# Stage 9 验收后还原 SPEC C3 默认 (Stage 7/8 期间临时 2000 已撤回).
+# 若 production 实际玩家流量证实 200 误伤合法重玩用户, 可后续 PR 单独调到 500-1000.
+RATE_LIMIT_PER_IP_DAILY = "200"
+RATE_LIMIT_PER_USER_DAILY = "200"
 # LLM 模型 / endpoint (001 已使用, 但 001 时这些在 dashboard 配; 现统一在此)
 LLM_MODEL = "gemini-3.1-flash-lite"
 YUNWU_BASE_URL = "https://yunwu.ai/v1"
