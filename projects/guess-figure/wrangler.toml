@@ -22,9 +22,10 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
 [vars]
 LLM_BUDGET_DAILY = "8000"
 LLM_BUDGET_PER_USER = "50"
-# Stage 9 验收后还原 SPEC C3 默认 (Stage 7/8 期间临时 2000 已撤回).
-# 若 production 实际玩家流量证实 200 误伤合法重玩用户, 可后续 PR 单独调到 500-1000.
-RATE_LIMIT_PER_IP_DAILY = "200"
+# RATE_LIMIT_PER_IP_DAILY: 验收后用户调整 200 → 1000 (减少共享 NAT 下误伤合法用户;
+# 单 IP 真实流量 < 1000/天 已足够防机器人, LLM 成本由 LLM_BUDGET_* 兜底).
+# RATE_LIMIT_PER_USER_DAILY 保持 200 (单 cookie 用户级仍按 SPEC C3 默认).
+RATE_LIMIT_PER_IP_DAILY = "1000"
 RATE_LIMIT_PER_USER_DAILY = "200"
 # LLM 模型 / endpoint (001 已使用, 但 001 时这些在 dashboard 配; 现统一在此)
 LLM_MODEL = "gemini-3.1-flash-lite"
