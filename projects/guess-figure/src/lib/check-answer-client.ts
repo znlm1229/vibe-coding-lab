@@ -52,3 +52,47 @@ export async function checkAnswerViaLLM(
     return { ok: false, error: `网络错误: ${e instanceof Error ? e.message : String(e)}` };
   }
 }
+
+// ====================================================================
+// 002 T14: 响应分类 + 线索消耗判断
+//
+// 把 fetch 响应分成 5 个互斥 outcome, 让 callsite (page.svelte) 用 switch 统一处理.
+// SPEC G7: 仅 wrong 才消耗线索; correct / degraded / network_error / client_error 都不消耗.
+// SPEC AC8 / AC9 / AC22 的核心.
+// ====================================================================
+
+export type CheckAnswerOutcome =
+  /** server 判正确 — 调 game.markWon() */
+  | { kind: "correct"; reason: string; cached?: boolean }
+  /** server 判错 (无 degraded / network_error 标志) — 调 game.consumeOnWrongAnswer() */
+  | { kind: "wrong"; reason: string }
+  /** V (日全局) / X (单 user 日) 配额触发降级 — 不消耗线索, 提示用户改输精确答案 */
+  | { kind: "degraded"; reason: string }
+  /** LLM 子调用失败 (云雾超时 / 5xx) — 不消耗线索, 提示重试 */
+  | { kind: "network_error"; reason: string }
+  /** client 层 fetch 自身失败 (HTTP 5xx 或网络断) — 不消耗线索, 提示重试 */
+  | { kind: "client_error"; reason: string };
+
+/** 把 fetch 结果归类为单一互斥的 outcome */
+export function classifyResult(
+  result: CheckAnswerResult | CheckAnswerError,
+): CheckAnswerOutcome {
+  if ("ok" in result) {
+    return { kind: "client_error", reason: result.error };
+  }
+  if (result.network_error) {
+    return { kind: "network_error", reason: result.reason };
+  }
+  if (result.degraded) {
+    return { kind: "degraded", reason: result.reason };
+  }
+  if (result.correct) {
+    return { kind: "correct", reason: result.reason, cached: result.cached };
+  }
+  return { kind: "wrong", reason: result.reason };
+}
+
+/** SPEC G7: 仅 "wrong" outcome 应消耗线索. 其他 4 种均不消耗. */
+export function shouldConsumeClue(outcome: CheckAnswerOutcome): boolean {
+  return outcome.kind === "wrong";
+}
