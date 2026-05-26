@@ -55,25 +55,36 @@ class TestAliasSubstringsHelper(unittest.TestCase):
 class TestCheck6_D67AliasSubstring(unittest.TestCase):
     """T3 — check #6: d6/7 不含 aliases 子串 (≥ 2 字)"""
 
-    def test_d7_substring_穿底_关云长(self):
-        """关羽 d7 含 alias '关云长' 的子串 '云长' → 应判违规"""
+    def test_d7_substring_穿底_关云长_2字不查(self):
+        """T14 fix: 2 字子串"云长"不算违规 (跟 judge prompt 一致 ≥ 3 字才查)"""
         f = _make_figure(
-            aliases=["关云长", "关公", "关二爷", "关帝"],
+            aliases=["关云长", "关公"],
             clues_text_by_d={7: "他是蜀汉五虎上将之首,字云长,河东解人。"},
         )
         score, _, warnings = check_figure(f)
-        leak_warn = [w for w in warnings if "子串" in w and "云长" in w]
-        self.assertTrue(leak_warn, f"应报 d7 alias 子串穿底,实际 warnings={warnings}")
+        # "云长" 2 字现在不算 (放宽到 ≥ 3 字)
+        leak_warn = [w for w in warnings if "子串 '云长'" in w]
+        self.assertFalse(leak_warn, "T14 fix: 2 字 alias 子串不再视为违规")
 
-    def test_d6_substring_穿底_alias完整出现(self):
-        """d6 含 alias 完整字符 → 应判违规"""
+    def test_d3_substring_关云长_3字算(self):
+        """T14 fix: check #6 现在管 d1-5; ≥ 3 字子串如"关云长"在 d3 出现 → 违规"""
         f = _make_figure(
-            aliases=["孔明", "卧龙", "诸葛武侯"],
-            clues_text_by_d={6: "三国时蜀汉丞相,卧龙先生,后封武乡侯。"},
+            aliases=["关云长", "关公"],
+            clues_text_by_d={3: "他人称关云长,是蜀汉早期核心将领。"},
         )
         score, _, warnings = check_figure(f)
-        leak_warn = [w for w in warnings if "子串" in w and "卧龙" in w]
-        self.assertTrue(leak_warn, f"应报 d6 alias 完整出现,实际 warnings={warnings}")
+        leak_warn = [w for w in warnings if "关云长" in w and "子串" in w]
+        self.assertTrue(leak_warn, "d3 含 3 字 alias 子串应 flag")
+
+    def test_d3_substring_3字alias_仍flag(self):
+        """T14 fix: check #6 现管 d1-5; ≥ 3 字 alias 子串在 d3 仍 flag"""
+        f = _make_figure(
+            aliases=["孔明", "卧龙", "诸葛武侯"],
+            clues_text_by_d={3: "他被尊为诸葛武侯,辅佐蜀汉。"},
+        )
+        score, _, warnings = check_figure(f)
+        leak_warn = [w for w in warnings if "诸葛武侯" in w]
+        self.assertTrue(leak_warn, "d3 含 3 字 alias 整字应 flag")
 
     def test_d6_d7_clean_no_warning(self):
         """d6/d7 无 alias 子串 → check #6 通过"""
@@ -134,18 +145,17 @@ class TestCheck6_StopwordFalsePositives(unittest.TestCase):
         丞相_warns = [w for w in warnings if "'丞相'" in w]
         self.assertFalse(丞相_warns, "'丞相' 子串属 stopword 不该被 flag")
 
-    def test_specific_alias_still_flagged(self):
-        """虽然加 stopword,但'云长'/'卧龙' 等专指 alias 仍要 flag"""
+    def test_specific_alias_3字d3仍flag(self):
+        """T14 fix: check #6 现管 d1-5; d3 含 3 字 alias (关云长) → flag"""
         f = _make_figure(
-            aliases=["关云长", "皇帝"],  # 同时含 alias "关云长" 和 stopword 词
-            clues_text_by_d={7: "他字云长,是蜀汉皇帝麾下的大将。"},
+            aliases=["关云长", "皇帝"],
+            clues_text_by_d={3: "他人称关云长,与刘备情同手足。"},
         )
         score, _, warnings = check_figure(f)
-        # '云长' 不在 stopword → 应 flag;'皇帝' 在 stopword → 不 flag
-        云长_warns = [w for w in warnings if "'云长'" in w]
+        关云长_warns = [w for w in warnings if "关云长" in w]
+        self.assertTrue(关云长_warns, "d3 含 3 字 alias 应 flag")
         皇帝_warns = [w for w in warnings if "'皇帝'" in w]
-        self.assertTrue(云长_warns, "'云长' 是专指 alias 子串,应 flag")
-        self.assertFalse(皇帝_warns, "'皇帝' 是 stopword,不 flag")
+        self.assertFalse(皇帝_warns, "stopword 不 flag")
 
 
 SAMPLE_PROFILE = """# 诸葛亮

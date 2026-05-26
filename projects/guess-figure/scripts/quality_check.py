@@ -8,7 +8,7 @@
 3. 难度 1-7 各 1 个齐全
 4. 难度 1-5 全段不含任何 aliases (字符整字)
 5. 难度 1 不含朝代名
-6. 难度 6-7 不含 aliases 子串 (长度 ≥ 2; T3 新增)
+6. 难度 1-5 不含 aliases ≥ 3 字 子串 (T3 + T14 fix; 与 check #4 整字检测互补;d6/d7 求救允许)
 7. 难度 1-5 不含 profile typology / 关键作品 banlist (T4 新增, 需 --profiles-dir)
 8. 难度 1-5 信息密度启发式 (T5 新增, 具体名词数符合梯度)
 
@@ -174,7 +174,7 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
     3. 难度 1-7 各 1 个齐全
     4. 难度 1-5 不含任何 aliases 整字
     5. 难度 1 不含朝代名
-    6. 难度 6-7 不含 aliases 子串 (T3, 长度 ≥ 2)
+    6. 难度 1-5 不含 aliases ≥ 3 字 子串 (T3 + T14 fix)
     7. 难度 1-5 不含 profile typology / 关键作品 section banlist 词 (T4, 仅当 profile_md 给定)
     8. 难度 1-5 信息密度梯度合理 (T5, 总是检测)
 
@@ -236,22 +236,24 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
         else:
             warnings.append(f"难度 1 含朝代名 {bad}")
 
-    # 6. 难度 6-7 不含 aliases 子串 (T3, 长度 ≥ 2; 单字不查避免 "关" / "关于" false positive)
+    # 6. 难度 1-5 不含 aliases ≥ 3 字 子串 (T3 + T14 fix, 与 judge prompt 一致)
+    # 注: d6/d7 求救范围 Q4 决议允许暴露 alias, check #6 仅查 d1-5 (与 check #4 d1-5 整字检测互补)
+    # 旧 ≥ 2 字过严, "高宗"/"世宗" 等 2 字 alias 几乎不可避免; judge prompt 已放宽 ≥ 3 字
     if aliases and clues:
         leak = None
         for c in clues:
             if not isinstance(c, dict):
                 continue
             d = c.get("difficulty", 0)
-            if d not in (6, 7):
+            if d not in (1, 2, 3, 4, 5):
                 continue
             text = c.get("text", "")
             for a in aliases:
-                if not a or len(a) < 2:
+                if not a or len(a) < 3:
                     continue
-                for sub in _alias_substrings(a, min_len=2):
+                for sub in _alias_substrings(a, min_len=3):
                     if not _is_alias_substring_violating(sub):
-                        continue  # 通用职衔/类目词跳过
+                        continue
                     if sub in text:
                         leak = (d, a, sub)
                         break
@@ -262,7 +264,7 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
         if not leak:
             score += 1
         else:
-            warnings.append(f"难度 {leak[0]} 含 alias '{leak[1]}' 子串 '{leak[2]}'")
+            warnings.append(f"难度 {leak[0]} 含 alias '{leak[1]}' ≥ 3 字子串 '{leak[2]}'")
 
     # 7. d1-5 不含 profile typology/关键作品 section banlist 词 (T4, 需要 profile_md)
     if profile_md is not None:
