@@ -1,0 +1,299 @@
+{
+  "乾隆": {
+    "wikisource_page": "清史稿/卷10",
+    "is_合传": false,
+    "biography_name": "高宗本纪",
+    "_verified": true
+  },
+  "关羽": {
+    "wikisource_page": "三國志/卷36",
+    "is_合传": true,
+    "biography_name": "关张马黄赵传",
+    "_verified": true
+  },
+  "刘备": {
+    "wikisource_page": "三國志/卷32",
+    "is_合传": false,
+    "biography_name": "先主传",
+    "_verified": true
+  },
+  "刘彻": {
+    "wikisource_page": "漢書/卷006",
+    "is_合传": false,
+    "biography_name": "武帝纪",
+    "_verified": true
+  },
+  "刘邦": {
+    "wikisource_page": "史記/卷08",
+    "is_合传": false,
+    "biography_name": "高祖本纪",
+    "_verified": false
+  },
+  "司马懿": {
+    "wikisource_page": "晉書/卷001",
+    "is_合传": false,
+    "biography_name": "宣帝纪",
+    "_verified": false
+  },
+  "司马迁": {
+    "wikisource_page": "史記/卷130",
+    "is_合传": false,
+    "biography_name": "太史公自序",
+    "_verified": false
+  },
+  "孔子": {
+    "wikisource_page": "史記/卷47",
+    "is_合传": false,
+    "biography_name": "孔子世家",
+    "_verified": false
+  },
+  "孙中山": {
+    "wikisource_page": null,
+    "is_合传": false,
+    "biography_name": "(近代人物, 无正史本传)"
+  },
+  "孟子": {
+    "wikisource_page": "史記/卷74",
+    "is_合传": true,
+    "biography_name": "孟子荀卿列传",
+    "_verified": false
+  },
+  "屈原": {
+    "wikisource_page": "史記/卷84",
+    "is_合传": true,
+    "biography_name": "屈原贾生列传",
+    "_verified": false
+  },
+  "岳飞": {
+    "wikisource_page": "宋史/卷365",
+    "is_合传": false,
+    "biography_name": "岳飞传",
+    "_verified": false
+  },
+  "嵇康": {
+    "wikisource_page": "晉書/卷49",
+    "is_合传": true,
+    "biography_name": "嵇康传",
+    "_verified": false
+  },
+  "庄子": {
+    "wikisource_page": "史記/卷63",
+    "is_合传": true,
+    "biography_name": "老子韩非列传",
+    "_verified": false
+  },
+  "康熙": {
+    "wikisource_page": "清史稿/卷6",
+    "is_合传": false,
+    "biography_name": "圣祖本纪",
+    "_verified": false
+  },
+  "张居正": {
+    "wikisource_page": "明史/卷213",
+    "is_合传": false,
+    "biography_name": "张居正传",
+    "_verified": false
+  },
+  "张衡": {
+    "wikisource_page": "後漢書/卷59",
+    "is_合传": false,
+    "biography_name": "张衡列传",
+    "_verified": false
+  },
+  "张飞": {
+    "wikisource_page": "三國志/卷36",
+    "is_合传": true,
+    "biography_name": "关张马黄赵传",
+    "_verified": true
+  },
+  "忽必烈": {
+    "wikisource_page": "元史/卷4",
+    "is_合传": false,
+    "biography_name": "世祖本纪",
+    "_verified": false
+  },
+  "成吉思汗": {
+    "wikisource_page": "元史/卷1",
+    "is_合传": false,
+    "biography_name": "太祖本纪",
+    "_verified": false
+  },
+  "戚继光": {
+    "wikisource_page": "明史/卷212",
+    "is_合传": false,
+    "biography_name": "戚继光传",
+    "_verified": false
+  },
+  "文天祥": {
+    "wikisource_page": "宋史/卷418",
+    "is_合传": false,
+    "biography_name": "文天祥传",
+    "_verified": false
+  },
+  "曹操": {
+    "wikisource_page": "三國志/卷1",
+    "is_合传": false,
+    "biography_name": "武帝纪",
+    "_verified": false
+  },
+  "曾国藩": {
+    "wikisource_page": "清史稿/卷405",
+    "is_合传": false,
+    "biography_name": "曾国藩传",
+    "_verified": false
+  },
+  "朱元璋": {
+    "wikisource_page": "明史/卷1",
+    "is_合传": false,
+    "biography_name": "太祖本纪",
+    "_verified": false
+  },
+  "朱熹": {
+    "wikisource_page": "宋史/卷429",
+    "is_合传": false,
+    "biography_name": "朱熹传",
+    "_verified": false
+  },
+  "李世民": {
+    "wikisource_page": "舊唐書/卷2",
+    "is_合传": false,
+    "biography_name": "太宗本纪",
+    "_verified": true
+  },
+  "李清照": {
+    "wikisource_page": null,
+    "is_合传": false,
+    "biography_name": "(无正史本传)"
+  },
+  "李白": {
+    "wikisource_page": "舊唐書/卷190下",
+    "is_合传": true,
+    "biography_name": "文苑列传",
+    "_verified": true
+  },
+  "杜甫": {
+    "wikisource_page": "舊唐書/卷190下",
+    "is_合传": true,
+    "biography_name": "文苑列传",
+    "_verified": true
+  },
+  "杨贵妃": {
+    "wikisource_page": "舊唐書/卷51",
+    "is_合传": true,
+    "biography_name": "后妃列传",
+    "_verified": true
+  },
+  "林则徐": {
+    "wikisource_page": "清史稿/卷369",
+    "is_合传": false,
+    "biography_name": "林则徐传",
+    "_verified": true
+  },
+  "柳宗元": {
+    "wikisource_page": "舊唐書/卷160",
+    "is_合传": false,
+    "biography_name": "柳宗元传",
+    "_verified": true
+  },
+  "武则天": {
+    "wikisource_page": "舊唐書/卷6",
+    "is_合传": false,
+    "biography_name": "则天皇后本纪",
+    "_verified": false
+  },
+  "玄奘": {
+    "wikisource_page": "舊唐書/卷191",
+    "is_合传": true,
+    "biography_name": "方伎列传",
+    "_verified": false
+  },
+  "王安石": {
+    "wikisource_page": "宋史/卷327",
+    "is_合传": false,
+    "biography_name": "王安石传",
+    "_verified": true
+  },
+  "王维": {
+    "wikisource_page": "舊唐書/卷190下",
+    "is_合传": true,
+    "biography_name": "文苑列传",
+    "_verified": true
+  },
+  "王羲之": {
+    "wikisource_page": "晉書/卷80",
+    "is_合传": false,
+    "biography_name": "王羲之传",
+    "_verified": false
+  },
+  "白居易": {
+    "wikisource_page": "舊唐書/卷166",
+    "is_合传": false,
+    "biography_name": "白居易传",
+    "_verified": false
+  },
+  "秦始皇": {
+    "wikisource_page": "史記/卷06",
+    "is_合传": false,
+    "biography_name": "秦始皇本纪",
+    "_verified": false
+  },
+  "老子": {
+    "wikisource_page": "史記/卷63",
+    "is_合传": true,
+    "biography_name": "老子韩非列传",
+    "_verified": false
+  },
+  "苏轼": {
+    "wikisource_page": "宋史/卷338",
+    "is_合传": false,
+    "biography_name": "苏轼传",
+    "_verified": false
+  },
+  "诸葛亮": {
+    "wikisource_page": "三國志/卷35",
+    "is_合传": false,
+    "biography_name": "诸葛亮传",
+    "_verified": false
+  },
+  "谢安": {
+    "wikisource_page": "晉書/卷79",
+    "is_合传": false,
+    "biography_name": "谢安传",
+    "_verified": false
+  },
+  "赵匡胤": {
+    "wikisource_page": "宋史/卷1",
+    "is_合传": false,
+    "biography_name": "太祖本纪",
+    "_verified": false
+  },
+  "辛弃疾": {
+    "wikisource_page": "宋史/卷401",
+    "is_合传": false,
+    "biography_name": "辛弃疾传",
+    "_verified": false
+  },
+  "郑和": {
+    "wikisource_page": "明史/卷304",
+    "is_合传": true,
+    "biography_name": "宦官列传",
+    "_verified": false
+  },
+  "陶渊明": {
+    "wikisource_page": "晉書/卷94",
+    "is_合传": true,
+    "biography_name": "隐逸列传",
+    "_verified": false
+  },
+  "韩愈": {
+    "wikisource_page": "舊唐書/卷160",
+    "is_合传": false,
+    "biography_name": "韩愈传",
+    "_verified": false
+  },
+  "鲁迅": {
+    "wikisource_page": null,
+    "is_合传": false,
+    "biography_name": "(近代人物, 无正史本传)"
+  }
+}
