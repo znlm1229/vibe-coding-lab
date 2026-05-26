@@ -262,7 +262,7 @@ PROFILE_PROMPT = """你是中国历史人物 profile 编辑。给你 1 位历史
 # {name}
 
 ## 基本信息
-- 字 / 号 / 谥号 / 庙号 / 别号: <列出所有,无则填"无">
+- 字 / 号 / 谥号 / 庙号 / 别号: <**严格 ≤ 5 个最常用**, 各类型(字/号/谥号/庙号/别号)各最多取 1 个, **排除 ≥ 10 字的完整谥号** (谥号若长则取末 2-3 字简称如"忠武"/"昭烈"/"纯帝"); 无则填"无">
 - 生卒年 / 朝代区间 / 籍贯: <...>
 - 主要职业 / 身份: <...>
 
@@ -807,6 +807,18 @@ def main():
     log.info(f"history_index: {len(history_index)} entry")
     good_examples, bad_examples = load_few_shot_examples()
     log.info(f"few-shot pool: {len(good_examples)} 好 + {len(bad_examples)} 坏")
+
+    # 清掉本次要跑 figure 的旧 failed 记录 (避免 stale)
+    if FAILED_FIGURES.exists():
+        try:
+            failed_old = json.loads(FAILED_FIGURES.read_text(encoding="utf-8"))
+            failed_clean = [f for f in failed_old if f.get("name") not in names]
+            if len(failed_clean) != len(failed_old):
+                FAILED_FIGURES.write_text(
+                    json.dumps(failed_clean, ensure_ascii=False, indent=2), encoding="utf-8")
+                log.info(f"  清掉 {len(failed_old) - len(failed_clean)} 条本次要跑 figure 的旧 failed 记录")
+        except Exception:
+            pass
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

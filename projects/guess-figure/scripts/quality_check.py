@@ -316,17 +316,17 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
 
 JUDGE_PROMPT_TEMPLATE = """你是中国历史人物线索质量审稿员。给定 aliases + banlist + 7 clues, 为每条 clue 输出 verdict。
 
-verdict 标准 (T14 灰度后放宽 2 字子串规则, 减少 false positive):
-**违规** (任一触发):
-- d1-d7 任意 clue 含 aliases 整字 (e.g. 完整 "东坡居士" 出现)
+verdict 标准 (T14 第二轮灰度后, 进一步放宽 d6/d7 整字 alias):
+**违规** (任一触发, 严格 d1-d5):
+- d1-d5 clue 含 aliases 整字 (e.g. 完整 "东坡居士" 出现)
 - d1-d5 clue 含 aliases **≥ 3 字** 子串 (e.g. "长春居" 3字子串 ⊂ "长春居士" 违规;"高宗"/"弘历" 2字 不算违规)
 - d1-d5 clue 含 banlist 中典故/作品名 (d6-d7 求救范围允许 banlist)
 - d1 clue 含朝代名 (汉/唐/宋/元/明/清/三国 等)
 
-**可疑** (软违规):
+**可疑** (软违规, 不阻 retry):
 - clue 长度 < 20 字 或 > 80 字
 - 难度梯度与编号不符 (如 d1 比 d5 还具体)
-- d6-d7 含 aliases ≥ 3 字子串 (求救范围允许子串,但 ≥ 3 字仍偏暴露,标可疑提醒)
+- d6-d7 含 aliases 整字或 ≥ 3 字子串 (求救范围设计本来允许暴露, 标可疑提醒但不阻塞)
 
 **合规**: 其他
 
