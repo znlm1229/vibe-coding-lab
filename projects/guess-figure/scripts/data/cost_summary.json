@@ -1,0 +1,430 @@
+{
+  "total_cost_cny": 0.2339,
+  "by_figure": {
+    "乾隆": {
+      "total_cost_cny": 0.0408,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 6447,
+            "completion_tokens": 1076,
+            "total_tokens": 7523
+          },
+          "cost_cny": 0.0339,
+          "latency_s": 43.31
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2411,
+            "completion_tokens": 529,
+            "total_tokens": 2940,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2411,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 4.94
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2510,
+            "completion_tokens": 519,
+            "total_tokens": 3029,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2510,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 11.11
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2417,
+            "completion_tokens": 570,
+            "total_tokens": 2987,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2417,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 5.37
+        }
+      ]
+    },
+    "关羽": {
+      "total_cost_cny": 0.0468,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 8788,
+            "completion_tokens": 903,
+            "total_tokens": 9691,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0402,
+          "latency_s": 27.32
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2272,
+            "completion_tokens": 487,
+            "total_tokens": 2759,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2272,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.29
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2213,
+            "completion_tokens": 581,
+            "total_tokens": 2794,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2213,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 35.57
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2334,
+            "completion_tokens": 504,
+            "total_tokens": 2838,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2334,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.11
+        }
+      ]
+    },
+    "刘备": {
+      "total_cost_cny": 0.051,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 9484,
+            "completion_tokens": 1066,
+            "total_tokens": 10550,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0444,
+          "latency_s": 31.42
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2408,
+            "completion_tokens": 506,
+            "total_tokens": 2914,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2408,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 5.01
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2492,
+            "completion_tokens": 463,
+            "total_tokens": 2955,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2492,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.29
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2519,
+            "completion_tokens": 463,
+            "total_tokens": 2982,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2519,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.25
+        }
+      ]
+    },
+    "李白": {
+      "total_cost_cny": 0.0501,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 9493,
+            "completion_tokens": 980,
+            "total_tokens": 10473,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0435,
+          "latency_s": 32.99
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2263,
+            "completion_tokens": 513,
+            "total_tokens": 2776,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2263,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 22.1
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2368,
+            "completion_tokens": 500,
+            "total_tokens": 2868,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2368,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.66
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2286,
+            "completion_tokens": 550,
+            "total_tokens": 2836,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2286,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 5.17
+        }
+      ]
+    },
+    "苏轼": {
+      "total_cost_cny": 0.0452,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 9305,
+            "completion_tokens": 994,
+            "total_tokens": 10299,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.043,
+          "latency_s": 33.9
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2274,
+            "completion_tokens": 527,
+            "total_tokens": 2801,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2274,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.81
+        }
+      ]
+    }
+  }
+}

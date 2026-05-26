@@ -114,27 +114,47 @@ def setup_logging() -> logging.Logger:
 
 
 # ===== T7: fetch_three_sources =====
-def search_wikidata_qid(name: str) -> str | None:
-    r = requests.get(
-        "https://www.wikidata.org/w/api.php",
-        params={"action": "wbsearchentities", "search": name, "language": "zh",
-                "format": "json", "type": "item", "limit": 5},
-        headers={"User-Agent": USER_AGENT}, timeout=30,
-    )
-    r.raise_for_status()
-    results = r.json().get("search", [])
+def _wikidata_get_with_retry(params: dict, log: logging.Logger | None = None, max_retries: int = 2) -> dict:
+    """Wikidata API GET 含 429 retry (cool down 30s/60s)。"""
+    last_err = None
+    for attempt in range(max_retries + 1):
+        if attempt > 0:
+            wait = 30 * attempt
+            if log:
+                log.warning(f"  ↻ Wikidata 429 cool down {wait}s 后 retry ({attempt}/{max_retries})")
+            time.sleep(wait)
+        try:
+            r = requests.get(
+                "https://www.wikidata.org/w/api.php",
+                params=params,
+                headers={"User-Agent": USER_AGENT}, timeout=30,
+            )
+            if r.status_code == 429:
+                last_err = "HTTP 429 Too Many Requests"
+                continue
+            r.raise_for_status()
+            return r.json()
+        except requests.HTTPError as e:
+            if e.response is not None and e.response.status_code == 429:
+                last_err = "HTTP 429"
+                continue
+            raise
+    raise RuntimeError(f"Wikidata 重试 {max_retries + 1} 次仍 429: {last_err}")
+
+
+def search_wikidata_qid(name: str, log: logging.Logger | None = None) -> str | None:
+    data = _wikidata_get_with_retry(
+        {"action": "wbsearchentities", "search": name, "language": "zh",
+         "format": "json", "type": "item", "limit": 5}, log=log)
+    results = data.get("search", [])
     return results[0]["id"] if results else None
 
 
-def fetch_wikidata_fields(qid: str) -> dict:
-    r = requests.get(
-        "https://www.wikidata.org/w/api.php",
-        params={"action": "wbgetentities", "ids": qid, "format": "json",
-                "languages": "zh|en", "props": "labels|aliases|claims|descriptions"},
-        headers={"User-Agent": USER_AGENT}, timeout=30,
-    )
-    r.raise_for_status()
-    entity = r.json()["entities"][qid]
+def fetch_wikidata_fields(qid: str, log: logging.Logger | None = None) -> dict:
+    data = _wikidata_get_with_retry(
+        {"action": "wbgetentities", "ids": qid, "format": "json",
+         "languages": "zh|en", "props": "labels|aliases|claims|descriptions"}, log=log)
+    entity = data["entities"][qid]
     claims = entity.get("claims", {})
 
     def extract_time(prop):
@@ -202,14 +222,14 @@ def fetch_three_sources(name: str, history_mapping: dict | None, log: logging.Lo
     wiki_text = (page.text or "")[:5000]
     log.debug(f"  维基: {len(wiki_text)} 字")
 
-    # 2. Wikidata 6 字段
-    qid = search_wikidata_qid(name)
+    # 2. Wikidata 6 字段 (含 429 retry)
+    qid = search_wikidata_qid(name, log=log)
     if not qid:
         log.warning(f"  ⚠️ Wikidata 无 '{name}'")
         wd = None
     else:
         time.sleep(1)
-        wd = fetch_wikidata_fields(qid)
+        wd = fetch_wikidata_fields(qid, log=log)
         log.debug(f"  Wikidata: {qid}")
 
     # 3. 二十四史本传 (按 mapping)
@@ -281,9 +301,6 @@ PROFILE_PROMPT = """你是中国历史人物 profile 编辑。给你 1 位历史
 3. "反差 / 鲜为人知点" 是 d1 难线索的源, 必须是普通人不知道的反差面
 4. 文字简洁, 单点 1 句话
 5. 输出纯 markdown, 无 ``` 包裹
-
-材料:
-{material}
 """
 
 
@@ -788,6 +805,8 @@ def main():
 
     for i, name in enumerate(names, 1):
         log.info(f"\n[{i}/{len(names)}]")
+        if i > 1:
+            time.sleep(3)  # figure 间 cool down 避免 Wikidata 429
         fig = process_one(name, args.strong_llm, args.flash_llm, args.judge_llm,
                           history_index, good_examples, bad_examples,
                           args.max_judge_retries, log)

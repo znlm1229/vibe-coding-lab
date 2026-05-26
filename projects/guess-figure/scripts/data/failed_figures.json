@@ -1,0 +1,22 @@
+[
+  {
+    "name": "乾隆",
+    "reason": "judge 重试 3 次后仍违规",
+    "timestamp": "2026-05-26T03:33:56Z"
+  },
+  {
+    "name": "关羽",
+    "reason": "judge 重试 3 次后仍违规",
+    "timestamp": "2026-05-26T03:35:31Z"
+  },
+  {
+    "name": "刘备",
+    "reason": "judge 重试 3 次后仍违规",
+    "timestamp": "2026-05-26T03:36:38Z"
+  },
+  {
+    "name": "李白",
+    "reason": "judge 重试 3 次后仍违规",
+    "timestamp": "2026-05-26T03:38:10Z"
+  }
+]
