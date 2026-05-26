@@ -15,7 +15,7 @@ V2（002 任务）就是为这个补保险。从 Stage 1 Brainstorm 到 Stage 9 
 
 ## 这次做的：3 件事
 
-1. **匿名 cookie 账号系统**：HMAC-SHA256 signed UUID + HttpOnly/Secure/SameSite=Lax + 滚动续期 365 天。"完全可选"——不强制注册，匿名也能玩、能存战绩。邮箱 / 跨设备同步推到下一个任务。
+1. **匿名 cookie 账号系统**：HMAC-SHA256 signed UUID + HttpOnly/Secure/SameSite=Lax + 滚动续期 365 天。"完全可选"——不强制注册，匿名也能玩、能存战绩。邮箱 / 跨设备同步推到后续任务（004 邮箱 magic link 候选）。
 2. **双层限流**：CF dashboard Rate Limiting Rules（P）在边缘拦极端流量 + Workers KV 计数器（Q）按 IP/user 日窗口细粒度。**实际上 P 路径在 free plan 走不通**——成了 SPEC v1.0.1 patch 的重要 acknowledge。
 3. **LLM 成本兜底三件套**：
    - **U** KV 缓存（key 含 `figure_id + aliases_hash + normalized_input`）—— 同输入第二次不调 LLM
@@ -143,7 +143,7 @@ Stage 7 末期 user 跑 verify_ac.sh 时报 `HTTP 429: 请求过于频繁 (rate-
 
 Stage 9 user 验收通过后两个微调：
 
-1. **个人战绩 UI**：002 SPEC Non-goals 3 明示"排行榜 UI / 个人详情页留 003"，所以 002 没做 UI——但 user 测完发现"看不到自己历史记录"是体验缺失。`fix(T16):` 在首页加战绩区段（共 N 局 · 胜 M 局 · 近 5 局列表），15 分钟轻补，不动 SPEC / 后端 / 单测。
+1. **个人战绩 UI**：002 SPEC Non-goals 3 明示"排行榜 UI / 个人详情页留 003"，所以 002 没做 UI——但 user 测完发现"看不到自己历史记录"是体验缺失。`fix(T16):` 在首页加战绩区段（共 N 局 · 胜 M 局 · 近 5 局列表），15 分钟轻补，不动 SPEC / 后端 / 单测。 *（事后 2026-05-26 修正：实际 003 做了线索 pipeline 重构，排行榜 UI 留 004+）*
 2. **RATE_LIMIT_PER_IP_DAILY 200 → 1000**：SPEC C3 默认 200 在共享 NAT 下误伤合法用户，user 决策调到 1000。**SPEC C3 已规约"env vars 可调"**，不算 patch。
 
 ## 整体感受

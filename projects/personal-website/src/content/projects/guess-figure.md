@@ -1,10 +1,10 @@
 ---
-title: "guess-figure — 猜历史人物（V2 含账号 + 限流 + LLM 成本兜底）"
-summary: "九步 AI 原生开发工作流连续两期端到端做出的公开上线 Web 游戏。V1（001，2 天）：50 人物 × 7 线索 + LLM 异称匹配；V2（002，1 长 session）：匿名 cookie 账号 + 双层限流 + LLM 缓存与日预算兜底，钱袋子风险压到 ≤ ¥5/天。"
-tech: ["SvelteKit 5", "Svelte 5 Runes", "TypeScript", "Cloudflare Pages", "Cloudflare Functions", "Cloudflare D1", "Cloudflare Workers KV", "HMAC-SHA256 Cookie", "gemini-3.1-flash-lite", "Python", "Vitest"]
+title: "guess-figure — 猜历史人物（V3 含 3 步 LLM pipeline + 题库 65 + 95.4% 质量）"
+summary: "九步 AI 原生开发工作流连续三期端到端做出的公开上线 Web 游戏。V1（001，2 天）：50 人物 × 7 线索 + LLM 异称匹配；V2（002，1 长 session）：匿名 cookie 账号 + 双层限流 + LLM 成本兜底；V3（003，1 工作日）：3 步 LLM pipeline 重构（强 LLM 产画像 → flash 产线索 → judge 自动重试）+ 题库 50→65 + quality_check 95.4% 满分率 + ¥2.61 总成本。"
+tech: ["SvelteKit 5", "Svelte 5 Runes", "TypeScript", "Cloudflare Pages", "Cloudflare Functions", "Cloudflare D1", "Cloudflare Workers KV", "HMAC-SHA256 Cookie", "gemini-3.1-flash-lite", "deepseek-v3.2", "Wikisource API", "Python", "Vitest"]
 githubUrl: "https://github.com/znlm1229/vibe-coding-lab/tree/main/projects/guess-figure"
 status: "active"
-pubDate: 2026-05-25
+pubDate: 2026-05-26
 featured: true
 order: 2
 ---
@@ -63,8 +63,8 @@ V1 内容生产模型选型走了一段弯路：grill-me 阶段锚定 DeepSeek V
 
 | 维度 | 方案 | 备注 |
 |---|---|---|
-| **账号** | 匿名持久 cookie + HMAC-SHA256 signed UUID + 滚动续期 365d | "完全可选"语境；不引入邮箱（推 003） |
-| **持久化** | Cloudflare D1（users + games 表）+ 2 个 KV namespaces | schema 预留 003 邮箱 + merge 字段 |
+| **账号** | 匿名持久 cookie + HMAC-SHA256 signed UUID + 滚动续期 365d | "完全可选"语境；不引入邮箱（推后续 — 004 候选） |
+| **持久化** | Cloudflare D1（users + games 表）+ 2 个 KV namespaces | schema 预留后续邮箱任务字段（004 候选） |
 | **限流主线 1** | Workers KV 计数器（按 IP / 按 user 日窗口） | CF Pages free plan 不支持 dashboard rate limit rules → SPEC v1.0.1 acknowledge，Q 计数器全量替代 |
 | **限流主线 2 LLM 成本** | KV 缓存（key 含 figure_id + aliases_hash）+ 全局日预算 V=8000 + 单点上限 X=50 + degraded 模式 | Stage 3 Prototype 实测云雾 ¥0.000526/call → V 阈值 ¥4.2/天兜底 |
 | **降级 UX** | 响应 `degraded:true / network_error:true` 三态字段；前端识别后**不消耗线索** | 防"配额触发误扣线索"的字面 PASS / 行为破洞 |
@@ -93,3 +93,59 @@ V2 期间又抓到 5 个 production 部署的隐性陷阱：
 [`workflow/002-account-rate-limit/`](https://github.com/znlm1229/vibe-coding-lab/tree/main/projects/guess-figure/workflow/002-account-rate-limit) 含 SPEC v1.0.1 / Plan / 20 Tasks / Implementation / Stage 8 用户实测清单 / Stage 9 22 AC 满足核对表。
 
 V2 全流程的工作流复盘见 [博客](/posts/guess-figure-002-account-rate-limit/)。
+
+---
+
+## V3 更新（2026-05-26，003 任务）：3 步 LLM pipeline + 题库 50→65 + 内容质量阶跃
+
+**任务规模与产出**：18 AC（15 PASS + 3 偏差 explicit accept）/ 单工作日推完 / 123 测全 pass / 4 次 `fix(TX):` 回路诚实记录 / 总 LLM 成本 ¥2.61 / 0 commit 动过游戏机制（AC16 完美）。
+
+**为什么做这一期**：V2 题库 50 个人物 × 7 线索的**内容质量本身**有天花板——乾隆 d1「十项武功」≈ alias「十全老人」(语义穿底)、关羽 d7「字云长」⊂ alias「关云长」(子串穿底)、刘备 d2「织席贩履 + 结义兄弟」（标志事件穿底）、乾隆 d5 比 d1 更易猜（梯度乱序）。**老 pipeline 单步 LLM + 1000 字摘要**信息饥饿,无法支撑梯度精细化。
+
+### 关键架构（v1.1）
+
+| 维度 | 方案 | 备注 |
+|---|---|---|
+| **3 步 LLM pipeline** | (强 LLM) 三源 → 8-section 画像 → (flash) 画像 + banlist + few-shot → 7 条 clues → (flash) judge 自动重试 N=2 | 强 LLM 主选 `deepseek-v3.2`(prototype 横向对比 haiku/gemini-pro-thinking-fail 后定);成本 ¥0.05/figure vs haiku ¥0.18 |
+| **输入侧三源材料** | 维基中文全文 5000 字（原 1000 字摘要）+ Wikidata 6 字段 + 二十四史 Wikisource 选段 5000 字（按 mapping） | mapping 阿拉伯数字 fix 后 hit 率 80%+,拉不到走 fallback 仅维基+Wikidata |
+| **数据资产化** | `src/lib/data/profiles/{id}.md` × 69 个 8-section markdown 入 git | 后续 006 / 新玩法（判断题/选择题）可复用同一份 profile |
+| **quality_check 升级 4 项** | d1-5 不含 aliases ≥3 字子串 + d1-5 不含 profile typology banlist + 信息密度梯度启发式 + LLM-as-judge `--with-judge` flag | 最终 62/65 = **95.4%** 满分率（SPEC AC6 ≥ 90% 过） |
+| **regression 兜底机制** | `regen_diff.py` 自动算 v1 vs v2 score（同一升级 quality_check）→ "候选采用 v2" 或 "保留 v1" → final figures.json 50 旧 = 31 v2 + 19 v1 混合 | 用户 T20 "全部按自动决策" 一句话通过,无逐 entry review |
+| **强约束防御** | thinking model detect（`reasoning_tokens > 0 + content 空 → raise`）+ clue prompt inject banlist（5 好+5 坏 few-shot 随机选 1 对） | 防 gemini-2.5-pro 类静默失败 + 防 d4-5 banlist 失控 |
+
+### 工作流摩擦点（给 v1.3 的输入）
+
+V3 期间又抓到 5 个 LLM iteration 的隐性陷阱：
+
+1. **LLM 静默改 figure name** — clues_obj.name 把"康熙"改成"康熙帝",production code 应 hardcode key field 而非取 LLM 输出
+2. **profile aliases 长度直接 driver clue 触发率** — 乾隆 11+ aliases 让 d6/d7 几乎不可能 judge 通过,X 方案 `PROFILE_PROMPT` 限 aliases ≤ 5 才解决
+3. **gemini-2.5-pro thinking model 输出空 content** — `completion_tokens=3997` 全在 `reasoning_tokens`,后续 pipeline 拿到空 profile 失败;call_llm 必须 detect
+4. **Wikisource page name 格式漂移** — LLM 凭知识写"卷一上"中文数字,实际 Wikisource 用"卷1上"阿拉伯数字,T22 第 1 轮 0/20 全 fail;mapping 生成后必须 verify hit rate
+5. **deterministic check 跟 LLM judge prompt 双重 standards** — check #6 ≥ 2 字 vs judge ≥ 3 字,quality_check 第 1 跑 42% 满分率,对齐后 95.4%
+
+### prompt 调优 2 轮（X + Y 方案）
+
+T14 灰度 5 figure 第 1 跑 4/5 fail。诊断 + 修 2 处:
+
+- **X 方案**(治本):`PROFILE_PROMPT` 限 aliases section ≤ 5 个最常用,排除 ≥ 10 字完整谥号
+- **Y 方案**(止损):`JUDGE_PROMPT` 子串规则 ≥ 2 字 → ≥ 3 字,d6/d7 整字 alias 改"可疑"(求救范围允许暴露)
+
+第 2 跑 4/5 通过(关羽/刘备/李白/苏轼;乾隆仍 fail —— alias「十全老人」典故「十全武功」太著名 LLM 在 d1-5 难避开 systematic hard case)。
+
+### 65/70 偏差 + 用户 explicit accept
+
+50 旧 figure 跑出 14 failed + 20 新皇帝跑出 5 failed = 19 failed(SPEC AC9 ≤ 5 字面违反 ≥ 4 倍)。但:**50 旧有 v1 fallback,5 新无 fallback 即 AC3 偏差**(题库 65/70)。
+
+**用户在中途多次 explicit accept**(T15 "A 接受 65 GO" + T20 "全部按自动" + Stage 8 "通过"),最终 figures.json 65/70 entry 上线。**workflow 灵活性证据**:SPEC AC 字面违反 vs spirit 用户知情同意,Stage 9 sign-off 通过。
+
+### V3 测试覆盖（123/123 全 pass）
+
+- `vitest` **66/66**（含 002 的 54 测 + V3 期间游戏端继承的 12 新测）
+- `quality_check.py` Python `unittest` **39/39**（helper / check #6/7/8 / stopword / mock LLM judge / 旧 5 项回归）
+- `generate_figures.py` Python `unittest` **18/18**（call_llm thinking 防御 / validate_profile_sections / material_to_text / parse_json / estimate_cost / clues banlist inject / judge retry loop）
+
+### V3 完整 artifact
+
+[`workflow/003-clue-optimization/`](https://github.com/znlm1229/vibe-coding-lab/tree/main/projects/guess-figure/workflow/003-clue-optimization) 含 SPEC v1.0/v1.0.1/v1.1 / 26 Tasks / Implementation / Stage 8 入场报告 / Stage 9 18 AC 核对表 / `spec-emperor-list.md` 20 皇帝候选清单 / `proto/` 多模型横向对比 spike 数据。
+
+V3 全流程的工作流复盘见 [博客](/posts/guess-figure-003-clue-optimization/)。

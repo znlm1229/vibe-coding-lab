@@ -4,11 +4,14 @@ vibe-coding-lab 的第一个实战项目：**用户的个人网站**。目的是
 
 ## 当前状态
 
-🟢 **上线运行中** —— 首版 MVP 已上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/)，13/13 AC 通过用户验收（2026-05-19）。
+🟢 **上线运行中** —— 已上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/),累计 13/13 AC 通过用户验收(2026-05-19);后续 3 次内容维护任务跟进。
 
-- 已完成任务：001 — 用九步工作流端到端搭出个人网站
-- 内容维护：直接编辑 `src/content/{posts,projects,pages}/*.md` → git push → CF Pages 自动 deploy
-- 后续候选任务：002（UX 收尾）、003（品牌化），用户提议时再开
+- 已完成任务:
+  - 001 — 用九步工作流端到端搭出个人网站(2026-05-19)
+  - 002 — 加 guess-figure V1 项目卡 + V1 复盘博客(2026-05-22,内容维护)
+  - 003 — 加 guess-figure 003 复盘博客 + 更新项目卡 V3 section + 润色 3 篇旧博客(2026-05-26,内容维护)
+- 内容维护:直接编辑 `src/content/{posts,projects,pages}/*.md` → git push → CF Pages 自动 deploy
+- 后续候选任务:004(UX 收尾:Header nav / Footer / 文案润色)、005(品牌化:OG 图 / 自定义域名),用户提议时再开
 
 ## 工作流（必须遵循）
 
@@ -42,5 +45,6 @@ Brainstorm → Grill Me → Prototype → SPEC ★ → Plan → Tasks ★ → Im
 
 | # | 任务 | 状态 | 备注 |
 |---|---|---|---|
+| 003 | [`003-v3-content-refresh`](./workflow/003-v3-content-refresh/) | ✅ **已完成 2026-05-26** | 内容维护:加 guess-figure 003(线索 pipeline 重构 / 题库 50→65)复盘博客 + 更新项目卡 V3 section + 润色现有 3 篇博客 5 处。同 002 pattern 跳过 Stage 1-6 + 8-9 |
 | 002 | [`002-blog-and-projects`](./workflow/002-blog-and-projects/) | ✅ **已完成 2026-05-22** | 按规模伸缩跳过 Stage 1-6 + 8-9；加 1 篇博客（guess-figure 复盘）+ 1 个项目集 entry（guess-figure），发布到 [lw-personal.pages.dev](https://lw-personal.pages.dev/) |
 | 001 | [`001-personal-website`](./workflow/001-personal-website/) | ✅ **已完成 2026-05-19** | 用户验收通过，13/13 AC 满足，上线 [lw-personal.pages.dev](https://lw-personal.pages.dev/) |

@@ -27,7 +27,7 @@ featured: true
 - **Grill Me**：调用 `grill-me` skill 跑 10 轮拷问，从动机、受众、维护频率到非目标全部理清
 - **SPEC**：13 条可测试 AC，包括"HTML 不含明文邮箱"这种隐私守则
 - **Plan + Tasks**：拆成 9 个 phase、19 个 atomic task
-- **Implementation**：每个 task 一个 commit，目前进行中
+- **Implementation**：每个 task 一个 commit，已全部完成（001 通过用户验收上线）
 
 ## 技术栈
 
