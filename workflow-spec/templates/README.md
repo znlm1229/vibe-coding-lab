@@ -1,6 +1,6 @@
 # workflow-spec/templates/ — 流程模板
 
-九个阶段 + 1 个空白的 markdown 模板。**配套 specification.md v1.3「持久化机制」节使用**。
+九个阶段的 markdown 模板。**配套 specification.md v1.4「规则五（持久化）+ 规则六（恢复）」使用**。
 
 ## 文件清单
 
@@ -43,6 +43,36 @@ cp -r workflow/_template workflow/001-your-task-name
 - **07-implementation.md**：commit prefix 速查表 + verification-before-completion 调用记录槽
 - **08-qa.md**：质检就绪摘要 + 人工实测发现 + 用户实测确认槽
 - **09-acceptance.md**：22 AC 满足核对表 + 用户验收槽
+
+## 恢复进行中的任务（v1.4 新增，对应规则六）
+
+新 session 接手已有 `workflow/` 的项目时，AI 第一步**不是直接干活，是探测状态**：
+
+```bash
+# 1. 列出所有 in-flight 任务
+ls workflow/
+# → 001-foo/  002-bar/  _template/
+
+# 2. 读目标任务的 9 个阶段文件
+ls workflow/002-bar/
+# → 01-brainstorm.md  02-grill-me.md  ...  09-acceptance.md
+```
+
+逐个 md 按下表判定状态：
+
+| md 文件状态 | 阶段状态 | 处理 |
+|---|---|---|
+| 文件不存在 / 只剩模板占位符 | **未开始** | 候选 resume point |
+| 顶部 `> 已跳过 — 理由：...` | **已跳过** | 算完成,跳过 |
+| 内容已填,`⬜ 等待确认` | **已起草,关卡未过** | 候选 resume point（如是阶段 4/6/8/9） |
+| 内容已填,`⬜ 已确认` 已勾上 | **已通过** | 跳过 |
+| 阶段 1/3/5/7 无确认槽,内容非模板 | **已通过** | 跳过 |
+
+**第一个非"已通过 / 已跳过"的阶段 = resume point**。先把这个判定告诉用户:
+
+> 「检测到 `workflow/002-account-rate-limit`：Stage 1-4 已通过（SPEC 2026-05-20 确认），Stage 5 草稿已写但 Stage 6 尚未开始。要从 Stage 6 续做，还是回 Stage 5 修计划？」
+
+确认后再动手。详见 [specification.md §3 规则六](../specification.md#规则六v14-新增从-workflow-状态恢复任务不从记忆里凭印象续做)。
 
 ## 跳过阶段（按规模伸缩规则）
 
