@@ -30,6 +30,8 @@ import re
 import sys
 from pathlib import Path
 
+import requests  # T6: judge LLM call
+
 # T6: 仅 --with-judge 时才需要 (避免顶层 import 失败)
 try:
     from dotenv import load_dotenv
@@ -348,7 +350,6 @@ banlist (典故/作品, 仅 d1-5 禁出现):
 
 def call_judge_llm(model: str, system: str, user: str) -> str:
     """调云雾 LLM (production)。返回 content 字符串。"""
-    import requests
     api_key = os.environ.get("YUNWU_API_KEY")
     base_url = (os.environ.get("YUNWU_BASE_URL") or "https://yunwu.ai/v1").rstrip("/")
     if not base_url.endswith("/v1"):
