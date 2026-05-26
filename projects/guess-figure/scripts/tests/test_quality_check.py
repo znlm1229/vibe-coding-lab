@@ -7,6 +7,7 @@ T3+ quality_check.py 升级项单测 (stdlib unittest, 无新 deps)。
   python -m unittest scripts.tests.test_quality_check -v
 """
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -14,7 +15,14 @@ from pathlib import Path
 # allow `from quality_check import ...` when running standalone
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from quality_check import check_figure, _alias_substrings, extract_banlist_from_profile, count_specific_terms
+from quality_check import (
+    check_figure,
+    _alias_substrings,
+    extract_banlist_from_profile,
+    count_specific_terms,
+    judge_clues_llm,
+    parse_judge_json,
+)
 
 
 def _make_figure(aliases, clues_text_by_d):
@@ -304,6 +312,88 @@ class TestMaxScore(unittest.TestCase):
         f = _make_figure(aliases=["a", "b", "c"], clues_text_by_d={})
         _, max_score, _ = check_figure(f, profile_md=SAMPLE_PROFILE)
         self.assertEqual(max_score, 8, "profile_md 给定时 max_score=8")
+
+
+class TestJudge_T6(unittest.TestCase):
+    """T6 — LLM-as-judge 集成 (mock LLM call)"""
+
+    def test_judge_parses_合规_response(self):
+        """LLM 返回 7 条 verdict 全合规 → 解析 OK"""
+        f = _make_figure(aliases=["孔明", "卧龙"], clues_text_by_d={})
+        mock_response = json.dumps({
+            "verdicts": [
+                {"d": d, "verdict": "合规", "reason": f"d{d} OK"} for d in range(1, 8)
+            ]
+        })
+
+        def mock_llm(model, system, user):
+            # 验证 prompt 中含关键内容
+            self.assertIn("aliases:", user)
+            self.assertIn("孔明", user)
+            self.assertIn("verdict", user)
+            return mock_response
+
+        result = judge_clues_llm(f, None, "fake-model", llm_call_fn=mock_llm)
+        self.assertEqual(len(result["verdicts"]), 7)
+        for v in result["verdicts"]:
+            self.assertEqual(v["verdict"], "合规")
+
+    def test_judge_parses_违规_response(self):
+        """LLM 返回 d1 违规 → 解析 OK"""
+        f = _make_figure(aliases=["孔明"], clues_text_by_d={})
+        mock_response = json.dumps({
+            "verdicts": [
+                {"d": 1, "verdict": "违规", "reason": "d1 含 alias '孔明'"},
+                {"d": 2, "verdict": "合规", "reason": "OK"},
+                {"d": 3, "verdict": "合规", "reason": "OK"},
+                {"d": 4, "verdict": "合规", "reason": "OK"},
+                {"d": 5, "verdict": "合规", "reason": "OK"},
+                {"d": 6, "verdict": "合规", "reason": "OK"},
+                {"d": 7, "verdict": "合规", "reason": "OK"},
+            ]
+        })
+
+        def mock_llm(model, system, user):
+            return mock_response
+
+        result = judge_clues_llm(f, None, "fake-model", llm_call_fn=mock_llm)
+        self.assertEqual(result["verdicts"][0]["verdict"], "违规")
+        self.assertIn("孔明", result["verdicts"][0]["reason"])
+
+    def test_judge_handles_markdown_wrapped_json(self):
+        """LLM 输出 ```json ... ``` 包裹时也能解析"""
+        f = _make_figure(aliases=["a"], clues_text_by_d={})
+        wrapped = "```json\n" + json.dumps({"verdicts": [{"d": 1, "verdict": "合规", "reason": "OK"}]}) + "\n```"
+
+        def mock_llm(model, system, user):
+            return wrapped
+
+        result = judge_clues_llm(f, None, "fake-model", llm_call_fn=mock_llm)
+        self.assertEqual(len(result["verdicts"]), 1)
+
+    def test_judge_includes_banlist_in_prompt(self):
+        """profile_md 给定时, banlist 应注入 judge prompt"""
+        f = _make_figure(aliases=["孔明"], clues_text_by_d={})
+        captured_prompt = []
+
+        def mock_llm(model, system, user):
+            captured_prompt.append(user)
+            return json.dumps({"verdicts": [
+                {"d": d, "verdict": "合规", "reason": "OK"} for d in range(1, 8)
+            ]})
+
+        judge_clues_llm(f, profile_md=SAMPLE_PROFILE, model="fake-model", llm_call_fn=mock_llm)
+        prompt = captured_prompt[0]
+        # banlist 应包含 typology section 中的关键词
+        self.assertIn("三顾茅庐", prompt, "banlist 应注入 prompt")
+        self.assertIn("木牛流马", prompt, "关键作品也应注入")
+
+    def test_judge_prompt_区分_d15_d67(self):
+        """JUDGE_PROMPT_TEMPLATE 必须显式区分 d1-5 vs d6-7 规则 (OQ14)"""
+        from quality_check import JUDGE_PROMPT_TEMPLATE
+        # prompt 应包含两类规则的区分说明
+        self.assertIn("d6-d7 求救范围允许 banlist", JUDGE_PROMPT_TEMPLATE)
+        self.assertIn("d6-d7 求救范围允许 aliases 子串", JUDGE_PROMPT_TEMPLATE)
 
 
 class TestExistingChecks(unittest.TestCase):

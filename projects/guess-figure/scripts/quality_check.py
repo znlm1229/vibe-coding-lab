@@ -25,9 +25,17 @@
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
+
+# T6: 仅 --with-judge 时才需要 (避免顶层 import 失败)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # 朝代关键词。区分"朝代名"vs"时期副词"：
 # - 朝代名（视为违规）：明确的政权名称
@@ -302,6 +310,112 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
     return score, max_score, warnings
 
 
+# =====  T6: LLM-as-judge =====
+
+JUDGE_PROMPT_TEMPLATE = """你是中国历史人物线索质量审稿员。给定 aliases + banlist + 7 clues, 为每条 clue 输出 verdict。
+
+verdict 标准:
+**违规** (任一触发):
+- d1-d7 任意 clue 含 aliases 整字
+- d1-d5 clue 含 aliases ≥ 2 字子串 (d6-d7 求救范围允许 aliases 子串)
+- d1-d5 clue 含 banlist 中典故/作品名 (d6-d7 求救范围允许 banlist)
+- d1 clue 含朝代名 (汉/唐/宋/元/明/清/三国 等)
+
+**可疑** (软违规):
+- clue 长度 < 20 字 或 > 80 字
+- 难度梯度与编号不符 (如 d1 比 d5 还具体)
+
+**合规**: 其他
+
+输出严格 JSON (无 markdown 包裹):
+{{
+  "verdicts": [
+    {{"d": 1, "verdict": "<合规|可疑|违规>", "reason": "..."}},
+    {{"d": 2, "verdict": "...", "reason": "..."}},
+    ...
+  ]
+}}
+
+aliases: {aliases}
+
+banlist (典故/作品, 仅 d1-5 禁出现):
+{banlist}
+
+7 条 clues:
+{clues}
+"""
+
+
+def call_judge_llm(model: str, system: str, user: str) -> str:
+    """调云雾 LLM (production)。返回 content 字符串。"""
+    import requests
+    api_key = os.environ.get("YUNWU_API_KEY")
+    base_url = (os.environ.get("YUNWU_BASE_URL") or "https://yunwu.ai/v1").rstrip("/")
+    if not base_url.endswith("/v1"):
+        base_url += "/v1"
+    if not api_key:
+        raise RuntimeError("YUNWU_API_KEY 缺失")
+    r = requests.post(
+        f"{base_url}/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": 0.1,
+            "max_tokens": 2000,
+        },
+        timeout=180,
+    )
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"]
+
+
+def parse_judge_json(content: str) -> dict:
+    text = content.strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*\n", "", text)
+        text = re.sub(r"\n```\s*$", "", text)
+    if not text.startswith("{"):
+        m = re.search(r"\{.*\}", text, flags=re.DOTALL)
+        if m:
+            text = m.group(0)
+    return json.loads(text)
+
+
+def judge_clues_llm(figure: dict, profile_md: str | None, model: str, llm_call_fn=None) -> dict:
+    """LLM judge 1 figure 的 7 条 clues, 返回 {verdicts: [...]} dict.
+
+    llm_call_fn(model, system, user) -> str. 默认用 call_judge_llm (production);
+    单测 mock 时传自定义函数.
+    """
+    if llm_call_fn is None:
+        llm_call_fn = call_judge_llm
+
+    aliases = figure.get("aliases") or []
+    clues = figure.get("clues") or []
+    banlist = extract_banlist_from_profile(profile_md) if profile_md else []
+
+    aliases_str = ", ".join(aliases) or "(无)"
+    banlist_str = "\n".join(f"- {b}" for b in banlist) or "(无)"
+    clues_str = "\n".join(
+        f"d{c['difficulty']}: {c['text']}"
+        for c in clues if isinstance(c, dict)
+    )
+
+    prompt = JUDGE_PROMPT_TEMPLATE.format(
+        aliases=aliases_str, banlist=banlist_str, clues=clues_str
+    )
+    content = llm_call_fn(
+        model,
+        "你是中国历史人物线索质量审稿员, 严格 JSON 输出, 不解释。",
+        prompt,
+    )
+    return parse_judge_json(content)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="题库质量自动校验（5 项检查）",
@@ -314,6 +428,10 @@ def main():
                         help="同时打印每条 clue 文字（便于人工 spot check）")
     parser.add_argument("--profiles-dir", default=None,
                         help="profile.md 所在目录 (例: src/lib/data/profiles/). 给定时启用 check #7 (T4)")
+    parser.add_argument("--with-judge", action="store_true",
+                        help="启用 LLM-as-judge 二次审 (T6, 慢, 烧 LLM 成本)")
+    parser.add_argument("--judge-model", default="gemini-3.1-flash-lite",
+                        help="judge 用的 LLM model id")
     args = parser.parse_args()
 
     path = Path(args.figures_file)
@@ -342,6 +460,8 @@ def main():
         print(f"⚠️ --profiles-dir {profiles_dir} 不存在, check #7 跳过")
         profiles_dir = None
 
+    judge_stats = {"合规": 0, "可疑": 0, "违规": 0, "error": 0}
+
     for i, f in enumerate(figures, 1):
         name = f.get("name", "?")
         profile_md = None
@@ -353,6 +473,23 @@ def main():
         score, max_score, warnings = check_figure(f, profile_md)
         status = "✅" if score == max_score else ("⚠️" if score >= max_score - 2 else "❌")
         print(f"{status} [{i:2}] {name:<10}  {score}/{max_score}")
+
+        # T6: judge (informational, not counted in score)
+        judge_result = None
+        if args.with_judge:
+            try:
+                judge_result = judge_clues_llm(f, profile_md, args.judge_model)
+                for v in judge_result.get("verdicts", []):
+                    vd = v.get("verdict", "")
+                    if vd in judge_stats:
+                        judge_stats[vd] += 1
+                if args.verbose:
+                    for v in judge_result.get("verdicts", []):
+                        icon = {"合规": "✓", "可疑": "?", "违规": "✗"}.get(v.get("verdict"), "?")
+                        print(f"      🤖 {icon} d{v.get('d')}: {v.get('verdict')} — {(v.get('reason') or '')[:70]}")
+            except Exception as e:
+                judge_stats["error"] += 1
+                print(f"      🤖 judge 失败: {type(e).__name__}: {str(e)[:80]}")
         if warnings:
             for w in warnings:
                 print(f"      ⚠️ {w}")
@@ -373,6 +510,12 @@ def main():
         print(f"⚠️ 有 issue: {issues_count}/{len(figures)} 个 figures、{issues_total} 处 warning")
     else:
         print(f"🎉 全部通过！")
+    if args.with_judge:
+        total_judged = sum(judge_stats.values())
+        print(f"🤖 LLM-as-judge 汇总 ({total_judged} 条 clue 中):")
+        for k, v in judge_stats.items():
+            if v:
+                print(f"   - {k}: {v}")
     print(f"{'=' * 60}")
 
     if args.strict and issues_count > 0:
