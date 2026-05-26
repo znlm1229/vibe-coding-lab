@@ -2,12 +2,13 @@
 """
 题库自动质量校验脚本（T4）。
 
-5 项检查：
+6 项检查 (003 v3 升级, T3 加第 6 项):
 1. aliases 数 3-5
 2. clues 数 = 7
 3. 难度 1-7 各 1 个齐全
-4. 难度 1-5 全段不含任何 aliases（关键约束 — 防"卧龙"暴露答案）
-5. 难度 1 不含朝代名（按精确朝代关键词匹配 — 修 prototype A 的"春秋"/"明（发明）"false positive）
+4. 难度 1-5 全段不含任何 aliases (字符整字)
+5. 难度 1 不含朝代名
+6. 难度 6-7 不含 aliases 子串 (长度 ≥ 2; T3 新增)
 
 跑法:
   python scripts/quality_check.py src/lib/data/figures.json
@@ -49,8 +50,55 @@ DYNASTY_KEYWORDS = [
 ]
 
 
+# 2-字通用职衔/类目词 — alias 子串若命中这些不算 flag (避免 "皇帝"/"丞相"/"将军" 等泛指词的 false positive)
+ALIAS_SUBSTRING_STOPWORDS = {
+    # 帝王类
+    "皇帝", "皇后", "太子", "太皇", "太上", "皇上",
+    # 职官
+    "丞相", "宰相", "宰执", "尚书", "侍郎", "御史", "中书", "中令", "詹事",
+    "将军", "都督", "节度", "刺史", "县令", "县尉", "县丞",
+    "大夫", "大臣", "大将", "学士", "校尉",
+    "夫人", "公主", "诸侯", "贵妃", "皇妃",
+    # 泛指
+    "万世", "千秋", "百代", "天下", "古今",
+}
+
+
+def _alias_substrings(alias: str, min_len: int = 2) -> list[str]:
+    """生成 alias 的所有 ≥ min_len 长度的子串。
+
+    例: "关云长" → ["关云", "云长", "关云长"]; min_len=2 时单字"关""云""长"被排除。
+    """
+    subs = []
+    n = len(alias)
+    if n < min_len:
+        return subs
+    for L in range(min_len, n + 1):
+        for i in range(n - L + 1):
+            subs.append(alias[i:i + L])
+    return subs
+
+
+def _is_alias_substring_violating(sub: str) -> bool:
+    """alias 子串是否算违规 — 通用职衔/类目词不算 (e.g. '皇帝' 子串 ⊂ '昭烈皇帝' 不 flag)"""
+    if len(sub) < 2:
+        return False
+    if sub in ALIAS_SUBSTRING_STOPWORDS:
+        return False
+    return True
+
+
 def check_figure(f: dict) -> tuple[int, list[str]]:
-    """返回 (score 0-5, warnings list)"""
+    """返回 (score 0-6, warnings list)。
+
+    6 项 check:
+    1. aliases 数 3-5
+    2. clues 数 = 7
+    3. 难度 1-7 各 1 个齐全
+    4. 难度 1-5 不含任何 aliases 整字
+    5. 难度 1 不含朝代名
+    6. 难度 6-7 不含 aliases 子串 (T3, 长度 ≥ 2)
+    """
     score = 0
     warnings = []
 
@@ -103,6 +151,34 @@ def check_figure(f: dict) -> tuple[int, list[str]]:
         else:
             warnings.append(f"难度 1 含朝代名 {bad}")
 
+    # 6. 难度 6-7 不含 aliases 子串 (T3, 长度 ≥ 2; 单字不查避免 "关" / "关于" false positive)
+    if aliases and clues:
+        leak = None
+        for c in clues:
+            if not isinstance(c, dict):
+                continue
+            d = c.get("difficulty", 0)
+            if d not in (6, 7):
+                continue
+            text = c.get("text", "")
+            for a in aliases:
+                if not a or len(a) < 2:
+                    continue
+                for sub in _alias_substrings(a, min_len=2):
+                    if not _is_alias_substring_violating(sub):
+                        continue  # 通用职衔/类目词跳过
+                    if sub in text:
+                        leak = (d, a, sub)
+                        break
+                if leak:
+                    break
+            if leak:
+                break
+        if not leak:
+            score += 1
+        else:
+            warnings.append(f"难度 {leak[0]} 含 alias '{leak[1]}' 子串 '{leak[2]}'")
+
     return score, warnings
 
 
@@ -142,8 +218,8 @@ def main():
     for i, f in enumerate(figures, 1):
         name = f.get("name", "?")
         score, warnings = check_figure(f)
-        status = "✅" if score == 5 else ("⚠️" if score >= 3 else "❌")
-        print(f"{status} [{i:2}] {name:<10}  {score}/5")
+        status = "✅" if score == 6 else ("⚠️" if score >= 4 else "❌")
+        print(f"{status} [{i:2}] {name:<10}  {score}/6")
         if warnings:
             for w in warnings:
                 print(f"      ⚠️ {w}")
