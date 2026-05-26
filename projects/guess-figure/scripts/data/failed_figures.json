@@ -70,53 +70,28 @@
     "timestamp": "2026-05-26T08:10:30Z"
   },
   {
-    "name": "刘秀",
-    "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:31:48Z"
-  },
-  {
     "name": "刘协",
     "reason": "HTTPError: 500 Server Error: Internal Server Error for url: https://yunwu.ai/v1/chat/completions",
-    "timestamp": "2026-05-26T08:32:02Z"
+    "timestamp": "2026-05-26T09:06:37Z"
   },
   {
     "name": "杨广",
     "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:34:40Z"
-  },
-  {
-    "name": "李治",
-    "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:35:46Z"
-  },
-  {
-    "name": "李隆基",
-    "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:36:53Z"
+    "timestamp": "2026-05-26T09:07:45Z"
   },
   {
     "name": "柴荣",
     "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:38:57Z"
-  },
-  {
-    "name": "耶律阿保机",
-    "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:43:09Z"
-  },
-  {
-    "name": "嘉靖",
-    "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:45:47Z"
+    "timestamp": "2026-05-26T09:11:32Z"
   },
   {
     "name": "万历",
     "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:47:01Z"
+    "timestamp": "2026-05-26T09:14:28Z"
   },
   {
     "name": "雍正",
     "reason": "judge 重试 3 次后仍违规",
-    "timestamp": "2026-05-26T08:49:31Z"
+    "timestamp": "2026-05-26T09:15:50Z"
   }
 ]
