@@ -26,7 +26,8 @@
   - 单测:66/66 vitest + 39 quality_check + 18 generate_figures = 123/123 全 pass
 - 公网 URL：https://guess-figure.pages.dev
 - **技术栈**:SvelteKit 5 + adapter-cloudflare + CF Pages Functions + CF D1 + CF Workers KV + gemini-3.1-flash-lite(flash 用)+ **deepseek-v3.2(强 LLM 产画像)** via 云雾中转 + JSON-in-git 题库 + **profiles markdown-in-git 画像数据资产** + Python 内容生产 v2 pipeline(`generate_figures.py` 3 步)+ wrangler.toml `[vars]` env vars
-- 后续候选任务:004（邮箱 magic link + 排行榜）、005（自定义域名 + 品牌化）、006(补 5 缺失皇帝 + V3 题库扩 200 人 + 修 3 旧 figure quality warning)
+- **004-turtle-soup-rag 🟡 进行中（Stage 1 起，2026-05-26）** — 新玩法海龟汤模式 + RAG 史料库（向量召回 + LLM 三态总结「是/否/无关」）
+- 后续候选任务:005（自定义域名 + 品牌化）、006(补 5 缺失皇帝 + V3 题库扩 200 人 + 修 3 旧 figure quality warning)、007 候选(邮箱 magic link + 排行榜,原 004 占位顺延)
 - 任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）
