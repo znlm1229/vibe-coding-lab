@@ -1,6 +1,6 @@
 ---
 name: ai-native-development
-version: 1.2
+version: 1.3
 maintainer: vibe-coding-lab
 homepage: https://github.com/znlm1229/vibe-coding-lab/tree/main/workflow-spec
 last-validated-with: claude-opus-4-7
@@ -15,12 +15,14 @@ description: |
 
   When triggered for smaller tasks, explicitly downscope (announce which stages will be skipped and why) rather than mechanically running all nine stages.
 
+  REQUIRED PERSISTENCE (v1.3): Every project must have a `workflow/` folder alongside `src/`, with each task in its own `NNN-kebab-case/` subdirectory containing the 9 stage markdown files (01-brainstorm.md ... 09-acceptance.md). If the project lacks `workflow/`, the AI's first action is to create it by copying templates from `workflow-spec/templates/`. Stage artifacts MUST persist as git-tracked markdown files — chat context alone is not durable across sessions.
+
   DO NOT trigger for trivial work: one-line bug fixes, renames, code formatting, pure markdown / docstring / changelog edits, dependency bumps, or pure config tweaks — these don't warrant the ceremony.
 ---
 
 # AI-Native Development Workflow
 
-> **v1.2** (2026-05-19) — validated end-to-end on a real ship; added 4 superpowers-skill bindings, AC verification discipline, auto-mode clarification, and 2 new failure modes captured from the v1.1 retrospective. Changelog at the bottom.
+> **v1.3** (2026-05-25) — adds rule 5 (persistence: every project needs `workflow/` folder) + companion `workflow-spec/templates/` directory with the 9 stage markdown templates. Built on v1.2's stage-skill bindings, AC verification discipline, auto-mode clarification, and failure modes. Full changelog at the bottom.
 
 ## What this skill is for
 
@@ -42,13 +44,28 @@ This skill defines how the AI should approach a coding task: not by jumping stra
 
 ## How to run the workflow
 
-Three rules govern movement through the workflow:
+Five rules govern movement through the workflow:
 
-**Scale to the task.** A one-line bug fix does not need a Brainstorm or a Prototype. A new subsystem needs every stage. Before starting, judge the task's size and explicitly tell the user which stages you intend to run and which you'll skip, and why. Let them correct you.
+**1. Scale to the task.** A one-line bug fix does not need a Brainstorm or a Prototype. A new subsystem needs every stage. Before starting, judge the task's size and explicitly tell the user which stages you intend to run and which you'll skip, and why. Let them correct you.
 
-**Stop at every human gate.** Four stages are hard stops where you must not proceed without explicit user confirmation in the chat: **SPEC** end (alignment on *what*), **Tasks** end (alignment on *how* and *scope*), **Human QA** (does it actually work), and **Acceptance** (confirmation against the contract). Producing the artifact is your job; approving it is the human's. Never approve your own SPEC or accept your own work.
+**2. Stop at every human gate.** Four stages are hard stops where you must not proceed without explicit user confirmation in the chat: **SPEC** end (alignment on *what*), **Tasks** end (alignment on *how* and *scope*), **Human QA** (does it actually work), and **Acceptance** (confirmation against the contract). Producing the artifact is your job; approving it is the human's. Never approve your own SPEC or accept your own work.
 
-**Make each stage produce a visible artifact.** Every stage ends with something concrete the user can read — a list of ideas, a list of hard questions, a running prototype, a SPEC document, a plan, a task list, a diff, a QA report, an acceptance checklist. "I thought about it" is not a stage output. If a stage's artifact would be trivial, say so and move on rather than padding it.
+**3. Make each stage produce a visible artifact.** Every stage ends with something concrete the user can read — a list of ideas, a list of hard questions, a running prototype, a SPEC document, a plan, a task list, a diff, a QA report, an acceptance checklist. "I thought about it" is not a stage output. If a stage's artifact would be trivial, say so and move on rather than padding it.
+
+**4. Auto-mode never overrides human gates.** When the host is in auto-mode (continuous autonomous execution), apply it only to routine within-stage decisions (file picks, variable names, library versions). Never apply auto-mode to the four human gates (SPEC / Tasks / Human QA / Acceptance). When in doubt at a gate, ask. The cost of pausing for confirmation at a designed stop is low; the cost of bypassing one can be a wrong-built feature.
+
+**5. Persist artifacts to `workflow/` folder (v1.3).** Every project must have a `workflow/` folder alongside `src/`, holding the 9 stage markdown files per task. Chat context is not durable across sessions — only git-tracked markdown is. **If the project lacks `workflow/`, the AI's first action upon receiving a task is to create it**:
+
+```bash
+# In project root (alongside src/)
+mkdir -p workflow/_template
+cp -r path/to/workflow-spec/templates/. workflow/_template/
+
+# For each new task
+cp -r workflow/_template workflow/NNN-task-name
+```
+
+Then fill `workflow/NNN-task-name/0X-stage.md` as each stage progresses. Skipped stages keep their file (write `> 已跳过 — 理由：<...>` at the top, satisfying rule 3). See [specification.md §3 rule 5](https://github.com/znlm1229/vibe-coding-lab/blob/main/workflow-spec/specification.md#规则五v13-新增每个项目必须建-workflow-文件夹持久化阶段-artifact) for full rationale.
 
 When you begin a task, briefly state the plan: which stages, in what order, where the human gates are. Then start with stage one.
 
@@ -164,9 +181,11 @@ When the host environment is in "auto mode" (continuous autonomous execution), t
 - `references/spec-template.md` — the structure for the Stage 4 SPEC document, including how to write testable acceptance criteria with both AI and human verification channels.
 - `references/plan-and-tasks.md` — structures for the Stage 5 plan document and the Stage 6 task list.
 - `references/tooling.md` — recommended tools and companion skills (including all v1.2 stage-bound skills) for each of the nine stages.
+- `templates/` — **(v1.3)** 9 stage markdown templates for new projects. Copy to `workflow/_template/` on project init (rule 5).
 
 ## Changelog
 
+- **v1.3** (2026-05-25) — Add rule 5: every project must have a `workflow/` folder alongside `src/` for persisting stage artifacts. New `templates/` directory with 9 stage markdown templates (de-projectized, absolute-URL references to spec). README + spec sections updated to reflect persistence as a spec-level requirement (was previously a project-level convention in vibe-coding-lab).
 - **v1.2** (2026-05-19) — Add 3 more stage-skill bindings (`brainstorming` S1, `writing-plans` S5, `verification-before-completion` S7→S8, `requesting-code-review` S8). Add OQ type marking (technical / taste). Add AC dual-channel verification discipline. Add commit prefix `fix(TX):` for Stage-8 回路 bug fixes. Add auto-mode boundary section. Add 2 new failure modes from the 001 retrospective. Add frontmatter version/maintainer/homepage/last-validated-with. Add Chinese trigger phrases + anti-trigger to description. Add top-of-file stage cheat sheet.
 - **v1.1** (2026-05-18) — Bind `grill-me` skill as required at Stage 2.
 - **v1.0** — Initial nine-stage workflow definition with three human gates.
