@@ -391,9 +391,9 @@ class TestJudge_T6(unittest.TestCase):
     def test_judge_prompt_区分_d15_d67(self):
         """JUDGE_PROMPT_TEMPLATE 必须显式区分 d1-5 vs d6-7 规则 (OQ14)"""
         from quality_check import JUDGE_PROMPT_TEMPLATE
-        # prompt 应包含两类规则的区分说明
+        # prompt 应包含两类规则的区分说明 (T14 修订: 3 字子串而非 2)
         self.assertIn("d6-d7 求救范围允许 banlist", JUDGE_PROMPT_TEMPLATE)
-        self.assertIn("d6-d7 求救范围允许 aliases 子串", JUDGE_PROMPT_TEMPLATE)
+        self.assertIn("≥ 3 字", JUDGE_PROMPT_TEMPLATE, "T14 修订: 子串规则放宽到 3 字")
 
 
 class TestExistingChecks(unittest.TestCase):

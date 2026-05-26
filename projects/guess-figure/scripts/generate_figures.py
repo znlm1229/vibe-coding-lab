@@ -419,10 +419,15 @@ def build_profile(name: str, material: dict, strong_model: str,
 
 CLUE_PROMPT = """你是中国历史人物题目编辑。给你 1 位历史人物的 profile + 一个 banlist (d1-5 必须避免的典故/作品名) + few-shot 好坏对比示例, 凝结 7 条难度梯度递增的猜谜线索。
 
+**最重要原则 — 用代称 / 模糊语 / 不直接给字号** (T14 灰度教训):
+- 写 clue 时**不要**直接给人物的字 / 号 / 谥号 / 庙号 / 别号 等 aliases 字眼
+- 用代称: "其号"/"其字"/"后人尊称"/"某地名"/"某菜名" 替代直接给名 (苏轼 d7 "号常被作菜名" = 模式)
+- 用模糊语: "某朝代官员"/"某地名将"/"一位文人" 替代具体名
+
 输出 JSON schema (严格,无 ``` 包裹):
 {{
   "name": "<画像 name>",
-  "aliases": [<画像基本信息列出的字/号/谥号/庙号/别号, 5-8 个>],
+  "aliases": [<**严格 5-6 个最常见 alias**: 仅取字、最常用的号、谥号简称;排除 30 字完整谥号; 5-6 个上限>],
   "clues": [
     {{"text": "<难度 1 — 最难, 30-60 字>", "difficulty": 1}},
     {{"text": "<难度 2>", "difficulty": 2}},
@@ -458,10 +463,11 @@ CLUE_PROMPT = """你是中国历史人物题目编辑。给你 1 位历史人物
 
 **d6 (求救范围)**:
 - 可触朝代 / 作品名 / 典故 (banlist 词允许)
-- 禁 aliases 整字 + 长度 ≥ 2 子串
+- 禁 aliases 整字 (≥ 3 字子串 也避免, 但 2 字 alias 子串可接受)
 
 **d7 (求救范围,几乎暴露)**:
-- 同 d6,且禁 "字/号/谥号/庙号" 等关键字 + aliases 字符
+- 同 d6,且禁 "字/号/谥号/庙号" 等关键字
+- 可用代称(如"其号"/"后世以其号命名的某菜"等)间接指代
 
 通用:
 - 每条 clue 单句, 30-60 字, 第三人称
@@ -661,6 +667,7 @@ def update_cost_summary(figure_name: str, calls: list[dict]) -> dict:
 
 
 def append_failed(figure_name: str, reason: str):
+    """记录失败 figure (idempotent: 同 name 替换不重复入)。"""
     FAILED_FIGURES.parent.mkdir(parents=True, exist_ok=True)
     failed = []
     if FAILED_FIGURES.exists():
@@ -668,6 +675,8 @@ def append_failed(figure_name: str, reason: str):
             failed = json.loads(FAILED_FIGURES.read_text(encoding="utf-8"))
         except Exception:
             pass
+    # dedup: 同 name 旧记录替换
+    failed = [f for f in failed if f.get("name") != figure_name]
     failed.append({
         "name": figure_name,
         "reason": reason,
