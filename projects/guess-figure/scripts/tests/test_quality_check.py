@@ -14,7 +14,7 @@ from pathlib import Path
 # allow `from quality_check import ...` when running standalone
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from quality_check import check_figure, _alias_substrings
+from quality_check import check_figure, _alias_substrings, extract_banlist_from_profile
 
 
 def _make_figure(aliases, clues_text_by_d):
@@ -53,7 +53,7 @@ class TestCheck6_D67AliasSubstring(unittest.TestCase):
             aliases=["关云长", "关公", "关二爷", "关帝"],
             clues_text_by_d={7: "他是蜀汉五虎上将之首,字云长,河东解人。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         leak_warn = [w for w in warnings if "子串" in w and "云长" in w]
         self.assertTrue(leak_warn, f"应报 d7 alias 子串穿底,实际 warnings={warnings}")
 
@@ -63,7 +63,7 @@ class TestCheck6_D67AliasSubstring(unittest.TestCase):
             aliases=["孔明", "卧龙", "诸葛武侯"],
             clues_text_by_d={6: "三国时蜀汉丞相,卧龙先生,后封武乡侯。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         leak_warn = [w for w in warnings if "子串" in w and "卧龙" in w]
         self.assertTrue(leak_warn, f"应报 d6 alias 完整出现,实际 warnings={warnings}")
 
@@ -74,7 +74,7 @@ class TestCheck6_D67AliasSubstring(unittest.TestCase):
             clues_text_by_d={6: "他是蜀汉政权的核心支柱,后人尊为某代名相。",
                              7: "他是三国时期蜀汉丞相,献上三分天下之策。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         # 注意:d6/d7 都不含子串。但其他 check 可能触发(d1-5 可能不含 aliases 整字,看具体 placeholder)
         check6_warns = [w for w in warnings if "子串" in w]
         self.assertFalse(check6_warns, f"不该报子串穿底,实际 warnings={warnings}")
@@ -85,7 +85,7 @@ class TestCheck6_D67AliasSubstring(unittest.TestCase):
             aliases=["关羽伯爵", "关"],  # "关" 是单字 alias
             clues_text_by_d={6: "关于他的故事,在民间流传很广,被尊为某神明。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         # 单字 alias "关" 不该触发子串 check (min_len=2)
         # 注意 "关羽伯爵" 4 字,如果"关羽"出现也会触发 — 但 placeholder 不含
         single_char_warns = [w for w in warnings if "子串 '关'" in w]
@@ -97,7 +97,7 @@ class TestCheck6_D67AliasSubstring(unittest.TestCase):
             aliases=["关云长", "关公"],
             clues_text_by_d={3: "他曾在战场上斩杀云长之敌"},  # d3 含 "云长" 子串
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         # check #6 只查 d6/7, d3 不该触发 check #6
         check6_warns = [w for w in warnings if "子串" in w]
         self.assertFalse(check6_warns, "d3 含子串不该触发 check #6 (它只管 d6/7)")
@@ -112,7 +112,7 @@ class TestCheck6_StopwordFalsePositives(unittest.TestCase):
             aliases=["刘玄德", "汉昭烈帝", "昭烈皇帝", "汉先主", "烈祖"],
             clues_text_by_d={6: "这位皇帝在白帝城托孤,其子继位。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         皇帝_warns = [w for w in warnings if "'皇帝'" in w]
         self.assertFalse(皇帝_warns, "'皇帝' 子串属 stopword 不该被 flag")
 
@@ -122,7 +122,7 @@ class TestCheck6_StopwordFalsePositives(unittest.TestCase):
             aliases=["孔明", "卧龙", "诸葛丞相"],  # 假设含 "诸葛丞相" alias
             clues_text_by_d={6: "这位丞相在五丈原对峙司马懿。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         丞相_warns = [w for w in warnings if "'丞相'" in w]
         self.assertFalse(丞相_warns, "'丞相' 子串属 stopword 不该被 flag")
 
@@ -132,7 +132,7 @@ class TestCheck6_StopwordFalsePositives(unittest.TestCase):
             aliases=["关云长", "皇帝"],  # 同时含 alias "关云长" 和 stopword 词
             clues_text_by_d={7: "他字云长,是蜀汉皇帝麾下的大将。"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         # '云长' 不在 stopword → 应 flag;'皇帝' 在 stopword → 不 flag
         云长_warns = [w for w in warnings if "'云长'" in w]
         皇帝_warns = [w for w in warnings if "'皇帝'" in w]
@@ -140,12 +140,113 @@ class TestCheck6_StopwordFalsePositives(unittest.TestCase):
         self.assertFalse(皇帝_warns, "'皇帝' 是 stopword,不 flag")
 
 
+SAMPLE_PROFILE = """# 诸葛亮
+
+## 基本信息
+- 字 / 号: 字孔明, 号卧龙
+
+## 主要事迹
+- 207 年隆中对
+
+## 典故 / 标志事件
+- 三顾茅庐:刘备三次拜访诸葛亮于隆中草庐
+- 隆中对(草庐对):提出三分天下战略
+- 鞠躬尽瘁,死而后已:出师表名句
+- 五丈原:北伐病逝
+
+## 关键作品
+- 《出师表》:北伐前上奏后主
+- 木牛流马:山地运输工具
+- 八阵图:阵法
+
+## 反差 / 鲜为人知点
+- 娶丑女为妻
+"""
+
+
+class TestExtractBanlistFromProfile(unittest.TestCase):
+    """T4 — helper: 从 profile.md 抽 banlist 词"""
+
+    def test_extracts_典故_section(self):
+        bans = extract_banlist_from_profile(SAMPLE_PROFILE)
+        self.assertIn("三顾茅庐", bans)
+        self.assertIn("五丈原", bans)
+
+    def test_extracts_关键作品_section(self):
+        bans = extract_banlist_from_profile(SAMPLE_PROFILE)
+        self.assertIn("《出师表》", bans)
+        self.assertIn("木牛流马", bans)
+        self.assertIn("八阵图", bans)
+
+    def test_strips_parentheses(self):
+        """'草庐对(隆中对)' → 'XXX' 不该带括号"""
+        bans = extract_banlist_from_profile(SAMPLE_PROFILE)
+        # 隆中对 是括号内, 实际 extract 出的是 "隆中对" 还是 "草庐对"?
+        # 我的实现: 去括号后取冒号前. 原文 "隆中对(草庐对):提出三分天下战略" → "隆中对" + 空 → "隆中对"
+        # 等等, 注意 # SAMPLE 写的是 "隆中对(草庐对):..." 实际我写的是 "隆中对(草庐对):提出..."
+        # 不,等等: SAMPLE_PROFILE 写的 "- 隆中对(草庐对):提出三分天下战略" → 去括号 "隆中对:提出..." → 取 ":" 前 "隆中对"
+        self.assertIn("隆中对", bans)
+        # 不该有带括号的项
+        for b in bans:
+            self.assertNotIn("(", b)
+            self.assertNotIn("（", b)
+
+    def test_handles_comma_separator(self):
+        """'鞠躬尽瘁,死而后已' → '鞠躬尽瘁'"""
+        bans = extract_banlist_from_profile(SAMPLE_PROFILE)
+        self.assertIn("鞠躬尽瘁", bans)
+
+    def test_empty_profile(self):
+        self.assertEqual(extract_banlist_from_profile(""), [])
+        self.assertEqual(extract_banlist_from_profile(None or ""), [])
+
+
+class TestCheck7_D15ProfileBanlist(unittest.TestCase):
+    """T4 — check #7: d1-5 不含 profile typology / 作品 banlist"""
+
+    def test_d3_含三顾茅庐_应判违规(self):
+        f = _make_figure(
+            aliases=["孔明", "卧龙"],
+            clues_text_by_d={3: "他在刘备三顾茅庐后才出山辅佐"},
+        )
+        score, max_score, warnings = check_figure(f, profile_md=SAMPLE_PROFILE)
+        self.assertEqual(max_score, 7, "有 profile_md 时 max_score 应为 7")
+        banlist_warns = [w for w in warnings if "profile banlist" in w]
+        self.assertTrue(banlist_warns, f"d3 含'三顾茅庐'应被 flag, 实际 warnings={warnings}")
+
+    def test_d2_含木牛流马_应判违规(self):
+        f = _make_figure(
+            aliases=["孔明", "卧龙"],
+            clues_text_by_d={2: "他设计了木牛流马运输工具"},
+        )
+        score, max_score, warnings = check_figure(f, profile_md=SAMPLE_PROFILE)
+        banlist_warns = [w for w in warnings if "'木牛流马'" in w]
+        self.assertTrue(banlist_warns, "d2 含'木牛流马'应被 flag")
+
+    def test_d6_含三顾茅庐_不触发check7(self):
+        """d6/d7 求救范围允许 banlist (Q4 决议), check #7 只查 d1-5"""
+        f = _make_figure(
+            aliases=["孔明", "卧龙"],
+            clues_text_by_d={6: "他在刘备三顾茅庐后才出山辅佐"},
+        )
+        score, max_score, warnings = check_figure(f, profile_md=SAMPLE_PROFILE)
+        # check #7 不查 d6
+        check7_warns = [w for w in warnings if "profile banlist" in w]
+        self.assertFalse(check7_warns, "d6 含 banlist 不该触发 check #7")
+
+    def test_no_profile_skip_check7(self):
+        """无 profile_md → max_score=6, check #7 跳过"""
+        f = _make_figure(aliases=["孔明", "卧龙"], clues_text_by_d={})
+        score, max_score, _ = check_figure(f, profile_md=None)
+        self.assertEqual(max_score, 6, "无 profile_md 时 max_score=6")
+
+
 class TestExistingChecks(unittest.TestCase):
     """旧 5 项 check 兼容性回归 (确保 T3 加 #6 没破坏旧检测)"""
 
     def test_aliases_count_3_to_5_ok(self):
         f = _make_figure(aliases=["a", "b", "c"], clues_text_by_d={})
-        score, _ = check_figure(f)
+        score, _, _ = check_figure(f)
         # 3 aliases OK,但 clues 是 placeholder,其他可能未必满分
         # 仅看 alias count 不报 warning
         # 因为 placeholder "占位文本不含敏感词" 不会触发 check #4 (没 alias 字符)
@@ -154,13 +255,13 @@ class TestExistingChecks(unittest.TestCase):
 
     def test_aliases_count_too_few_warning(self):
         f = _make_figure(aliases=["a"], clues_text_by_d={})
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         self.assertTrue(any("aliases 数" in w for w in warnings))
 
     def test_clues_count_7_ok(self):
         f = _make_figure(aliases=["a", "b", "c"], clues_text_by_d={})
         # 7 clues
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         self.assertFalse(any("clues 数" in w for w in warnings))
 
     def test_d1_dynasty_warning(self):
@@ -168,7 +269,7 @@ class TestExistingChecks(unittest.TestCase):
             aliases=["孔明", "卧龙", "诸葛武侯"],
             clues_text_by_d={1: "他生活在三国时期的蜀汉政权,是著名谋士"},
         )
-        score, warnings = check_figure(f)
+        score, _, warnings = check_figure(f)
         # d1 含"三国"和"蜀汉"朝代关键词
         self.assertTrue(any("朝代名" in w for w in warnings))
 

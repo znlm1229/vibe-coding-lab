@@ -23,6 +23,7 @@
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -88,18 +89,62 @@ def _is_alias_substring_violating(sub: str) -> bool:
     return True
 
 
-def check_figure(f: dict) -> tuple[int, list[str]]:
-    """返回 (score 0-6, warnings list)。
+# T4: profile typology / 关键作品 section regex (OQ10)
+PROFILE_BANLIST_SECTIONS = ["典故 / 标志事件", "关键作品", "典故", "标志事件"]
 
-    6 项 check:
+
+def extract_banlist_from_profile(profile_md: str) -> list[str]:
+    """从 profile.md 抽「典故/标志事件」+「关键作品」section 词列表 (T4)。
+
+    每个 section 是 markdown `## 标题\\n- ...\\n- ...`,提取每个 bullet 的关键词:
+    - "三顾茅庐:刘备三次拜访..." → "三顾茅庐"
+    - "草庐对(隆中对)" → "草庐对" (取 ( 前)
+    - "鞠躬尽瘁,死而后已" → "鞠躬尽瘁" (取 , 前)
+    - 否则取前 6 字
+    """
+    if not profile_md:
+        return []
+    bans: list[str] = []
+    for header in PROFILE_BANLIST_SECTIONS:
+        m = re.search(
+            rf"^##\s+{re.escape(header)}\s*\n((?:[-*]\s*.+\n?)+)",
+            profile_md,
+            flags=re.MULTILINE,
+        )
+        if not m:
+            continue
+        block = m.group(1)
+        for line in block.split("\n"):
+            line = line.strip()
+            if not line or not line.startswith(("-", "*")):
+                continue
+            line = line[1:].strip()
+            # 去括号注释 "(隆中对)" / "（隆中对）"
+            line = re.sub(r"[(（].*?[)）]", "", line)
+            # 取所有分隔符的最前段 (冒号 / 中文逗号 / 句号)
+            line = re.split(r"[:：,，.。;；]", line, maxsplit=1)[0]
+            line = line.strip()
+            if 2 <= len(line) <= 12 and line not in bans:
+                bans.append(line)
+    return bans
+
+
+def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list[str]]:
+    """返回 (score, max_score, warnings)。
+
+    Checks:
     1. aliases 数 3-5
     2. clues 数 = 7
     3. 难度 1-7 各 1 个齐全
     4. 难度 1-5 不含任何 aliases 整字
     5. 难度 1 不含朝代名
     6. 难度 6-7 不含 aliases 子串 (T3, 长度 ≥ 2)
+    7. 难度 1-5 不含 profile typology / 关键作品 section banlist 词 (T4, 仅当 profile_md 给定)
+
+    profile_md=None → max_score=6 (跳过 check #7);profile_md=str → max_score=7。
     """
     score = 0
+    max_score = 6
     warnings = []
 
     aliases = f.get("aliases") or []
@@ -179,7 +224,33 @@ def check_figure(f: dict) -> tuple[int, list[str]]:
         else:
             warnings.append(f"难度 {leak[0]} 含 alias '{leak[1]}' 子串 '{leak[2]}'")
 
-    return score, warnings
+    # 7. d1-5 不含 profile typology/关键作品 section banlist 词 (T4, 需要 profile_md)
+    if profile_md is not None:
+        max_score = 7
+        banlist = extract_banlist_from_profile(profile_md)
+        leak = None
+        if banlist and clues:
+            for c in clues:
+                if not isinstance(c, dict):
+                    continue
+                d = c.get("difficulty", 0)
+                if d not in (1, 2, 3, 4, 5):
+                    continue
+                text = c.get("text", "")
+                for ban in banlist:
+                    if not ban or len(ban) < 2:
+                        continue
+                    if ban in text:
+                        leak = (d, ban)
+                        break
+                if leak:
+                    break
+        if not leak:
+            score += 1
+        else:
+            warnings.append(f"难度 {leak[0]} 含 profile banlist 词 '{leak[1]}'")
+
+    return score, max_score, warnings
 
 
 def main():
@@ -192,6 +263,8 @@ def main():
                         help="任一不合规则 exit 2（CI 友好）")
     parser.add_argument("--verbose", "-v", action="store_true",
                         help="同时打印每条 clue 文字（便于人工 spot check）")
+    parser.add_argument("--profiles-dir", default=None,
+                        help="profile.md 所在目录 (例: src/lib/data/profiles/). 给定时启用 check #7 (T4)")
     args = parser.parse_args()
 
     path = Path(args.figures_file)
@@ -215,11 +288,22 @@ def main():
     issues_count = 0
     issues_total = 0
 
+    profiles_dir = Path(args.profiles_dir) if args.profiles_dir else None
+    if profiles_dir and not profiles_dir.exists():
+        print(f"⚠️ --profiles-dir {profiles_dir} 不存在, check #7 跳过")
+        profiles_dir = None
+
     for i, f in enumerate(figures, 1):
         name = f.get("name", "?")
-        score, warnings = check_figure(f)
-        status = "✅" if score == 6 else ("⚠️" if score >= 4 else "❌")
-        print(f"{status} [{i:2}] {name:<10}  {score}/6")
+        profile_md = None
+        if profiles_dir:
+            fid = f.get("id") or name
+            p = profiles_dir / f"{fid}.md"
+            if p.exists():
+                profile_md = p.read_text(encoding="utf-8")
+        score, max_score, warnings = check_figure(f, profile_md)
+        status = "✅" if score == max_score else ("⚠️" if score >= max_score - 2 else "❌")
+        print(f"{status} [{i:2}] {name:<10}  {score}/{max_score}")
         if warnings:
             for w in warnings:
                 print(f"      ⚠️ {w}")
