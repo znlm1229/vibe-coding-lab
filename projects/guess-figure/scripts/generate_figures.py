@@ -735,8 +735,10 @@ def process_one(name: str, strong_model: str, flash_model: str, judge_model: str
             return None
 
         # 组装 V1 兼容 figure
+        # 注意: name **强制保留输入 name** (LLM 可能在 clues_obj 输出"乾隆帝"/"康熙帝"
+        # 违反 SPEC "禁止 figure 名字被改" Edge cases, 这里 hardcode)
         figure = {
-            "name": clues_obj.get("name", name),
+            "name": name,
             "aliases": clues_obj.get("aliases", []),
             "clues": clues_obj.get("clues", []),
             "id": fid,
