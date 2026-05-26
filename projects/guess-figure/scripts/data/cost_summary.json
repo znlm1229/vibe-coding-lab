@@ -1,5 +1,5 @@
 {
-  "total_cost_cny": 2.0167,
+  "total_cost_cny": 2.4909,
   "by_figure": {
     "乾隆": {
       "total_cost_cny": 0.0362,
@@ -3660,6 +3660,1470 @@
           },
           "cost_cny": 0.0021,
           "latency_s": 35.07
+        }
+      ]
+    },
+    "刘秀": {
+      "total_cost_cny": 0.0346,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4890,
+            "completion_tokens": 1016,
+            "total_tokens": 5906,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0278,
+          "latency_s": 28.49
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2438,
+            "completion_tokens": 495,
+            "total_tokens": 2933,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2438,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 5.21
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2640,
+            "completion_tokens": 491,
+            "total_tokens": 3131,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2640,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 4.65
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2590,
+            "completion_tokens": 484,
+            "total_tokens": 3074,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2590,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 5.06
+        }
+      ]
+    },
+    "刘协": {
+      "total_cost_cny": 0.0,
+      "calls": []
+    },
+    "拓跋宏": {
+      "total_cost_cny": 0.0204,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 2783,
+            "completion_tokens": 811,
+            "total_tokens": 3594,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0183,
+          "latency_s": 21.81
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2275,
+            "completion_tokens": 491,
+            "total_tokens": 2766,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2275,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.5
+        }
+      ]
+    },
+    "杨坚": {
+      "total_cost_cny": 0.0291,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4613,
+            "completion_tokens": 820,
+            "total_tokens": 5433,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0248,
+          "latency_s": 26.51
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2371,
+            "completion_tokens": 481,
+            "total_tokens": 2852,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2371,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 5.3
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2447,
+            "completion_tokens": 462,
+            "total_tokens": 2909,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2447,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.62
+        }
+      ]
+    },
+    "杨广": {
+      "total_cost_cny": 0.0307,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4669,
+            "completion_tokens": 760,
+            "total_tokens": 5429,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0243,
+          "latency_s": 23.0
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2280,
+            "completion_tokens": 513,
+            "total_tokens": 2793,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2280,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 6.0
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2215,
+            "completion_tokens": 489,
+            "total_tokens": 2704,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2215,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.49
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2264,
+            "completion_tokens": 498,
+            "total_tokens": 2762,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2264,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 7.18
+        }
+      ]
+    },
+    "李治": {
+      "total_cost_cny": 0.0262,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 3531,
+            "completion_tokens": 724,
+            "total_tokens": 4255,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.02,
+          "latency_s": 28.98
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2137,
+            "completion_tokens": 455,
+            "total_tokens": 2592,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2137,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.002,
+          "latency_s": 4.48
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2269,
+            "completion_tokens": 512,
+            "total_tokens": 2781,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2269,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.63
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2216,
+            "completion_tokens": 492,
+            "total_tokens": 2708,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2216,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.75
+        }
+      ]
+    },
+    "李隆基": {
+      "total_cost_cny": 0.032,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4652,
+            "completion_tokens": 876,
+            "total_tokens": 5528,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0255,
+          "latency_s": 28.37
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2299,
+            "completion_tokens": 521,
+            "total_tokens": 2820,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2299,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.39
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2388,
+            "completion_tokens": 483,
+            "total_tokens": 2871,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2388,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.42
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2317,
+            "completion_tokens": 527,
+            "total_tokens": 2844,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2317,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.97
+        }
+      ]
+    },
+    "李纯": {
+      "total_cost_cny": 0.0148,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 851,
+            "completion_tokens": 919,
+            "total_tokens": 1770,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0126,
+          "latency_s": 28.87
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2309,
+            "completion_tokens": 515,
+            "total_tokens": 2824,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2309,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 6.04
+        }
+      ]
+    },
+    "柴荣": {
+      "total_cost_cny": 0.025,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 2754,
+            "completion_tokens": 847,
+            "total_tokens": 3601,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0185,
+          "latency_s": 27.6
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2256,
+            "completion_tokens": 480,
+            "total_tokens": 2736,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2256,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 16.98
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2406,
+            "completion_tokens": 514,
+            "total_tokens": 2920,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2406,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.77
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2399,
+            "completion_tokens": 470,
+            "total_tokens": 2869,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2399,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.56
+        }
+      ]
+    },
+    "赵祯": {
+      "total_cost_cny": 0.0282,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4863,
+            "completion_tokens": 869,
+            "total_tokens": 5732,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0261,
+          "latency_s": 26.88
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2287,
+            "completion_tokens": 471,
+            "total_tokens": 2758,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2287,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 9.15
+        }
+      ]
+    },
+    "赵佶": {
+      "total_cost_cny": 0.0333,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4783,
+            "completion_tokens": 958,
+            "total_tokens": 5741,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0268,
+          "latency_s": 29.89
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2413,
+            "completion_tokens": 513,
+            "total_tokens": 2926,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2413,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.71
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2446,
+            "completion_tokens": 468,
+            "total_tokens": 2914,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2446,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.55
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2422,
+            "completion_tokens": 462,
+            "total_tokens": 2884,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2422,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.44
+        }
+      ]
+    },
+    "赵构": {
+      "total_cost_cny": 0.0309,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4836,
+            "completion_tokens": 895,
+            "total_tokens": 5731,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0263,
+          "latency_s": 21.43
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2427,
+            "completion_tokens": 514,
+            "total_tokens": 2941,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2427,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 16.37
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2462,
+            "completion_tokens": 552,
+            "total_tokens": 3014,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2462,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0023,
+          "latency_s": 5.92
+        }
+      ]
+    },
+    "耶律阿保机": {
+      "total_cost_cny": 0.0233,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 2493,
+            "completion_tokens": 778,
+            "total_tokens": 3271,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0169,
+          "latency_s": 23.74
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2200,
+            "completion_tokens": 470,
+            "total_tokens": 2670,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2200,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.002,
+          "latency_s": 4.84
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2267,
+            "completion_tokens": 539,
+            "total_tokens": 2806,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2267,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 10.25
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2297,
+            "completion_tokens": 486,
+            "total_tokens": 2783,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2297,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 5.14
+        }
+      ]
+    },
+    "完颜阿骨打": {
+      "total_cost_cny": 0.0206,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 2594,
+            "completion_tokens": 890,
+            "total_tokens": 3484,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0184,
+          "latency_s": 23.56
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2386,
+            "completion_tokens": 471,
+            "total_tokens": 2857,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2386,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.59
+        }
+      ]
+    },
+    "朱棣": {
+      "total_cost_cny": 0.0271,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 4823,
+            "completion_tokens": 769,
+            "total_tokens": 5592,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.025,
+          "latency_s": 27.93
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2248,
+            "completion_tokens": 486,
+            "total_tokens": 2734,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2248,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 7.71
+        }
+      ]
+    },
+    "嘉靖": {
+      "total_cost_cny": 0.0248,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 2614,
+            "completion_tokens": 875,
+            "total_tokens": 3489,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0183,
+          "latency_s": 24.27
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2324,
+            "completion_tokens": 511,
+            "total_tokens": 2835,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2324,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.8
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2355,
+            "completion_tokens": 480,
+            "total_tokens": 2835,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2355,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.27
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2307,
+            "completion_tokens": 511,
+            "total_tokens": 2818,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2307,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 4.62
+        }
+      ]
+    },
+    "万历": {
+      "total_cost_cny": 0.0201,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 1680,
+            "completion_tokens": 761,
+            "total_tokens": 2441,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0139,
+          "latency_s": 25.23
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2226,
+            "completion_tokens": 486,
+            "total_tokens": 2712,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2226,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.74
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2351,
+            "completion_tokens": 447,
+            "total_tokens": 2798,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2351,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.06
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2243,
+            "completion_tokens": 481,
+            "total_tokens": 2724,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2243,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 6.91
+        }
+      ]
+    },
+    "崇祯": {
+      "total_cost_cny": 0.0202,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 1811,
+            "completion_tokens": 720,
+            "total_tokens": 2531,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0139,
+          "latency_s": 26.15
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2172,
+            "completion_tokens": 510,
+            "total_tokens": 2682,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2172,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.56
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2157,
+            "completion_tokens": 499,
+            "total_tokens": 2656,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2157,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 3.85
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2207,
+            "completion_tokens": 508,
+            "total_tokens": 2715,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2207,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.04
+        }
+      ]
+    },
+    "雍正": {
+      "total_cost_cny": 0.0185,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 1169,
+            "completion_tokens": 760,
+            "total_tokens": 1929,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0121,
+          "latency_s": 26.38
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2247,
+            "completion_tokens": 502,
+            "total_tokens": 2749,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2247,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 14.81
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2270,
+            "completion_tokens": 527,
+            "total_tokens": 2797,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2270,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0022,
+          "latency_s": 5.08
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 2233,
+            "completion_tokens": 504,
+            "total_tokens": 2737,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 2233,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0021,
+          "latency_s": 4.72
+        }
+      ]
+    },
+    "道光": {
+      "total_cost_cny": 0.0144,
+      "calls": [
+        {
+          "model": "deepseek-v3.2",
+          "usage": {
+            "prompt_tokens": 1760,
+            "completion_tokens": 597,
+            "total_tokens": 2357,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "cost_cny": 0.0124,
+          "latency_s": 22.73
+        },
+        {
+          "model": "gemini-3.1-flash-lite",
+          "usage": {
+            "prompt_tokens": 1997,
+            "completion_tokens": 470,
+            "total_tokens": 2467,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "text_tokens": 1997,
+              "audio_tokens": 0,
+              "image_tokens": 0
+            },
+            "completion_tokens_details": {
+              "text_tokens": 0,
+              "audio_tokens": 0,
+              "reasoning_tokens": 0
+            },
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "input_tokens_details": null,
+            "claude_cache_creation_5_m_tokens": 0,
+            "claude_cache_creation_1_h_tokens": 0
+          },
+          "cost_cny": 0.0019,
+          "latency_s": 4.52
         }
       ]
     }

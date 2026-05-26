@@ -173,39 +173,100 @@ def fetch_wikidata_fields(qid: str, log: logging.Logger | None = None) -> dict:
     }
 
 
+def _wikisource_page_variants(page_name: str) -> list[str]:
+    """生成 page name 多种 variant 试探 (阿拉伯/中文数字 + 卷上下后缀)。
+
+    Wikisource 中文版的卷号实际用**阿拉伯数字** "卷1上",但 LLM 输出常带中文 "卷一上"。
+    本函数生成 4 种 variant 提高 hit rate。
+    """
+    candidates = [page_name]
+    # 匹配 "{book}/卷{num}{suffix?}"
+    m = re.match(r"^(.+?)/卷([^/]+?)(上|中|下)?$", page_name)
+    if not m:
+        return candidates
+    book, num_part, suffix = m.group(1), m.group(2), m.group(3) or ""
+
+    # 中文数字 → 阿拉伯 简单映射 (覆盖 1-30 + 100 内常见)
+    CN2AR = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+    arabic_num = None
+    if num_part.isdigit():
+        arabic_num = int(num_part)
+    else:
+        # 解析中文数字 (e.g. "十二" = 12, "二十" = 20, "三十五" = 35, "一百" = 100, "一百二十" = 120)
+        s = num_part.strip()
+        try:
+            if "百" in s:
+                parts = s.split("百")
+                h = CN2AR.get(parts[0] or "一", 1)
+                rest = parts[1] if len(parts) > 1 else ""
+                v = h * 100
+                if rest:
+                    if "十" in rest:
+                        tp = rest.split("十")
+                        t = CN2AR.get(tp[0], 1) if tp[0] else 1
+                        o = CN2AR.get(tp[1], 0) if len(tp) > 1 and tp[1] else 0
+                        v += t * 10 + o
+                    else:
+                        v += CN2AR.get(rest, 0)
+                arabic_num = v
+            elif "十" in s:
+                tp = s.split("十")
+                t = CN2AR.get(tp[0], 1) if tp[0] else 1
+                o = CN2AR.get(tp[1], 0) if len(tp) > 1 and tp[1] else 0
+                arabic_num = t * 10 + o
+            else:
+                arabic_num = CN2AR.get(s)
+        except Exception:
+            arabic_num = None
+
+    for n_form in [num_part, str(arabic_num) if arabic_num else None]:
+        if n_form is None:
+            continue
+        for suf in [suffix, "", "上", "下"]:
+            cand = f"{book}/卷{n_form}{suf}"
+            if cand and cand not in candidates:
+                candidates.append(cand)
+    return candidates
+
+
 def fetch_wikisource_history(page_name: str, log: logging.Logger) -> str | None:
-    """从 Wikisource 拉某二十四史本传, 截 5000 字, 简单清 wiki markup。"""
+    """从 Wikisource 拉某二十四史本传, 截 5000 字, 简单清 wiki markup。
+
+    尝试多种 page name variant (阿拉伯/中文数字 + 卷上下后缀), 提高 hit rate。
+    """
     if not page_name:
         return None
-    try:
-        r = requests.get(
-            "https://zh.wikisource.org/w/api.php",
-            params={"action": "parse", "page": page_name, "format": "json",
-                    "prop": "wikitext", "redirects": "true"},
-            headers={"User-Agent": USER_AGENT}, timeout=60,
-        )
-        if r.status_code != 200:
-            log.warning(f"  ⚠️ Wikisource HTTP {r.status_code}: {page_name}")
-            return None
-        data = r.json()
-        if "error" in data:
-            log.warning(f"  ⚠️ Wikisource error: {data['error'].get('info')}")
-            return None
-        wt = data.get("parse", {}).get("wikitext", {}).get("*", "")
-        if len(wt) < 100:
-            log.warning(f"  ⚠️ Wikisource page 太短 (len={len(wt)}): {page_name}")
-            return None
-        # 简单清 markup
-        wt = re.sub(r"<ref[^>]*>.*?</ref>", "", wt, flags=re.DOTALL)
-        wt = re.sub(r"<ref[^>]*/>", "", wt)
-        wt = re.sub(r"\{\{[^}]+\}\}", "", wt)
-        wt = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]+)\]\]", r"\1", wt)
-        wt = re.sub(r"'{2,5}", "", wt)
-        wt = re.sub(r"\n{3,}", "\n\n", wt)
-        return wt.strip()[:5000]
-    except Exception as e:
-        log.warning(f"  ⚠️ Wikisource fetch 异常: {type(e).__name__}: {str(e)[:80]}")
-        return None
+    for candidate in _wikisource_page_variants(page_name):
+        try:
+            r = requests.get(
+                "https://zh.wikisource.org/w/api.php",
+                params={"action": "parse", "page": candidate, "format": "json",
+                        "prop": "wikitext", "redirects": "true"},
+                headers={"User-Agent": USER_AGENT}, timeout=60,
+            )
+            if r.status_code != 200:
+                continue
+            data = r.json()
+            if "error" in data:
+                continue
+            wt = data.get("parse", {}).get("wikitext", {}).get("*", "")
+            if len(wt) < 100:
+                continue
+            if candidate != page_name:
+                log.info(f"  ↻ Wikisource variant: {page_name} → {candidate}")
+            # 简单清 markup
+            wt = re.sub(r"<ref[^>]*>.*?</ref>", "", wt, flags=re.DOTALL)
+            wt = re.sub(r"<ref[^>]*/>", "", wt)
+            wt = re.sub(r"\{\{[^}]+\}\}", "", wt)
+            wt = re.sub(r"\[\[(?:[^|\]]*\|)?([^\]]+)\]\]", r"\1", wt)
+            wt = re.sub(r"'{2,5}", "", wt)
+            wt = re.sub(r"\n{3,}", "\n\n", wt)
+            return wt.strip()[:5000]
+        except Exception as e:
+            log.debug(f"  Wikisource variant fail ({candidate}): {type(e).__name__}: {str(e)[:80]}")
+            continue
+    log.warning(f"  ⚠️ Wikisource 所有 variant 都拉不到: {page_name}")
+    return None
 
 
 def fetch_three_sources(name: str, history_mapping: dict | None, log: logging.Logger) -> tuple[dict | None, str | None]:
