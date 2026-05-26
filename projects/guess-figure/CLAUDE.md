@@ -6,7 +6,7 @@
 
 ## 1. 项目状态
 
-🟢 **V2 上线运行中** —— V1 + 002 全部上线 [guess-figure.pages.dev](https://guess-figure.pages.dev)（最新 2026-05-25）。
+🟢 **V3 上线运行中** —— V1 + 002 + 003 全部上线 [guess-figure.pages.dev](https://guess-figure.pages.dev)（最新 2026-05-26）。
 
 - **001-guess-figure ✅ 已完成（2026-05-22 用户验收通过，15/15 AC）**
 - **002-account-rate-limit ✅ 已完成（2026-05-25 用户验收通过，22/22 AC）**
@@ -14,10 +14,19 @@
   - 限流：CF Pages free plan 不支持 dashboard rate limit → SPEC v1.0.1 acknowledge，用 Workers KV 计数器（IP/user 日窗口）覆盖
   - LLM 成本兜底：KV 缓存（key 含 figure_id + aliases_hash）+ 全局/单点日预算 + degraded/network_error 不消耗线索
   - 持久化：CF D1 users + games 表（预留 003 邮箱迁移字段）+ 2 KV namespaces
-  - 单测：54/54 passed（match-exact 9 + auth 12 + hooks 4 + rate-limit 17 + llm-cache 12）
+  - 单测:54/54 passed
+- **003-clue-optimization ✅ 已完成（2026-05-26 用户验收通过，15/18 AC + 3 偏差 accept = SPEC v1.1）**
+  - **3 步 LLM pipeline**:三源材料(维基全文 5K + Wikidata 6 字段 + 二十四史 Wikisource 5K)→ 强 LLM (deepseek-v3.2) 产 8-section markdown 画像 → flash-lite 产 clues (inject banlist + few-shot) → flash-lite judge (区分 d1-5/d6-7) + 自动重试 N=2
+  - **题库 50→65**:31 v2 + 19 v1 旧版混合(regression 兜底)+ 15 新皇帝;5 缺失皇帝(刘协/杨广/柴荣/万历/雍正)留 006 补
+  - **数据资产**:`src/lib/data/profiles/*.md` × 69 (8 sections 结构化画像);`figures.v1.json` baseline
+  - **quality_check 升级 4 项**:d6/7 alias 子串(后改 d1-5 ≥3字)+ 典故 banlist + 信息密度启发式 + LLM-as-judge `--with-judge`;最终 62/65 = 95.4% 满分率
+  - **prompt 调优 2 轮**:profile aliases ≤ 5 + clue 用代称避 alias + judge d6/7 整字放可疑
+  - **强约束防御**:thinking model detect + clue prompt inject banlist
+  - LLM 总成本 ¥2.61(< ¥10 hard cap),无新 deps
+  - 单测:66/66 vitest + 39 quality_check + 18 generate_figures = 123/123 全 pass
 - 公网 URL：https://guess-figure.pages.dev
-- **技术栈**：SvelteKit 5 + adapter-cloudflare + CF Pages Functions + CF D1 + CF Workers KV + gemini-3.1-flash-lite via 云雾中转 + JSON-in-git 题库 + Python 内容生产 pipeline + wrangler.toml `[vars]` env vars
-- 后续候选任务：003（线索调优）、004（邮箱 magic link + 排行榜）、005（自定义域名 + 品牌化）、006（V2 题库扩展到 200 人）
+- **技术栈**:SvelteKit 5 + adapter-cloudflare + CF Pages Functions + CF D1 + CF Workers KV + gemini-3.1-flash-lite(flash 用)+ **deepseek-v3.2(强 LLM 产画像)** via 云雾中转 + JSON-in-git 题库 + **profiles markdown-in-git 画像数据资产** + Python 内容生产 v2 pipeline(`generate_figures.py` 3 步)+ wrangler.toml `[vars]` env vars
+- 后续候选任务:004（邮箱 magic link + 排行榜）、005（自定义域名 + 品牌化）、006(补 5 缺失皇帝 + V3 题库扩 200 人 + 修 3 旧 figure quality warning)
 - 任务台账：见 [`README.md#任务台账`](./README.md#任务台账)
 
 ## 2. 必须遵循的工作流（强制）

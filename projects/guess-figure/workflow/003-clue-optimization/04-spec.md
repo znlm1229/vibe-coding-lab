@@ -4,7 +4,7 @@
 >
 > **v1.2 约定**:AC 双通道 + OQ 标 type。**用户未确认前不得进入 Stage 5**。
 
-**版本**: v1.0.1(用户 2026-05-26 已确认 v1.0,OQ4 patch)
+**版本**: v1.1(2026-05-26 验收通过,已 accept 3 项偏差)
 
 ---
 
@@ -213,6 +213,15 @@
 - 18 项 AC,涵盖 pipeline 重构 / 70 figure / 数据资产 / 防 regression / 兼容性 / 主观行为 6 大类
 - 15 项 OQ(3 个 taste 标"用户应自己改";其余 technical 标 AI 推荐)
 - 关键约束:强 LLM 主选 deepseek-v3.2、排除 thinking model、clue prompt inject banlist、judge prompt 区分 d1-5 / d6-7
+
+### v1.1(2026-05-26,验收通过)
+
+- 用户 Stage 9 "验收通过" — 18 AC 中 15 PASS + 3 偏差 explicit accept
+- 3 项偏差:
+  - AC3 题库 65/70(5 新皇帝 v2 fail 无 v1 fallback;留 006)
+  - AC4 profiles 69/70(刘协因 API 500 缺;留 006)
+  - AC9 failed 19>5(50 旧有 v1 fallback / 5 新即 AC3 偏差)
+- 后续遗留:3 个 v1 旧 figure quality_check warning(张居正/李清照/武则天)留 006
 
 ### v1.0.1(2026-05-26)
 
