@@ -92,10 +92,9 @@
 
 ## 用户审稿决定
 
-- ⬜ **等待审稿**
-- ⬜ **已通过** — 审稿时间:______ ｜ 备注 / 替换:______
+- ☑ **已通过** — 审稿时间:2026-05-26 ｜ 备注:用户回复"全部通过",20 名无替换
 
-通过后:
-1. SPEC `04-spec.md` 升级到 v1.0.1,修订日志记 20 皇帝候选 finalize
-2. `scripts/data/history_index.json` 加 20 entry(总 70)
+已执行:
+1. ✅ SPEC `04-spec.md` 升级到 v1.0.1,修订日志记 OQ4 finalize
+2. ✅ `scripts/data/history_index.json` 加 20 entry(总 70 ✓)
 3. 进 T18(全 50 旧 figure 重生成)

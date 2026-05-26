@@ -4,7 +4,7 @@
 >
 > **v1.2 约定**:AC 双通道 + OQ 标 type。**用户未确认前不得进入 Stage 5**。
 
-**版本**: v1.0(待用户确认)
+**版本**: v1.0.1(用户 2026-05-26 已确认 v1.0,OQ4 patch)
 
 ---
 
@@ -165,7 +165,7 @@
 | OQ1 | 强 LLM 具体型号 | technical | **deepseek-v3.2** 主选(prototype 验证质量 = haiku 且成本 1/4);claude-haiku-4-5-20251001 备用 | (待) | Stage 7 实现前 | prototype 已排除 thinking model |
 | OQ2 | judge 用哪个模型 | technical | `gemini-3.1-flash-lite` 自审 | (待) | Stage 7 | flash judge 已 work,但需精化 prompt(见 OQ14) |
 | OQ3 | 自动 judge 循环最多重试 N | technical | **N=2** | (待) | Stage 7 | N=1 已可降 d4-5 违规率;N=2 兜底罕见 case |
-| OQ4 | 20 皇帝具体候选清单 | taste ⚠️ | (SPEC v1.0.1 阶段 AI 按原则提案 20 候选;原则:排除现 50 已有皇帝、朝代覆盖均衡、优先有完整 25 史本传、知名度 tier 1-2) | (待) | Stage 7 实现前 | **用户必须自己审稿**,AI 提案仅占位 |
+| OQ4 | 20 皇帝具体候选清单 | taste ⚠️ | (见 [`spec-emperor-list.md`](./spec-emperor-list.md)) | **✅ 用户 2026-05-26 全部通过 20 名** | Stage 7 实现前 | spec-emperor-list.md 定稿:刘秀/刘协/拓跋宏/杨坚/杨广/李治/李隆基/李纯/柴荣/赵祯/赵佶/赵构/耶律阿保机/完颜阿骨打/朱棣/嘉靖/万历/崇祯/雍正/道光 |
 | OQ5 | 灰度先跑哪 5 个 figure | taste ⚠️ | 乾隆 / 关羽 / 刘备 / 李白 / 苏轼(3 个有问题的 + 2 个本来好的诗人) | (待) | Stage 7 灰度前 | 用户可改 |
 | OQ6 | LLM N 次重试后仍失败的 figure 处理 | technical | 标 failed → 写入 failed_figures.json → 不入 figures.json;人工兜底(直接编辑旧版条目入 figures.json) | (待) | Stage 7 | 估算 < 5 个 / 70 |
 | OQ7 | 旧 figures.v1.json 是否 deploy | technical | 否,仅 deploy 新版;v1 留 git 历史 | (待) | Stage 7 部署前 | 减少部署体积 |
@@ -214,11 +214,16 @@
 - 15 项 OQ(3 个 taste 标"用户应自己改";其余 technical 标 AI 推荐)
 - 关键约束:强 LLM 主选 deepseek-v3.2、排除 thinking model、clue prompt inject banlist、judge prompt 区分 d1-5 / d6-7
 
-### 后续可能 patch
+### v1.0.1(2026-05-26)
 
-- v1.0.1:OQ4 (20 皇帝候选清单) 用户审稿后入 spec-emperor-list.md
+- **OQ4 finalize**:T16 AI 提案 20 皇帝 → T17 用户审稿"全部通过"。`spec-emperor-list.md` 入 SPEC,`history_index.json` 加 20 entry(总 70)
+- 命名风格:唐前+宋元用本名,明嘉靖/万历/崇祯+清雍正/道光用年号
+
+### v1.0.x 后续可能 patch
+
 - v1.0.2:OQ12 (few-shot pool 初版内容) 用户审稿后入库
 - v1.0.x:若 deepseek 实际产出有大量退化,改主选为 claude-haiku-4-5-20251001
+- v1.0.x:T14 灰度 fix prompt 调优(profile aliases ≤ 5,judge d6/d7 整字放可疑) — 已在 git history,后续若有更多 prompt iteration 在此记录
 
 ---
 
