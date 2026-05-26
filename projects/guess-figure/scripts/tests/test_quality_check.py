@@ -14,7 +14,7 @@ from pathlib import Path
 # allow `from quality_check import ...` when running standalone
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from quality_check import check_figure, _alias_substrings, extract_banlist_from_profile
+from quality_check import check_figure, _alias_substrings, extract_banlist_from_profile, count_specific_terms
 
 
 def _make_figure(aliases, clues_text_by_d):
@@ -210,7 +210,7 @@ class TestCheck7_D15ProfileBanlist(unittest.TestCase):
             clues_text_by_d={3: "他在刘备三顾茅庐后才出山辅佐"},
         )
         score, max_score, warnings = check_figure(f, profile_md=SAMPLE_PROFILE)
-        self.assertEqual(max_score, 7, "有 profile_md 时 max_score 应为 7")
+        self.assertEqual(max_score, 8, "有 profile_md 时 max_score 应为 8 (T5 后)")
         banlist_warns = [w for w in warnings if "profile banlist" in w]
         self.assertTrue(banlist_warns, f"d3 含'三顾茅庐'应被 flag, 实际 warnings={warnings}")
 
@@ -235,10 +235,75 @@ class TestCheck7_D15ProfileBanlist(unittest.TestCase):
         self.assertFalse(check7_warns, "d6 含 banlist 不该触发 check #7")
 
     def test_no_profile_skip_check7(self):
-        """无 profile_md → max_score=6, check #7 跳过"""
+        """无 profile_md → max_score=7 (T5 后, 跳过 check #7 但 check #8 在)"""
         f = _make_figure(aliases=["孔明", "卧龙"], clues_text_by_d={})
         score, max_score, _ = check_figure(f, profile_md=None)
-        self.assertEqual(max_score, 6, "无 profile_md 时 max_score=6")
+        self.assertEqual(max_score, 7, "无 profile_md 时 max_score=7 (1-6 + 8)")
+
+
+class TestCheck8_InfoDensity(unittest.TestCase):
+    """T5 — check #8: 信息密度启发式 (具体名词数 vs 难度阈值)"""
+
+    def test_count_specific_terms_book_title(self):
+        # 书名号《》计数
+        self.assertEqual(count_specific_terms("他写了《出师表》和《诫子书》"), 2)
+
+    def test_count_specific_terms_dynasty(self):
+        # 朝代名计数
+        self.assertEqual(count_specific_terms("他在三国时期辅佐蜀汉"), 2)
+
+    def test_count_specific_terms_event(self):
+        # 历史事件 (XX 之战 / 之乱)
+        self.assertEqual(count_specific_terms("赤壁之战与街亭之役都很关键"), 2)
+
+    def test_count_specific_terms_year(self):
+        self.assertEqual(count_specific_terms("234年病逝五丈原"), 1)
+
+    def test_d1_too_dense_flagged(self):
+        """d1 信息密度过高 → flag"""
+        # 阈值 d1=2,放 3 个具体名词
+        f = _make_figure(
+            aliases=["孔明", "卧龙", "诸葛武侯"],
+            clues_text_by_d={1: "他在三国时期参与赤壁之战与街亭之役,留下《出师表》"},
+        )
+        score, max_score, warnings = check_figure(f)
+        density_warns = [w for w in warnings if "信息密度过高" in w and "难度 1" in w]
+        self.assertTrue(density_warns, f"d1 含 4 个具体名词(三国/赤壁之战/街亭之役/《出师表》),应 flag,实际 warnings={warnings}")
+
+    def test_d5_within_threshold_ok(self):
+        """d5 阈值 6, 含 3 个具体名词 ok"""
+        f = _make_figure(
+            aliases=["孔明", "卧龙", "诸葛武侯"],
+            clues_text_by_d={5: "他活跃于三国时期辅佐蜀汉君主"},  # 2 朝代名
+        )
+        score, max_score, warnings = check_figure(f)
+        density_warns = [w for w in warnings if "信息密度过高" in w and "难度 5" in w]
+        self.assertFalse(density_warns, "d5 含 2 个 specific 不该 flag")
+
+    def test_d6_d7_not_checked(self):
+        """d6/d7 求救范围,信息密度不查"""
+        f = _make_figure(
+            aliases=["孔明", "卧龙", "诸葛武侯"],
+            clues_text_by_d={6: "他在三国时期参与赤壁之战、街亭之役、五丈原之役留下《出师表》《诫子书》",
+                             7: "他是三国蜀汉丞相"},
+        )
+        score, max_score, warnings = check_figure(f)
+        density_d67_warns = [w for w in warnings if "信息密度过高" in w and ("难度 6" in w or "难度 7" in w)]
+        self.assertFalse(density_d67_warns, "d6/d7 不该被 check #8 检查")
+
+
+class TestMaxScore(unittest.TestCase):
+    """T5 — max_score 现 7/8"""
+
+    def test_max_score_7_without_profile(self):
+        f = _make_figure(aliases=["a", "b", "c"], clues_text_by_d={})
+        _, max_score, _ = check_figure(f, profile_md=None)
+        self.assertEqual(max_score, 7, "无 profile_md 时 max_score=7 (1-6 + 8)")
+
+    def test_max_score_8_with_profile(self):
+        f = _make_figure(aliases=["a", "b", "c"], clues_text_by_d={})
+        _, max_score, _ = check_figure(f, profile_md=SAMPLE_PROFILE)
+        self.assertEqual(max_score, 8, "profile_md 给定时 max_score=8")
 
 
 class TestExistingChecks(unittest.TestCase):

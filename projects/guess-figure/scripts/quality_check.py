@@ -2,13 +2,15 @@
 """
 题库自动质量校验脚本（T4）。
 
-6 项检查 (003 v3 升级, T3 加第 6 项):
+8 项检查 (003 v3 升级):
 1. aliases 数 3-5
 2. clues 数 = 7
 3. 难度 1-7 各 1 个齐全
 4. 难度 1-5 全段不含任何 aliases (字符整字)
 5. 难度 1 不含朝代名
 6. 难度 6-7 不含 aliases 子串 (长度 ≥ 2; T3 新增)
+7. 难度 1-5 不含 profile typology / 关键作品 banlist (T4 新增, 需 --profiles-dir)
+8. 难度 1-5 信息密度启发式 (T5 新增, 具体名词数符合梯度)
 
 跑法:
   python scripts/quality_check.py src/lib/data/figures.json
@@ -89,6 +91,30 @@ def _is_alias_substring_violating(sub: str) -> bool:
     return True
 
 
+# T5: 信息密度启发式 — 难度越低,具体名词数应越少
+# 阈值: 难度 d 允许的最大具体名词数 (d6/d7 不查,求救范围允许密度任意)
+SPECIFIC_TERM_THRESHOLDS = {1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
+
+# 具体名词识别 regex
+SPECIFIC_TERM_PATTERNS = [
+    r"《[^》]+》",                                          # 书名号
+    r"[一-鿿]{1,4}(?:年间|年代|世纪)",              # 时代
+    r"\d{2,4}\s*年(?![代间])",                              # 年份 "207年"
+    r"[一-鿿]{2,4}(?:之战|之役|之乱|之变|之盟|起义|事件)",  # 历史事件
+]
+
+
+def count_specific_terms(text: str) -> int:
+    """统计文本中的具体名词数 (启发式: 书名/年份/事件/朝代)。"""
+    if not text:
+        return 0
+    n = 0
+    for pat in SPECIFIC_TERM_PATTERNS:
+        n += len(re.findall(pat, text))
+    n += sum(1 for w in DYNASTY_KEYWORDS if w in text)  # 朝代名
+    return n
+
+
 # T4: profile typology / 关键作品 section regex (OQ10)
 PROFILE_BANLIST_SECTIONS = ["典故 / 标志事件", "关键作品", "典故", "标志事件"]
 
@@ -140,11 +166,15 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
     5. 难度 1 不含朝代名
     6. 难度 6-7 不含 aliases 子串 (T3, 长度 ≥ 2)
     7. 难度 1-5 不含 profile typology / 关键作品 section banlist 词 (T4, 仅当 profile_md 给定)
+    8. 难度 1-5 信息密度梯度合理 (T5, 总是检测)
 
-    profile_md=None → max_score=6 (跳过 check #7);profile_md=str → max_score=7。
+    profile_md=None → max_score=7 (跳过 check #7);profile_md=str → max_score=8。
     """
     score = 0
-    max_score = 6
+    max_score = 7  # 1-6 + 8 = 7 总是
+    if profile_md is not None:
+        max_score = 8  # +1 for check #7
+
     warnings = []
 
     aliases = f.get("aliases") or []
@@ -226,7 +256,6 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
 
     # 7. d1-5 不含 profile typology/关键作品 section banlist 词 (T4, 需要 profile_md)
     if profile_md is not None:
-        max_score = 7
         banlist = extract_banlist_from_profile(profile_md)
         leak = None
         if banlist and clues:
@@ -249,6 +278,26 @@ def check_figure(f: dict, profile_md: str | None = None) -> tuple[int, int, list
             score += 1
         else:
             warnings.append(f"难度 {leak[0]} 含 profile banlist 词 '{leak[1]}'")
+
+    # 8. 信息密度梯度 (T5): d1-5 每条的具体名词数 ≤ 该难度阈值
+    if clues:
+        leak = None
+        for c in clues:
+            if not isinstance(c, dict):
+                continue
+            d = c.get("difficulty", 0)
+            if d not in SPECIFIC_TERM_THRESHOLDS:
+                continue
+            text = c.get("text", "")
+            n = count_specific_terms(text)
+            thr = SPECIFIC_TERM_THRESHOLDS[d]
+            if n > thr:
+                leak = (d, n, thr)
+                break
+        if not leak:
+            score += 1
+        else:
+            warnings.append(f"难度 {leak[0]} 信息密度过高 (具体名词 {leak[1]} > 阈值 {leak[2]})")
 
     return score, max_score, warnings
 
