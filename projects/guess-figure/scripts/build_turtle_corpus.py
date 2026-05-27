@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sample", action="store_true", help="只构建小样本 dry-run")
     parser.add_argument("--cloud", action="store_true", help="把本次构建产物写入 Cloudflare R2/Vectorize/D1")
     parser.add_argument("--mock-embedding", action="store_true", help="使用确定性 1024 维 mock embedding")
-    parser.add_argument("--wrangler-bin", default="pnpm exec wrangler", help="wrangler 命令前缀，便于测试注入")
+    parser.add_argument("--wrangler-bin", default=None, help="wrangler 可执行文件路径，默认使用 pnpm exec wrangler")
     parser.add_argument("--output", type=Path, required=True, help="输出目录，不默认写入仓库大文件目录")
     parser.add_argument("--sample-size", type=int, default=3, help="小样本人物数量，默认 3")
     return parser.parse_args()
@@ -37,9 +37,14 @@ def is_output_inside_project(output_dir: Path) -> bool:
 
 
 def build_cloud_config(args: argparse.Namespace) -> CloudflareIngestConfig:
+    if args.wrangler_bin:
+        return CloudflareIngestConfig(
+            mock_embedding=args.mock_embedding,
+            wrangler_bin=args.wrangler_bin,
+            wrangler_args=(),
+        )
     return CloudflareIngestConfig(
         mock_embedding=args.mock_embedding,
-        wrangler_bin=args.wrangler_bin,
     )
 
 

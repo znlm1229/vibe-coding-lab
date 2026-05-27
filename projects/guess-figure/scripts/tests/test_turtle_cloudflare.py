@@ -9,6 +9,7 @@ from pathlib import Path
 from scripts.turtle_cloudflare import (
     CloudflareIngestConfig,
     CommandFailure,
+    build_wrangler_command,
     ingest_corpus_to_cloudflare,
 )
 from scripts.turtle_corpus import build_sample_corpus
@@ -261,10 +262,30 @@ class TurtleCloudflareTest(unittest.TestCase):
 
     def test_cli_cloud_config_requires_explicit_mock_embedding(self):
         config = build_cli.build_cloud_config(
-            argparse.Namespace(mock_embedding=False, wrangler_bin="pnpm exec wrangler")
+            argparse.Namespace(mock_embedding=False, wrangler_bin=None)
         )
 
         self.assertFalse(config.mock_embedding)
+
+    def test_default_cli_cloud_config_builds_pnpm_exec_wrangler_argv(self):
+        config = build_cli.build_cloud_config(
+            argparse.Namespace(mock_embedding=False, wrangler_bin=None)
+        )
+
+        command = build_wrangler_command(config, ["r2", "bucket", "list"])
+
+        self.assertEqual(command[:3], ["pnpm", "exec", "wrangler"])
+        self.assertEqual(command[3:], ["r2", "bucket", "list"])
+
+    def test_custom_cli_wrangler_bin_with_spaces_does_not_append_default_args(self):
+        wrangler_path = r"C:\Program Files\nodejs\wrangler.cmd"
+        config = build_cli.build_cloud_config(
+            argparse.Namespace(mock_embedding=True, wrangler_bin=wrangler_path)
+        )
+
+        command = build_wrangler_command(config, ["vectorize", "list"])
+
+        self.assertEqual(command, [wrangler_path, "vectorize", "list"])
 
 
 if __name__ == "__main__":
