@@ -31,14 +31,14 @@ export type TurtleQuestionAnswer = "是" | "否" | "无关";
 export type TurtleMode = "embedded" | "standalone";
 
 export interface TurtleQuestionApiResponse {
-  answer?: TurtleQuestionAnswer | string;
+  answer?: TurtleQuestionAnswer;
   invalid?: boolean;
   consumes_question: boolean;
   cached?: boolean;
   degraded?: boolean;
   network_error?: boolean;
   reason?: string;
-  mode?: TurtleMode | string;
+  mode?: TurtleMode;
   rag_index_version?: string;
   prompt_version?: string;
 }

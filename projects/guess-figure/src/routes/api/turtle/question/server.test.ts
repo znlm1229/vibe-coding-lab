@@ -52,6 +52,38 @@ async function readJson(response: Response): Promise<TurtleQuestionApiResponse> 
 }
 
 describe("/api/turtle/question", () => {
+  it("合法 JSON 但不是对象时返回 400，避免 TypeError 变成 500", async () => {
+    const handler = _createTurtleQuestionHandler({ figures: [figure] });
+
+    await expect(handler(mockEvent(null))).rejects.toMatchObject({
+      status: 400,
+      body: { message: "请求体必须是 JSON 对象" },
+    });
+  });
+
+  it("未知 mode 返回 400，且不调用 cache/RAG/LLM", async () => {
+    const answerTurtleQuestion = vi.fn();
+    const getTurtleCache = vi.fn();
+    const setTurtleCache = vi.fn();
+    const handler = _createTurtleQuestionHandler({
+      figures: [figure],
+      answerTurtleQuestion,
+      getTurtleCache,
+      setTurtleCache,
+    });
+
+    await expect(
+      handler(mockEvent({ figure_id: "guan-yu", question: "他是不是皇帝？", mode: "arcade" })),
+    ).rejects.toMatchObject({
+      status: 400,
+      body: { message: "mode 必须是 embedded 或 standalone" },
+    });
+
+    expect(getTurtleCache).not.toHaveBeenCalled();
+    expect(setTurtleCache).not.toHaveBeenCalled();
+    expect(answerTurtleQuestion).not.toHaveBeenCalled();
+  });
+
   it("invalid 问法返回 invalid 且不调用 cache/RAG/LLM", async () => {
     const answerTurtleQuestion = vi.fn();
     const getTurtleCache = vi.fn();

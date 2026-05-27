@@ -1,6 +1,6 @@
 import { error, json } from "@sveltejs/kit";
 import figures from "$lib/data/figures.json";
-import type { Figure, TurtleQuestionApiResponse } from "$lib/types";
+import type { Figure, TurtleMode, TurtleQuestionApiResponse } from "$lib/types";
 import {
   getTurtleCache,
   setTurtleCache,
@@ -50,7 +50,7 @@ export function _createTurtleQuestionHandler(deps: HandlerDeps = {}): RequestHan
     const body = await readBody(request);
     const figureId = readRequiredString(body.figure_id, "figure_id");
     const question = readRequiredString(body.question, "question");
-    const mode = typeof body.mode === "string" && body.mode.trim() ? body.mode.trim() : undefined;
+    const mode = readMode(body.mode);
 
     const figure = figureList.find((item) => item.id === figureId);
     if (!figure) {
@@ -134,11 +134,17 @@ export function _createTurtleQuestionHandler(deps: HandlerDeps = {}): RequestHan
 export const POST: RequestHandler = _createTurtleQuestionHandler();
 
 async function readBody(request: Request): Promise<TurtleQuestionBody> {
+  let body: unknown;
   try {
-    return (await request.json()) as TurtleQuestionBody;
+    body = await request.json();
   } catch {
     throw error(400, "请求体必须是 JSON");
   }
+
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    throw error(400, "请求体必须是 JSON 对象");
+  }
+  return body as TurtleQuestionBody;
 }
 
 function readRequiredString(value: unknown, field: string): string {
@@ -148,8 +154,14 @@ function readRequiredString(value: unknown, field: string): string {
   return value.trim();
 }
 
+function readMode(value: unknown): TurtleMode | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (value === "embedded" || value === "standalone") return value;
+  throw error(400, "mode 必须是 embedded 或 standalone");
+}
+
 function degradedResponse(input: {
-  mode?: string;
+  mode?: TurtleMode;
   ragIndexVersion: string;
   promptVersion: string;
   answer?: TurtleQuestionApiResponse["answer"];
