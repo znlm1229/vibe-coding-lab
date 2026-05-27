@@ -1,5 +1,11 @@
 // See https://svelte.dev/docs/kit/types#app
-import type { D1Database, KVNamespace } from "@cloudflare/workers-types";
+import type {
+  Ai,
+  D1Database,
+  KVNamespace,
+  R2Bucket,
+  VectorizeIndex,
+} from "@cloudflare/workers-types";
 
 declare global {
   namespace App {
@@ -29,10 +35,22 @@ declare global {
         RATE_LIMIT_PER_USER_DAILY?: string; // 默认 "200"
         AUTH_HMAC_SECRET?: string;          // cookie HMAC 密钥 (SPEC C4)
 
+        // === 004 海龟汤 RAG env vars ===
+        RAG_EMBEDDING_MODEL?: string;       // 默认 "@cf/qwen/qwen3-embedding-0.6b"
+        RAG_INDEX_VERSION?: string;         // 当前线上 RAG 索引版本
+        RAG_CORPUS_BUCKET?: string;         // R2 语料 bucket 名称
+        RAG_VECTOR_DIMENSIONS?: string;     // Vectorize V2 维度, 默认 "1024"
+        RAG_VECTOR_METRIC?: string;         // Vectorize V2 距离度量, 默认 "cosine"
+
         // === 002 bindings ===
         GF_DB?: D1Database;                 // users + games 表 (T1)
         GF_RATELIMIT?: KVNamespace;         // 限流计数器 (T2)
         GF_LLM_CACHE?: KVNamespace;         // LLM 结果缓存 (T2)
+
+        // === 004 bindings ===
+        GF_VECTORIZE?: VectorizeIndex;      // 海龟汤 RAG Vectorize V2 索引
+        GF_CORPUS_R2?: R2Bucket;            // 海龟汤 RAG 语料主存储
+        AI?: Ai;                            // Workers AI embedding / rerank / 判定
       };
     }
   }

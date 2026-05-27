@@ -31,6 +31,17 @@ RATE_LIMIT_PER_USER_DAILY = "200"
 LLM_MODEL = "gemini-3.1-flash-lite"
 YUNWU_BASE_URL = "https://yunwu.ai/v1"
 
+# 004 海龟汤 RAG 资源契约 (非密配置)
+# Vectorize V2 index 需用以下命令创建:
+# pnpm exec wrangler vectorize create guess-figure-turtle-rag --dimensions=1024 --metric=cosine
+# R2 bucket 需用以下命令创建:
+# pnpm exec wrangler r2 bucket create guess-figure-turtle-corpus
+RAG_EMBEDDING_MODEL = "@cf/qwen/qwen3-embedding-0.6b"
+RAG_INDEX_VERSION = "turtle-rag-v1"
+RAG_CORPUS_BUCKET = "guess-figure-turtle-corpus"
+RAG_VECTOR_DIMENSIONS = "1024"
+RAG_VECTOR_METRIC = "cosine"
+
 # 注意: 以下两个 *_SECRET 是密钥, 不入 git, 通过 `wrangler pages secret put NAME` 配置:
 #   - YUNWU_API_KEY        云雾 API Key (001 使用; 若 dashboard 现已配且仍生效则免再配)
 #   - AUTH_HMAC_SECRET     cookie HMAC 签名密钥 (002 新增, SPEC C4)
@@ -61,3 +72,25 @@ id      = "797aa9b778dd4a69a970e6befb4ae6b1"
 [[kv_namespaces]]
 binding = "GF_LLM_CACHE"
 id      = "c7d92348d3ea4c1aae42d2804c7e13e4"
+
+# ====================================================================
+# Vectorize — 004 海龟汤 RAG 向量索引
+# index: guess-figure-turtle-rag, V2, 1024 维, cosine
+# ====================================================================
+[[vectorize]]
+binding = "GF_VECTORIZE"
+index_name = "guess-figure-turtle-rag"
+
+# ====================================================================
+# R2 — 004 海龟汤 RAG 语料主存储
+# 存放原始/清洗语料、chunk JSONL、构建报告；D1 只存 manifest。
+# ====================================================================
+[[r2_buckets]]
+binding = "GF_CORPUS_R2"
+bucket_name = "guess-figure-turtle-corpus"
+
+# ====================================================================
+# Workers AI — 004 embedding / rerank / RAG 判定调用
+# ====================================================================
+[ai]
+binding = "AI"
