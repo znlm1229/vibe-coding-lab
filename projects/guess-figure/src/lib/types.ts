@@ -42,3 +42,15 @@ export interface TurtleQuestionApiResponse {
   rag_index_version?: string;
   prompt_version?: string;
 }
+
+export interface TurtleAnswerApiResponse {
+  mode: TurtleMode;
+  correct?: boolean;
+  completed?: boolean;
+  won?: boolean;
+  used_turtle?: boolean;
+  consumes_answer: boolean;
+  answer_attempts_used?: number;
+  answer_attempts_remaining?: number;
+  question_count?: number;
+}
