@@ -29,11 +29,12 @@
 ## 当前阻塞
 
 - Cloudflare 真实远端验收仍阻塞：`pnpm exec wrangler whoami` 失败。当前实际输出为 `Failed to fetch auth token: 400 Bad Request` / `Not logged in`；任务背景中的已知输出为 `Invalid access token [code: 9109]`。两者都表示当前认证不可用，因此 AC1/T1 和 AC2/T3 的真实远端资源、R2/Vectorize/D1 写入证据不得标 PASS。
+- AC4 自动化仅覆盖 sample 的 `profile`、`wikipedia`、`wikisource` 三类 source type；完整 AC4 还需要全量二十四史 processed/failed 统计报告确认，当前不得标完整 PASS。
 - Stage 8 是人工关卡，浏览器人工主路径尚未由用户实测；AC20 保持 MANUAL。
 
 ## 已运行的自动化检查
 
-- `C:\Program Files\Git\bin\bash.exe scripts/verify_ac.sh`：exit code `2`；summary `PASS=17 FAIL=0 BLOCKED=2 MANUAL=1 SKIP=0`。PowerShell 中 `bash` 命令不存在，已改用 Git Bash。
+- `C:\Program Files\Git\bin\bash.exe scripts/verify_ac.sh`：exit code `2`；summary `PASS=16 FAIL=0 BLOCKED=3 MANUAL=1 SKIP=0`。PowerShell 中 `bash` 命令不存在，已改用 Git Bash。
 - `pnpm test`：17 test files passed，147 tests passed。
 - `pnpm run check`：0 errors，2 existing warnings：
   - `src/routes/play/+page.svelte:310` unused CSS selector `.result small`
@@ -47,10 +48,10 @@
 
 | AC | AI 验证命令 | 输出证据 | 状态 |
 |---|---|---|---|
-| AC1 | `pnpm exec wrangler whoami`; 恢复认证后继续跑 `pnpm exec wrangler vectorize list`; `pnpm exec wrangler r2 bucket list`; `pnpm exec wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';"` | 当前 `whoami` 为 Cloudflare 认证失败：`Failed to fetch auth token: 400 Bad Request` / `Not logged in`；背景已知 blocker 为 `Invalid access token [code: 9109]`。 | BLOCKED |
-| AC2 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>`；恢复认证后跑 `python scripts/build_turtle_corpus.py --sample --cloud --mock-embedding --output <repo外临时目录>` | 本地 dry-run 生成 `corpus_version`、`index_version`、`build-report.json` 和 `chunks.jsonl`；真实 R2/Vectorize/D1 写入因认证不可用未跑通。 | BLOCKED |
+| AC1 | `pnpm exec wrangler whoami`; 恢复认证后继续跑 `pnpm exec wrangler vectorize list`; `pnpm exec wrangler r2 bucket list`; `pnpm exec wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';"` | 当前 `whoami` 为 Cloudflare 认证失败：`Failed to fetch auth token: 400 Bad Request` / `Not logged in`；背景已知 blocker 为 `Invalid access token [code: 9109]`。恢复认证后脚本只自动检查资源存在和 D1 manifest 表，Vectorize 1024/cosine 仍需 Dashboard/manual 取证。 | BLOCKED |
+| AC2 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>`；恢复认证后跑 `python scripts/build_turtle_corpus.py --sample --cloud --mock-embedding --output <repo外临时目录>` | 本地 dry-run 生成 `corpus_version`、`index_version`、`build-report.json` 和 `chunks.jsonl`；真实 R2/Vectorize/D1 写入因认证不可用未跑通。恢复认证后还需 report/stdout 证明 version、source counts、R2 object keys、Vectorize/D1/cloud summary。 | BLOCKED |
 | AC3 | `git ls-files | rg '(^|/)(raw|normalized|chunks|wikisource|r2-cache).*\.(jsonl|txt|md)$|(^|/)corpus/|r2-cache'` | `scripts/verify_ac.sh` 报 `git 未跟踪全量原始/清洗语料、chunk JSONL 或 R2 cache`。 | PASS |
-| AC4 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>` 后检查 `build-report.json` | report 覆盖 `profile`、`wikipedia`、`wikisource` 三类来源。 | PASS |
+| AC4 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>` 后检查 `build-report.json` | 自动化仅覆盖 sample source type coverage：`profile`、`wikipedia`、`wikisource` 三类来源；完整 AC4 待全量二十四史 processed/failed 统计报告确认。 | BLOCKED |
 | AC5 | `python -m unittest scripts.tests.test_turtle_corpus` | Python corpus 测试覆盖 chunk 长度、overlap、metadata <10KiB 与来源追溯；相关总 Python suite 24 passed。 | PASS |
 | AC6 | `pnpm exec vitest run src/lib/server/turtle-rag.test.ts` | RAG 单测覆盖 query expansion、目标人物姓名/aliases 注入与跨人物污染约束。 | PASS |
 | AC7 | `pnpm exec vitest run src/lib/server/turtle-rag.test.ts src/routes/api/turtle/question/server.test.ts` | RAG/API 单测覆盖可见回答枚举只允许“是/否/无关”。 | PASS |

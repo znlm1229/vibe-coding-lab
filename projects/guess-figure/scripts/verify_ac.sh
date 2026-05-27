@@ -116,20 +116,31 @@ echo "AC1-AC20"
 
 if [ "$CF_READY" -eq 1 ]; then
   AC1_LOG="$RUN_DIR/ac1-cloudflare-resources.log"
-  {
-    pnpm exec wrangler vectorize list
-    pnpm exec wrangler r2 bucket list
-    pnpm exec wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';"
-  } >"$AC1_LOG" 2>&1
+  : >"$AC1_LOG"
+  AC1_STATUS=0
+  if ! pnpm exec wrangler vectorize list >>"$AC1_LOG" 2>&1; then
+    AC1_STATUS=1
+  fi
+  if ! pnpm exec wrangler r2 bucket list >>"$AC1_LOG" 2>&1; then
+    AC1_STATUS=1
+  fi
+  if ! pnpm exec wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';" >>"$AC1_LOG" 2>&1; then
+    AC1_STATUS=1
+  fi
   if grep -q "guess-figure-turtle-rag" "$AC1_LOG" \
     && grep -q "guess-figure-turtle-corpus" "$AC1_LOG" \
-    && grep -q "turtle_corpus_versions" "$AC1_LOG"; then
-    record AC1 PASS "远端 Vectorize/R2/D1 资源可见"
+    && grep -q "turtle_corpus_versions" "$AC1_LOG" \
+    && grep -q "turtle_index_versions" "$AC1_LOG" \
+    && grep -q "turtle_corpus_sources" "$AC1_LOG" \
+    && grep -q "turtle_build_reports" "$AC1_LOG"; then
+    record AC1 MANUAL "远端 Vectorize/R2/D1 资源和 D1 manifest 表可见；Vectorize 1024 维与 cosine metric 仍需 Dashboard/manual 取证，输出见 $AC1_LOG"
+  elif [ "$AC1_STATUS" -ne 0 ]; then
+    record AC1 FAIL "远端资源检查命令失败；输出见 $AC1_LOG"
   else
-    record AC1 FAIL "远端资源缺失或输出不匹配；输出见 $AC1_LOG"
+    record AC1 FAIL "远端资源或 D1 manifest 表缺失；需包含 turtle_corpus_versions/turtle_index_versions/turtle_corpus_sources/turtle_build_reports，输出见 $AC1_LOG"
   fi
 else
-  record AC1 BLOCKED "需要恢复 token 后运行：pnpm exec wrangler vectorize list；pnpm exec wrangler r2 bucket list；pnpm exec wrangler d1 execute guess-figure-db --remote --command \"SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';\""
+  record AC1 BLOCKED "需要恢复 token 后运行：pnpm exec wrangler vectorize list；pnpm exec wrangler r2 bucket list；pnpm exec wrangler d1 execute guess-figure-db --remote --command \"SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';\"；资源存在可自动检查，Vectorize 1024/cosine 仍需 Dashboard/manual"
 fi
 
 if [ -f "$REPORT_JSON" ] \
@@ -138,8 +149,19 @@ if [ -f "$REPORT_JSON" ] \
   && grep -q '"chunks_jsonl"' "$REPORT_JSON"; then
   if [ "$CF_READY" -eq 1 ]; then
     AC2_LOG="$RUN_DIR/ac2-cloud-ingest.log"
+    AC2_REPORT="$RUN_DIR/cloud-corpus/build-report.json"
     if python scripts/build_turtle_corpus.py --sample --cloud --mock-embedding --output "$RUN_DIR/cloud-corpus" >"$AC2_LOG" 2>&1; then
-      record AC2 PASS "小样本 --cloud 写入链路完成，且 report 含版本与 R2 object keys"
+      if [ -f "$AC2_REPORT" ] \
+        && grep -q '"corpus_version"' "$AC2_REPORT" \
+        && grep -q '"index_version"' "$AC2_REPORT" \
+        && grep -qi 'source' "$AC2_REPORT" \
+        && grep -qi 'r2' "$AC2_REPORT" \
+        && grep -qi 'vector' "$AC2_REPORT" \
+        && grep -qi 'd1' "$AC2_REPORT"; then
+        record AC2 PASS "小样本 --cloud 写入链路完成，build report 含 version、source counts、R2 object keys、Vectorize/D1/cloud summary"
+      else
+        record AC2 MANUAL "小样本 --cloud 命令成功，但 report/stdout 未能完整自动证明 version、source counts、R2 object keys、Vectorize/D1/cloud summary；输出见 $AC2_LOG 和 $AC2_REPORT"
+      fi
     else
       record AC2 FAIL "--cloud 写入失败；输出见 $AC2_LOG"
     fi
@@ -162,7 +184,7 @@ if [ -f "$REPORT_JSON" ] \
   && grep -q '"profile"' "$REPORT_JSON" \
   && grep -q '"wikipedia"' "$REPORT_JSON" \
   && grep -q '"wikisource"' "$REPORT_JSON"; then
-  record AC4 PASS "build report 覆盖 profile/wikipedia/wikisource 三类来源"
+  record AC4 BLOCKED "自动化仅确认 sample source type coverage 覆盖 profile/wikipedia/wikisource；完整 AC4 还需全量二十四史 processed/failed 统计报告"
 else
   record AC4 FAIL "build report 未覆盖三类来源"
 fi
@@ -192,11 +214,15 @@ run_text_check AC12 "嵌入式海龟汤测试覆盖 5 问上限与用后结算 0
   pnpm exec vitest run src/lib/game-state.svelte.test.ts src/routes/api/game/finish/server.test.ts
 
 AC13_LOG="$RUN_DIR/ac13.log"
-{
-  pnpm exec vitest run src/lib/turtle-soup-state.test.ts
-  python -m unittest scripts.tests.test_turtle_intro
-} >"$AC13_LOG" 2>&1
-if [ "$?" -eq 0 ]; then
+: >"$AC13_LOG"
+AC13_STATUS=0
+if ! pnpm exec vitest run src/lib/turtle-soup-state.test.ts >>"$AC13_LOG" 2>&1; then
+  AC13_STATUS=1
+fi
+if ! python -m unittest scripts.tests.test_turtle_intro >>"$AC13_LOG" 2>&1; then
+  AC13_STATUS=1
+fi
+if [ "$AC13_STATUS" -eq 0 ]; then
   record AC13 PASS "独立模式状态测试与 intro 校验覆盖首屏不泄露强识别信息，65 人通过"
 else
   record AC13 FAIL "独立模式首屏或 turtle_intro 校验失败；输出见 $AC13_LOG"
@@ -218,13 +244,21 @@ run_text_check AC18 "关羽武圣维基 fixture 回归为 是" \
   pnpm exec vitest run src/lib/server/turtle-rag.test.ts
 
 AC19_LOG="$RUN_DIR/ac19-automation.log"
-{
-  pnpm test
-  pnpm run check
-  pnpm run build
-  python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro
-} >"$AC19_LOG" 2>&1
-if [ "$?" -eq 0 ]; then
+: >"$AC19_LOG"
+AC19_STATUS=0
+if ! pnpm test >>"$AC19_LOG" 2>&1; then
+  AC19_STATUS=1
+fi
+if ! pnpm run check >>"$AC19_LOG" 2>&1; then
+  AC19_STATUS=1
+fi
+if ! pnpm run build >>"$AC19_LOG" 2>&1; then
+  AC19_STATUS=1
+fi
+if ! python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro >>"$AC19_LOG" 2>&1; then
+  AC19_STATUS=1
+fi
+if [ "$AC19_STATUS" -eq 0 ]; then
   record AC19 PASS "pnpm test/check/build 与相关 Python tests 全部通过"
 else
   record AC19 FAIL "自动化检查失败；输出见 $AC19_LOG"
