@@ -233,6 +233,64 @@ describe("/api/turtle/question", () => {
     expect(db._sessions.get("session-invalid")?.question_count).toBe(3);
   });
 
+  it("standalone 已完成会话在 cache/RAG/LLM 前直接拒绝", async () => {
+    const db = createMemoryTurtleDb();
+    db._sessions.set("session-completed", {
+      id: "session-completed",
+      user_id: "user-test",
+      game_id: null,
+      figure_id: "guan-yu",
+      mode: "standalone",
+      question_count: 3,
+      answer_attempts_used: 3,
+      completed: true,
+      won: false,
+      used_turtle: true,
+    });
+    const getTurtleCache = vi.fn(async () => null);
+    const setTurtleCache = vi.fn();
+    const answerTurtleQuestion = vi.fn(async (): Promise<TurtleRagResult> => ({
+      answer: "否",
+      evidence: [],
+      degraded: false,
+      ragIndexVersion: "test-index",
+      promptVersion: "prompt-v1",
+    }));
+    const aiRun = vi.fn();
+    const vectorQuery = vi.fn();
+    const handler = _createTurtleQuestionHandler({
+      figures: [figure],
+      getTurtleCache,
+      setTurtleCache,
+      answerTurtleQuestion,
+    });
+
+    await expect(
+      handler(
+        mockEvent(
+          {
+            mode: "standalone",
+            session_id: "session-completed",
+            question: "他是不是皇帝？",
+          },
+          {
+            GF_DB: db,
+            GF_LLM_CACHE: {},
+            GF_VECTORIZE: { query: vectorQuery },
+            AI: { run: aiRun },
+            RAG_INDEX_VERSION: "test-index",
+          },
+        ),
+      ),
+    ).rejects.toMatchObject({ status: 409 });
+
+    expect(getTurtleCache).not.toHaveBeenCalled();
+    expect(setTurtleCache).not.toHaveBeenCalled();
+    expect(answerTurtleQuestion).not.toHaveBeenCalled();
+    expect(vectorQuery).not.toHaveBeenCalled();
+    expect(aiRun).not.toHaveBeenCalled();
+  });
+
   it("embedded 通过 game_id 建立会话并限制 5 次有效问题", async () => {
     const db = createMemoryTurtleDb();
     const answerTurtleQuestion = vi.fn(async (): Promise<TurtleRagResult> => ({

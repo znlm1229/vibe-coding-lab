@@ -96,6 +96,9 @@ export function _createTurtleQuestionHandler(deps: HandlerDeps = {}): RequestHan
       if (!stored && sessionContext.mode === "standalone") {
         throw error(400, "海龟汤会话不存在");
       }
+      if (stored?.completed) {
+        throw error(409, "海龟汤会话已完成");
+      }
       if (stored && stored.question_count >= sessionContext.maxQuestions) {
         throw error(409, "海龟汤提问次数已用完");
       }
