@@ -20,7 +20,7 @@
 - [x] T8 - 极短隐晦汤面数据与校验 - commit: `d4064fb` + `0b4057f`。SPEC/code-quality re-review APPROVED。
 - [x] T9 - 主游戏嵌入式 UI - commit: `eefd16a` + `e344533`。SPEC re-review PASS；code-quality re-review APPROVED。
 - [x] T10 - 独立 `/turtle-soup` 玩法 UI - commit: `b378644` + `e344533`。SPEC re-review PASS；code-quality re-review APPROVED。
-- [x] T11 - AC 验证脚本与 Stage 8 证据包 - commit: pending。
+- [x] T11 - AC 验证脚本与 Stage 8 证据包 - commit: `dfd9930` + `4475201`。SPEC re-review PASS；code-quality re-review APPROVED。
 
 ## 偏离 SPEC 的发现
 
@@ -73,4 +73,4 @@
 
 T11 已把旧 002 AC 验证脚本替换为 004 专用脚本。影响：`scripts/verify_ac.sh` 现在验证 `workflow/004-turtle-soup-rag` 的 AC1-AC20，不再假装旧 002 AC 是当前任务。Stage 8 需要用户重点补齐 Cloudflare Dashboard 远端资源截图/记录、真实 R2/Vectorize/D1 入库证据，以及两条浏览器主路径实测。
 
-阶段尚未满足 committed 条件：T11 改动尚未提交，Stage 8 人工关卡也尚未由用户确认。
+T11 代码与证据包改动已提交；Stage 8 人工关卡尚未由用户确认，且 AC1/AC2/AC4/AC20 仍需补齐远端、全量或人工证据。

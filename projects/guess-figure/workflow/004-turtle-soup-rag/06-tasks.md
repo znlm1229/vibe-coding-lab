@@ -67,7 +67,7 @@
   - Done when: 页面测试覆盖 15 问、3 次答案提交、错误答案不扣提问次数；本地浏览器打开 `/turtle-soup` 能看到 1 条极短隐晦汤面和问答入口
   - Depends on: T6, T7, T8
 
-- [ ] **T11 — AC 验证脚本与 Stage 8 证据包**
+- [x] **T11 — AC 验证脚本与 Stage 8 证据包**
   - Touches: `scripts/verify_ac.sh`、`workflow/004-turtle-soup-rag/07-implementation.md`、`workflow/004-turtle-soup-rag/08-qa.md`
   - Done when: `pnpm test`、`pnpm run check`、`pnpm run build`、相关 Python 测试和 AC 资源检查命令都有记录；Stage 8 QA checklist 覆盖 SPEC AC1-AC20 的人工验证路径
   - Depends on: T1-T10
