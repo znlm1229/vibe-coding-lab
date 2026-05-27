@@ -57,12 +57,12 @@
   - Done when: 每个人物都有 `turtle_intro` 且通过长度/禁词/强识别信息校验；抽样报告显示汤面不直接暴露姓名、别名、朝代、职业、作品、典故、亲属、地名
   - Depends on: T2
 
-- [ ] **T9 — 主游戏嵌入式 UI**
+- [x] **T9 — 主游戏嵌入式 UI**
   - Touches: `src/lib/game-state.svelte.ts`、`src/routes/play/+page.svelte`、`src/lib/components/TurtleHelpPanel.svelte`
   - Done when: 组件/状态测试覆盖第 1-5 条线索不显示入口、第 6 条后显示入口；嵌入式问答最多 5 问且用过后结算 0 分
   - Depends on: T6, T7
 
-- [ ] **T10 — 独立 `/turtle-soup` 玩法 UI**
+- [x] **T10 — 独立 `/turtle-soup` 玩法 UI**
   - Touches: `src/routes/turtle-soup/+page.svelte`、`src/lib/components/TurtleSoupGame.svelte`、`src/lib/components/TurtleQuestionList.svelte`
   - Done when: 页面测试覆盖 15 问、3 次答案提交、错误答案不扣提问次数；本地浏览器打开 `/turtle-soup` 能看到 1 条极短隐晦汤面和问答入口
   - Depends on: T6, T7, T8
