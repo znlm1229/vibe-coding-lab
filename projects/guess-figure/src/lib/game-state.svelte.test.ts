@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGameState } from "./game-state.svelte";
 import type { Figure } from "./types";
+import turtleHelpPanelSource from "$lib/components/TurtleHelpPanel.svelte?raw";
 
 const figure: Figure = {
   id: "test-figure",
@@ -24,6 +25,18 @@ function revealToSixthClue(game: ReturnType<typeof createGameState>) {
 }
 
 describe("createGameState 嵌入式海龟汤", () => {
+  it("TurtleHelpPanel 调用 question API 时发送 game_id", () => {
+    const questionPayload = turtleHelpPanelSource.slice(
+      turtleHelpPanelSource.indexOf('fetch("/api/turtle/question"'),
+      turtleHelpPanelSource.indexOf(
+        "});",
+        turtleHelpPanelSource.indexOf('fetch("/api/turtle/question"'),
+      ),
+    );
+
+    expect(questionPayload).toContain("game_id: gameId");
+  });
+
   it("第 1-5 条线索不显示入口，第 6 条线索后显示入口", () => {
     const game = createGameState(figure);
 

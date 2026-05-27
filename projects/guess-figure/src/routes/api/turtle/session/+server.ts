@@ -1,24 +1,31 @@
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 import figures from "$lib/data/figures.json";
-import type { Figure, TurtleMode } from "$lib/types";
+import intros from "$lib/data/turtle-intros.json";
+import { createPublicTurtleSoupRound } from "$lib/turtle-soup-state";
+import type { Figure } from "$lib/types";
 import {
   createStandaloneTurtleSession,
+  getTurtleSession,
   TurtleSessionError,
   type TurtleD1Database,
 } from "$lib/server/turtle-session";
 
 type TurtleSessionBody = {
   mode?: unknown;
-  session_id?: unknown;
-  figure_id?: unknown;
 };
 
 type HandlerDeps = {
   figures?: Figure[];
+  intros?: Record<string, string>;
+  createSessionId?: () => string;
+  random?: () => number;
 };
 
 export function _createTurtleSessionHandler(deps: HandlerDeps = {}): RequestHandler {
   const figureList = deps.figures ?? (figures as Figure[]);
+  const introMap = deps.intros ?? (intros as Record<string, string>);
+  const createSessionId = deps.createSessionId ?? (() => crypto.randomUUID());
+  const random = deps.random ?? Math.random;
 
   return async ({ request, locals, platform }) => {
     const userId = locals.user_id;
@@ -31,26 +38,30 @@ export function _createTurtleSessionHandler(deps: HandlerDeps = {}): RequestHand
     const mode = readMode(body.mode);
     if (mode !== "standalone") throw error(400, "当前接口只支持 standalone 模式");
 
-    const sessionId = readRequiredString(body.session_id, "session_id");
-    const figureId = readRequiredString(body.figure_id, "figure_id");
-    const figure = figureList.find((item) => item.id === figureId);
-    if (!figure) throw error(400, `figure_id 不存在: ${figureId}`);
+    const figure = pickFigureWithIntro(figureList, introMap, random);
+    const sessionId = createSessionId();
 
     try {
+      const existing = await getTurtleSession(db, sessionId);
+      if (existing) throw new TurtleSessionError("conflict", "海龟汤会话编号已存在");
+
       const session = await createStandaloneTurtleSession({
         db,
         userId,
         sessionId,
-        figureId,
+        figureId: figure.id,
       });
 
-      return json({
-        mode,
-        session_id: session.id,
-        figure_id: session.figure_id,
-        question_count: session.question_count,
-        answer_attempts_used: session.answer_attempts_used,
-      });
+      return json(
+        createPublicTurtleSoupRound({
+          session_id: session.id,
+          turtle_intro: introMap[figure.name] ?? "一处微光未明",
+          question_count: session.question_count,
+          answer_attempts_used: session.answer_attempts_used,
+          status: "playing",
+          questions: [],
+        }),
+      );
     } catch (cause) {
       if (cause instanceof TurtleSessionError) {
         if (cause.code === "conflict") throw error(409, cause.message);
@@ -65,9 +76,12 @@ export function _createTurtleSessionHandler(deps: HandlerDeps = {}): RequestHand
 export const POST: RequestHandler = _createTurtleSessionHandler();
 
 async function readBody(request: Request): Promise<TurtleSessionBody> {
+  const raw = await request.text();
+  if (!raw.trim()) return {};
+
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
     throw error(400, "请求体必须是 JSON");
   }
@@ -78,15 +92,21 @@ async function readBody(request: Request): Promise<TurtleSessionBody> {
   return body as TurtleSessionBody;
 }
 
-function readRequiredString(value: unknown, field: string): string {
-  if (typeof value !== "string" || !value.trim()) {
-    throw error(400, `${field} 必填`);
-  }
-  return value.trim();
+function readMode(value: unknown): "standalone" {
+  if (value === undefined || value === null || value === "") return "standalone";
+  if (value === "standalone") return value;
+  throw error(400, "mode 必须是 standalone");
 }
 
-function readMode(value: unknown): TurtleMode {
-  if (value === undefined || value === null || value === "") return "standalone";
-  if (value === "standalone" || value === "embedded") return value;
-  throw error(400, "mode 必须是 embedded 或 standalone");
+function pickFigureWithIntro(
+  figureList: Figure[],
+  introMap: Record<string, string>,
+  random: () => number,
+): Figure {
+  const candidates = figureList.filter((figure) => introMap[figure.name]);
+  const pool = candidates.length > 0 ? candidates : figureList;
+  if (pool.length === 0) throw error(500, "海龟汤题库为空");
+
+  const index = Math.min(pool.length - 1, Math.floor(random() * pool.length));
+  return pool[index];
 }

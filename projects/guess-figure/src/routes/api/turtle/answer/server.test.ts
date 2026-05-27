@@ -140,6 +140,63 @@ async function readJson(response: Response): Promise<TurtleAnswerApiResponse> {
 }
 
 describe("/api/turtle/answer", () => {
+  it("standalone 只需 session_id 与 answer，完成后才返回 reveal", async () => {
+    const db = createMemoryTurtleDb();
+    seedStandalone(db, "session-reveal");
+    const handler = _createTurtleAnswerHandler({ figures: [figure] });
+
+    const response = await handler(
+      mockEvent(
+        {
+          mode: "standalone",
+          session_id: "session-reveal",
+          answer: "孔明",
+          question_count: 6,
+        },
+        db,
+      ),
+    );
+    const body = await readJson(response);
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      correct: true,
+      completed: true,
+      won: true,
+      reveal: {
+        target_name: figure.name,
+        target_aliases: figure.aliases,
+        target_wiki_url: figure.wiki_url,
+      },
+    });
+    expect(JSON.stringify(body)).not.toContain("figure_id");
+    expect(JSON.stringify(body)).not.toContain("clues");
+  });
+
+  it("standalone 未完成时不揭晓 target", async () => {
+    const db = createMemoryTurtleDb();
+    seedStandalone(db, "session-hidden");
+    const handler = _createTurtleAnswerHandler({ figures: [figure] });
+
+    const body = await readJson(
+      await handler(
+        mockEvent(
+          {
+            mode: "standalone",
+            session_id: "session-hidden",
+            answer: "曹操",
+            question_count: 6,
+          },
+          db,
+        ),
+      ),
+    );
+
+    expect(body.completed).toBe(false);
+    expect(body).not.toHaveProperty("reveal");
+    expect(JSON.stringify(body)).not.toContain(figure.name);
+    expect(JSON.stringify(body)).not.toContain("孔明");
+  });
   it("非法 JSON 对象返回 400", async () => {
     const handler = _createTurtleAnswerHandler({ figures: [figure] });
 

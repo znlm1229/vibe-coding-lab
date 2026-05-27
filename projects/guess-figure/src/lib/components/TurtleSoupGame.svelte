@@ -10,13 +10,7 @@
   } from "$lib/turtle-soup-state";
   import TurtleQuestionList from "$lib/components/TurtleQuestionList.svelte";
 
-  interface Props {
-    initialRound: TurtleSoupRound;
-  }
-
-  let { initialRound }: Props = $props();
-
-  let round = $state((() => cloneRound(initialRound))());
+  let round = $state<TurtleSoupRound | null>(null);
   let sessionReady = $state(false);
   let sessionError = $state<string | null>(null);
   let questionText = $state("");
@@ -25,8 +19,14 @@
   let answering = $state(false);
   let lastMessage = $state<string | null>(null);
 
-  let questionsRemaining = $derived(TURTLE_SOUP_MAX_QUESTIONS - round.question_count);
-  let answersRemaining = $derived(TURTLE_SOUP_MAX_ANSWER_ATTEMPTS - round.answer_attempts_used);
+  let questionsRemaining = $derived(
+    round ? TURTLE_SOUP_MAX_QUESTIONS - round.question_count : TURTLE_SOUP_MAX_QUESTIONS,
+  );
+  let answersRemaining = $derived(
+    round
+      ? TURTLE_SOUP_MAX_ANSWER_ATTEMPTS - round.answer_attempts_used
+      : TURTLE_SOUP_MAX_ANSWER_ATTEMPTS,
+  );
 
   onMount(() => {
     void createSession();
@@ -36,14 +36,11 @@
     sessionReady = false;
     sessionError = null;
     try {
-      const response = await postJson("/api/turtle/session", {
-        mode: "standalone",
-        session_id: round.session_id,
-        figure_id: round.figure.id,
-      });
+      const response = await postJson("/api/turtle/session", { mode: "standalone" });
       if (!response.ok) {
         throw new Error(await readError(response, "创建会话失败"));
       }
+      round = (await response.json()) as TurtleSoupRound;
       sessionReady = true;
     } catch (cause) {
       sessionError = cause instanceof Error ? cause.message : "创建会话失败";
@@ -51,6 +48,7 @@
   }
 
   async function askQuestion() {
+    if (!round) return;
     const question = questionText.trim();
     if (!question || !round.can_ask_question || asking) return;
 
@@ -59,14 +57,15 @@
     try {
       const response = await postJson("/api/turtle/question", {
         mode: "standalone",
-        figure_id: round.figure.id,
+        session_id: round.session_id,
         question,
       });
       if (!response.ok) {
         throw new Error(await readError(response, "提问失败"));
       }
       const body = (await response.json()) as TurtleQuestionApiResponse;
-      round = applyTurtleQuestionResult(round, question, body);
+      const nextRound = applyTurtleQuestionResult(round, question, body);
+      round = nextRound;
       if (!body.invalid) questionText = "";
       if (body.invalid || body.degraded) {
         lastMessage = body.reason ?? "这次没有消耗提问次数";
@@ -79,6 +78,7 @@
   }
 
   async function submitAnswer() {
+    if (!round) return;
     const answer = answerText.trim();
     if (!answer || !round.can_submit_answer || answering || !sessionReady) return;
 
@@ -88,7 +88,6 @@
       const response = await postJson("/api/turtle/answer", {
         mode: "standalone",
         session_id: round.session_id,
-        figure_id: round.figure.id,
         answer,
         question_count: round.question_count,
       });
@@ -96,14 +95,18 @@
         throw new Error(await readError(response, "提交答案失败"));
       }
       const body = (await response.json()) as TurtleAnswerApiResponse;
-      round = applyTurtleAnswerResult(round, body);
+      const nextRound = applyTurtleAnswerResult(round, body);
+      round = nextRound;
       answerText = "";
-      if (round.status === "won") {
+      if (nextRound.status === "won") {
         lastMessage = "猜中了。";
-      } else if (round.status === "lost") {
+      } else if (nextRound.status === "lost") {
         lastMessage = "答案机会已用完。";
       } else {
-        lastMessage = `不对，还剩 ${answersRemaining} 次答案机会。`;
+        const remaining =
+          body.answer_attempts_remaining ??
+          TURTLE_SOUP_MAX_ANSWER_ATTEMPTS - nextRound.answer_attempts_used;
+        lastMessage = `不对，还剩 ${remaining} 次答案机会。`;
       }
     } catch (cause) {
       lastMessage = cause instanceof Error ? cause.message : "提交答案失败";
@@ -140,85 +143,82 @@
       return `${fallback} (HTTP ${response.status})`;
     }
   }
-
-  function cloneRound(source: TurtleSoupRound): TurtleSoupRound {
-    return {
-      ...source,
-      questions: [...source.questions],
-    };
-  }
 </script>
 
 <section class="game">
-  <div class="opening">
-    <span class="label">汤面</span>
-    <p>{round.turtle_intro}</p>
-  </div>
+  {#if round}
+    <div class="opening">
+      <span class="label">汤面</span>
+      <p>{round.turtle_intro}</p>
+    </div>
 
-  <div class="meters" aria-label="剩余次数">
-    <span>提问 <strong>{round.question_count}/{TURTLE_SOUP_MAX_QUESTIONS}</strong></span>
-    <span>答案 <strong>{round.answer_attempts_used}/{TURTLE_SOUP_MAX_ANSWER_ATTEMPTS}</strong></span>
-  </div>
+    <div class="meters" aria-label="剩余次数">
+      <span>提问 <strong>{round.question_count}/{TURTLE_SOUP_MAX_QUESTIONS}</strong></span>
+      <span>答案 <strong>{round.answer_attempts_used}/{TURTLE_SOUP_MAX_ANSWER_ATTEMPTS}</strong></span>
+    </div>
+  {/if}
 
   {#if sessionError}
     <p class="notice error">{sessionError}</p>
-  {:else if !sessionReady}
+  {:else if !sessionReady || !round}
     <p class="notice">正在开局...</p>
   {/if}
 
-  <TurtleQuestionList questions={round.questions} />
+  {#if round}
+    <TurtleQuestionList questions={round.questions} />
 
-  {#if round.status === "playing"}
-    <section class="panel">
-      <h2>提问</h2>
-      <textarea
-        bind:value={questionText}
-        disabled={!round.can_ask_question || asking}
-        rows="3"
-        placeholder="例如：他是不是皇帝？"
-        onkeydown={handleQuestionKeydown}
-      ></textarea>
-      <div class="row">
-        <span>{questionsRemaining} 次可用</span>
-        <button onclick={askQuestion} disabled={!questionText.trim() || !round.can_ask_question || asking}>
-          {asking ? "提问中..." : "提问"}
-        </button>
-      </div>
-    </section>
+    {#if round.status === "playing"}
+      <section class="panel">
+        <h2>提问</h2>
+        <textarea
+          bind:value={questionText}
+          disabled={!round.can_ask_question || asking}
+          rows="3"
+          placeholder="例如：他是不是皇帝？"
+          onkeydown={handleQuestionKeydown}
+        ></textarea>
+        <div class="row">
+          <span>{questionsRemaining} 次可用</span>
+          <button onclick={askQuestion} disabled={!questionText.trim() || !round.can_ask_question || asking}>
+            {asking ? "提问中..." : "提问"}
+          </button>
+        </div>
+      </section>
 
-    <section class="panel">
-      <h2>答案</h2>
-      <input
-        type="text"
-        bind:value={answerText}
-        disabled={!sessionReady || !round.can_submit_answer || answering}
-        placeholder="输入你猜的人物名"
-        autocomplete="off"
-        onkeydown={handleAnswerKeydown}
-      />
-      <div class="row">
-        <span>{answersRemaining} 次可用</span>
-        <button
-          onclick={submitAnswer}
-          disabled={!answerText.trim() || !sessionReady || !round.can_submit_answer || answering}
-        >
-          {answering ? "判定中..." : "提交答案"}
-        </button>
-      </div>
-    </section>
-  {:else}
-    <section class="reveal {round.status}">
-      {#if round.status === "won"}
-        <h2>猜中了</h2>
-      {:else}
-        <h2>答案揭晓</h2>
-      {/if}
-      <p class="answer-name">{round.figure.name}</p>
-      {#if round.figure.aliases.length > 0}
-        <p class="aliases">别名：{round.figure.aliases.join("、")}</p>
-      {/if}
-      <a href={round.figure.wiki_url} target="_blank" rel="noopener">查看资料</a>
-    </section>
+      <section class="panel">
+        <h2>答案</h2>
+        <input
+          type="text"
+          bind:value={answerText}
+          disabled={!sessionReady || !round.can_submit_answer || answering}
+          placeholder="输入你猜的人物名"
+          autocomplete="off"
+          onkeydown={handleAnswerKeydown}
+        />
+        <div class="row">
+          <span>{answersRemaining} 次可用</span>
+          <button
+            onclick={submitAnswer}
+            disabled={!answerText.trim() || !sessionReady || !round.can_submit_answer || answering}
+          >
+            {answering ? "判定中..." : "提交答案"}
+          </button>
+        </div>
+      </section>
+    {:else if round.reveal}
+      <section class="reveal {round.status}">
+        {#if round.status === "won"}
+          <h2>猜中了</h2>
+        {:else}
+          <h2>答案揭晓</h2>
+        {/if}
+        <p class="answer-name">{round.reveal.target_name}</p>
+        {#if round.reveal.target_aliases.length > 0}
+          <p class="aliases">别名：{round.reveal.target_aliases.join("、")}</p>
+        {/if}
+        <a href={round.reveal.target_wiki_url} target="_blank" rel="noopener">查看资料</a>
+      </section>
+    {/if}
   {/if}
 
   {#if lastMessage}

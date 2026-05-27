@@ -55,6 +55,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           figure_id: figureId,
+          game_id: gameId,
           question: trimmed,
           mode: "embedded",
         }),

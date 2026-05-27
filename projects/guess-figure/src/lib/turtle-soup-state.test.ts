@@ -23,6 +23,57 @@ const figure: Figure = {
 };
 
 describe("turtle-soup-state", () => {
+  it("首屏 round 对象只包含公开字段，不下发人物答案材料", () => {
+    const round = createTurtleSoupRound({
+      figures: [figure],
+      intros: { 目标人物: "半盏微光" },
+      createSessionId: () => "session-1",
+    });
+
+    const serializedRound = JSON.stringify(round);
+
+    expect(round).not.toHaveProperty("figure");
+    expect(round).not.toHaveProperty("figure_id");
+    expect(serializedRound).not.toContain("target");
+    expect(serializedRound).not.toContain("wiki_url");
+    expect(serializedRound).not.toContain("aliases");
+    expect(serializedRound).not.toContain("clues");
+    expect(serializedRound).not.toContain("目标人物");
+    expect(serializedRound).not.toContain("目标别名");
+    expect(serializedRound).not.toContain("普通线索");
+  });
+
+  it("完成后只通过 reveal 字段展示公开答案信息", () => {
+    const round = createTurtleSoupRound({
+      figures: [figure],
+      intros: { 目标人物: "半盏微光" },
+      createSessionId: () => "session-1",
+    });
+
+    const won = applyTurtleAnswerResult(round, {
+      mode: "standalone",
+      correct: true,
+      completed: true,
+      won: true,
+      consumes_answer: true,
+      answer_attempts_used: 1,
+      answer_attempts_remaining: 2,
+      question_count: 0,
+      reveal: {
+        target_name: "目标人物",
+        target_aliases: ["目标别名"],
+        target_wiki_url: "https://example.test/target",
+      },
+    });
+
+    expect(won.status).toBe("won");
+    expect(won.reveal).toEqual({
+      target_name: "目标人物",
+      target_aliases: ["目标别名"],
+      target_wiki_url: "https://example.test/target",
+    });
+    expect(JSON.stringify(round)).not.toContain("目标人物");
+  });
   it("首屏只暴露 turtle_intro，不暴露人物姓名、别名或普通线索", () => {
     const round = createTurtleSoupRound({
       figures: [figure],

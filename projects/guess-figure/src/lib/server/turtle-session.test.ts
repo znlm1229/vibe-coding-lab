@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { Figure, TurtleMode } from "$lib/types";
 import {
   createStandaloneTurtleSession,
+  consumeTurtleQuestion,
+  ensureEmbeddedTurtleSession,
   getTurtleSession,
   markEmbeddedTurtleUsed,
   persistFinishedGame,
@@ -114,7 +116,21 @@ function createMemoryTurtleDb(options: {
                   }
                 }
               }
-              if (sql.startsWith("UPDATE turtle_sessions")) {
+              if (sql.startsWith("UPDATE turtle_sessions SET question_count = question_count + 1")) {
+                const [id, user_id, mode, maxQuestions] = params;
+                const session = sessions.get(String(id));
+                if (
+                  session &&
+                  session.user_id === user_id &&
+                  session.mode === mode &&
+                  !session.completed &&
+                  session.question_count < Number(maxQuestions)
+                ) {
+                  session.question_count += 1;
+                  session.used_turtle = true;
+                  changes = 1;
+                }
+              } else if (sql.startsWith("UPDATE turtle_sessions")) {
                 const [
                   question_count,
                   correct,
@@ -189,6 +205,59 @@ function createMemoryTurtleDb(options: {
 }
 
 describe("turtle-session", () => {
+  it("consumeTurtleQuestion 原子递增有效问题次数并在达到上限后拒绝", async () => {
+    const db = createMemoryTurtleDb();
+    await createStandaloneTurtleSession({
+      db,
+      userId: "user-1",
+      sessionId: "question-limit",
+      figureId: "zhuge-liang",
+      questionCount: 14,
+    });
+
+    const consumed = await consumeTurtleQuestion({
+      db,
+      userId: "user-1",
+      sessionId: "question-limit",
+      mode: "standalone",
+      maxQuestions: 15,
+    });
+
+    expect(consumed.question_count).toBe(15);
+    await expect(
+      consumeTurtleQuestion({
+        db,
+        userId: "user-1",
+        sessionId: "question-limit",
+        mode: "standalone",
+        maxQuestions: 15,
+      }),
+    ).rejects.toMatchObject({ code: "question_limit" });
+    expect(await getTurtleSession(db, "question-limit")).toMatchObject({
+      question_count: 15,
+    });
+  });
+
+  it("ensureEmbeddedTurtleSession 使用 user_id + game_id + figure_id 复用同一嵌入式会话", async () => {
+    const db = createMemoryTurtleDb();
+
+    const first = await ensureEmbeddedTurtleSession({
+      db,
+      userId: "user-1",
+      gameId: "game-1",
+      figureId: "zhuge-liang",
+    });
+    const second = await ensureEmbeddedTurtleSession({
+      db,
+      userId: "user-1",
+      gameId: "game-1",
+      figureId: "zhuge-liang",
+    });
+
+    expect(first.id).toBe("embedded:game-1");
+    expect(second.id).toBe(first.id);
+    expect(db._sessions.size).toBe(1);
+  });
   it("未知独立会话提交答案时返回 not_found，不隐式创建会话", async () => {
     const db = createMemoryTurtleDb();
 

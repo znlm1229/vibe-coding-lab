@@ -34,6 +34,8 @@ export interface TurtleQuestionApiResponse {
   answer?: TurtleQuestionAnswer;
   invalid?: boolean;
   consumes_question: boolean;
+  question_count?: number;
+  questions_remaining?: number;
   cached?: boolean;
   degraded?: boolean;
   network_error?: boolean;
@@ -53,4 +55,11 @@ export interface TurtleAnswerApiResponse {
   answer_attempts_used?: number;
   answer_attempts_remaining?: number;
   question_count?: number;
+  reveal?: TurtleAnswerReveal;
+}
+
+export interface TurtleAnswerReveal {
+  target_name: string;
+  target_aliases: string[];
+  target_wiki_url: string;
 }

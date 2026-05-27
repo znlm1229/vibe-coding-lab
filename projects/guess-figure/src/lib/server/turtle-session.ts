@@ -40,11 +40,20 @@ export interface TurtleAnswerResult {
 
 export class TurtleSessionError extends Error {
   constructor(
-    public readonly code: "completed" | "attempts_exhausted" | "not_found" | "conflict",
+    public readonly code:
+      | "completed"
+      | "attempts_exhausted"
+      | "question_limit"
+      | "not_found"
+      | "conflict",
     message: string,
   ) {
     super(message);
   }
+}
+
+export function getEmbeddedTurtleSessionId(gameId: string): string {
+  return embeddedSessionId(gameId);
 }
 
 export async function getTurtleSession(
@@ -59,6 +68,35 @@ export async function getTurtleSession(
     .first<TurtleSessionRow>();
 
   return row ? toSessionRecord(row) : null;
+}
+
+export async function consumeTurtleQuestion(input: {
+  db: TurtleD1Database;
+  userId: string;
+  sessionId: string;
+  mode: TurtleMode;
+  maxQuestions: number;
+}): Promise<TurtleSessionRecord> {
+  const updateResult = await input.db
+    .prepare(
+      "UPDATE turtle_sessions SET question_count = question_count + 1, used_turtle = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND mode = ? AND completed = 0 AND question_count < ?",
+    )
+    .bind(input.sessionId, input.userId, input.mode, input.maxQuestions)
+    .run();
+
+  const stored = await getTurtleSession(input.db, input.sessionId);
+  if (!stored) throw new TurtleSessionError("not_found", "海龟汤会话不存在");
+  if (stored.user_id !== input.userId || stored.mode !== input.mode) {
+    throw new TurtleSessionError("conflict", "海龟汤会话与当前用户或模式不匹配");
+  }
+  if (changesOf(updateResult) !== 1) {
+    if (stored.completed) throw new TurtleSessionError("completed", "海龟汤会话已完成");
+    if (stored.question_count >= input.maxQuestions) {
+      throw new TurtleSessionError("question_limit", "海龟汤提问次数已用完");
+    }
+    throw new TurtleSessionError("conflict", "海龟汤提问次数更新未生效");
+  }
+  return stored;
 }
 
 export async function createStandaloneTurtleSession(input: {
@@ -173,6 +211,27 @@ export async function markEmbeddedTurtleUsed(input: {
     completed: false,
     won: null,
     usedTurtle: true,
+  });
+}
+
+export async function ensureEmbeddedTurtleSession(input: {
+  db: TurtleD1Database;
+  userId: string;
+  gameId: string;
+  figureId: string;
+}): Promise<TurtleSessionRecord> {
+  return ensureTurtleSession({
+    db: input.db,
+    sessionId: embeddedSessionId(input.gameId),
+    userId: input.userId,
+    gameId: input.gameId,
+    figureId: input.figureId,
+    mode: "embedded",
+    questionCount: 0,
+    answerAttemptsUsed: 0,
+    completed: false,
+    won: null,
+    usedTurtle: false,
   });
 }
 

@@ -2,6 +2,7 @@ import { error, json } from "@sveltejs/kit";
 import figures from "$lib/data/figures.json";
 import type { Figure, TurtleAnswerApiResponse, TurtleMode } from "$lib/types";
 import {
+  getTurtleSession,
   markEmbeddedTurtleUsed,
   submitStandaloneTurtleAnswer,
   TurtleSessionError,
@@ -36,11 +37,9 @@ export function _createTurtleAnswerHandler(deps: HandlerDeps = {}): RequestHandl
 
     const body = await readBody(request);
     const mode = readMode(body.mode);
-    const figureId = readRequiredString(body.figure_id, "figure_id");
-    const figure = figureList.find((item) => item.id === figureId);
-    if (!figure) throw error(400, `figure_id 不存在: ${figureId}`);
 
     if (mode === "embedded") {
+      const figureId = readRequiredString(body.figure_id, "figure_id");
       const gameId = readRequiredString(body.game_id, "game_id");
       if (!UUID_RE.test(gameId)) throw error(400, "game_id 必须是 UUID 字符串");
       try {
@@ -63,6 +62,20 @@ export function _createTurtleAnswerHandler(deps: HandlerDeps = {}): RequestHandl
     const sessionId = readRequiredString(body.session_id, "session_id");
     const answerText = readRequiredString(body.answer, "answer");
     const questionCount = readOptionalNonNegativeInteger(body.question_count, "question_count");
+    const session = await getTurtleSession(db, sessionId);
+    if (!session) throw error(400, "海龟汤会话不存在");
+    if (session.user_id !== userId || session.mode !== "standalone") {
+      throw error(409, "海龟汤会话与当前用户或模式不匹配");
+    }
+
+    const clientFigureId =
+      typeof body.figure_id === "string" && body.figure_id.trim() ? body.figure_id.trim() : undefined;
+    if (clientFigureId && clientFigureId !== session.figure_id) {
+      throw error(409, "figure_id 与会话目标不匹配");
+    }
+
+    const figure = figureList.find((item) => item.id === session.figure_id);
+    if (!figure) throw error(400, `figure_id 不存在: ${session.figure_id}`);
 
     try {
       const result = await submitStandaloneTurtleAnswer({
@@ -83,6 +96,13 @@ export function _createTurtleAnswerHandler(deps: HandlerDeps = {}): RequestHandl
         answer_attempts_remaining: result.answer_attempts_remaining,
         question_count: result.question_count,
         consumes_answer: true,
+        reveal: result.completed
+          ? {
+              target_name: figure.name,
+              target_aliases: figure.aliases,
+              target_wiki_url: figure.wiki_url,
+            }
+          : undefined,
       } satisfies TurtleAnswerApiResponse);
     } catch (cause) {
       if (cause instanceof TurtleSessionError) {

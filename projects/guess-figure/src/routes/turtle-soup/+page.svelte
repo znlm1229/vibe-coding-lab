@@ -1,12 +1,5 @@
 <script lang="ts">
   import TurtleSoupGame from "$lib/components/TurtleSoupGame.svelte";
-  import type { PageData } from "./$types";
-
-  interface Props {
-    data: PageData;
-  }
-
-  let { data }: Props = $props();
 </script>
 
 <svelte:head>
@@ -19,7 +12,7 @@
     <p class="subtitle">一条汤面，十五次提问，三次作答。</p>
   </header>
 
-  <TurtleSoupGame initialRound={data.initialRound} />
+  <TurtleSoupGame />
 </main>
 
 <style>
