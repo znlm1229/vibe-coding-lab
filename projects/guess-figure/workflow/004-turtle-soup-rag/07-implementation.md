@@ -14,9 +14,9 @@
 - [x] T2 - 本地语料构建与 chunk 校验 - commit: `642dc73` + `5bed5e8`。SPEC review PASS；code-quality re-review APPROVED。
 - [ ] T3 - Cloudflare 入库链路 - commit: `c283155` + `0fac610` + `76f360e` + `1c70e68`。代码链路复审 PASS；真实 `--cloud` 写入仍被 Cloudflare 认证阻塞，Stage 8/9 需要补远端证据。
 - [x] T4 - RAG 问题校验与缓存核心 - commit: `1963aca` + `e8a4795`。SPEC review PASS；code-quality re-review APPROVED。
-- [x] T5 - RAG 检索、rerank 与三态裁判 - commit: `1598f8f` + `91da358`。SPEC review PASS；code-quality re-review APPROVED。
+- [x] T5 - RAG 检索、rerank 与三态裁判 - commit: `1598f8f` + `91da358` + `a214c10`。SPEC review PASS；code-quality re-review APPROVED；最终整体验收修复 Workers AI embedding 矩阵响应兼容。
 - [x] T6 - 海龟汤问答 API - commit: `e385921` + `d4e19b8`。SPEC review PASS；code-quality re-review APPROVED。
-- [x] T7 - 答案提交与持久化状态 - commit: `b52508d` + `e21bc26` + `462e540`。SPEC re-review PASS；code-quality second re-review APPROVED。
+- [x] T7 - 答案提交与持久化状态 - commit: `b52508d` + `e21bc26` + `462e540` + `ad640c5`。SPEC re-review PASS；code-quality second re-review APPROVED；最终整体验收修复 completed session 提前拒绝，避免结束局消耗 RAG。
 - [x] T8 - 极短隐晦汤面数据与校验 - commit: `d4064fb` + `0b4057f`。SPEC/code-quality re-review APPROVED。
 - [x] T9 - 主游戏嵌入式 UI - commit: `eefd16a` + `e344533`。SPEC re-review PASS；code-quality re-review APPROVED。
 - [x] T10 - 独立 `/turtle-soup` 玩法 UI - commit: `b378644` + `e344533`。SPEC re-review PASS；code-quality re-review APPROVED。
@@ -35,7 +35,7 @@
 ## 已运行的自动化检查
 
 - `C:\Program Files\Git\bin\bash.exe scripts/verify_ac.sh`：exit code `2`；summary `PASS=16 FAIL=0 BLOCKED=3 MANUAL=1 SKIP=0`。PowerShell 中 `bash` 命令不存在，已改用 Git Bash。
-- `pnpm test`：17 test files passed，147 tests passed。
+- `pnpm test`：17 test files passed，150 tests passed。
 - `pnpm run check`：0 errors，2 existing warnings：
   - `src/routes/play/+page.svelte:310` unused CSS selector `.result small`
   - `tsconfig.json:1` cannot find type definition file for `node`
@@ -66,7 +66,7 @@
 | AC16 | `pnpm exec vitest run src/lib/server/turtle-question.test.ts` | 直接猜姓名/别名类 yes/no 问题不被 invalid 拦截。 | PASS |
 | AC17 | `pnpm exec vitest run src/lib/server/turtle-rag.test.ts src/routes/api/turtle/question/server.test.ts` | Workers AI/Vectorize/预算失败走 degraded；不误记为“否”或错误答案。 | PASS |
 | AC18 | `pnpm exec vitest run src/lib/server/turtle-rag.test.ts` | 关羽“后世尊为武圣”维基 fixture 回归为“是”。 | PASS |
-| AC19 | `pnpm test`; `pnpm run check`; `pnpm run build`; `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro` | `pnpm test` 147 passed；`check` 0 errors/2 existing warnings；`build` pass；Python 24 passed。 | PASS |
+| AC19 | `pnpm test`; `pnpm run check`; `pnpm run build`; `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro` | `pnpm test` 150 passed；`check` 0 errors/2 existing warnings；`build` pass；Python 24 passed。 | PASS |
 | AC20 | `scripts/verify_ac.sh` 只生成人工路径提示；浏览器主路径需 Stage 8 真人实测 | 脚本标 `MANUAL`，指向 `08-qa.md`。 | MANUAL |
 
 ## Stage 8 入场摘要预备
