@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from scripts.validate_turtle_intro import (
     DEFAULT_FIGURES_PATH,
@@ -14,16 +19,16 @@ from scripts.validate_turtle_intro import (
 
 
 PLACEHOLDER_STEMS = (
-    "无声回环",
-    "薄雾停步",
-    "旧灯微冷",
-    "空杯未满",
-    "迟来的风",
-    "背光而立",
-    "纸上微尘",
-    "暗处回声",
-    "半醒之门",
-    "静夜留白",
+    "薄雾未散",
+    "空阶微响",
+    "半盏微光",
+    "旧帘微动",
+    "冷雨初停",
+    "白纸留痕",
+    "暗纹浮起",
+    "微尘暂落",
+    "低声回转",
+    "空白未合",
 )
 
 

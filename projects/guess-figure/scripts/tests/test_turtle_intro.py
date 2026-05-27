@@ -1,6 +1,17 @@
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
-from scripts.validate_turtle_intro import validate_turtle_intros
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from scripts.validate_turtle_intro import load_json, validate_turtle_intros
+
+
+REVIEW_FLAGGED_TERMS = ("梦", "歌", "碗", "烟", "棋", "黄", "挑灯", "篱", "铁屋")
 
 
 def make_figure(figure_id: str = "孔子") -> dict:
@@ -59,6 +70,36 @@ class TurtleIntroValidationTest(unittest.TestCase):
         )
 
         self.assertTrue(any("禁词" in error for error in errors))
+        self.assertFalse(any("先生" in error for error in errors))
+
+    def test_rejects_review_flagged_imagery_terms(self):
+        errors = validate_turtle_intros(
+            figures=[make_figure("庄子")],
+            intros={"庄子": "梦外一息"},
+        )
+
+        self.assertTrue(any("强意象" in error for error in errors))
+
+    def test_current_intro_data_avoids_review_flagged_terms(self):
+        intros = load_json(ROOT_DIR / "src" / "lib" / "data" / "turtle-intros.json")
+        leaked = {
+            figure_id: intro
+            for figure_id, intro in intros.items()
+            if any(term in intro for term in REVIEW_FLAGGED_TERMS)
+        }
+
+        self.assertEqual(leaked, {})
+
+    def test_generator_help_runs_when_executed_by_path(self):
+        result = subprocess.run(
+            [sys.executable, "scripts/generate_turtle_intro.py", "--help"],
+            cwd=ROOT_DIR,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":

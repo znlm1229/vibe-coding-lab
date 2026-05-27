@@ -10,7 +10,10 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_FIGURES_PATH = ROOT_DIR / "src" / "lib" / "data" / "figures.json"
 DEFAULT_INTROS_PATH = ROOT_DIR / "src" / "lib" / "data" / "turtle-intros.json"
 MIN_INTRO_CHARS = 4
-MAX_INTRO_CHARS = 16
+MAX_INTRO_CHARS = 8
+
+# review 点名的强指向意象，容易让汤面回到人物生平、作品或典故。
+REVIEW_FLAGGED_TERMS = ("梦", "歌", "碗", "烟", "棋", "黄", "挑灯", "篱", "铁屋")
 
 # 只放强识别词：朝代、职业/身份、作品、亲属、常见地名与典故关键词。
 BANLIST = (
@@ -84,7 +87,6 @@ BANLIST = (
     "水调歌头",
     "将进酒",
     "兰亭",
-    "先生",
 )
 
 
@@ -136,6 +138,10 @@ def validate_turtle_intros(figures: list[dict[str, Any]], intros: dict[str, Any]
             if banned in intro:
                 errors.append(f"{figure_id}: 汤面包含禁词 {banned}")
 
+        for flagged in REVIEW_FLAGGED_TERMS:
+            if flagged in intro:
+                errors.append(f"{figure_id}: 汤面包含强意象 {flagged}")
+
     return errors
 
 
@@ -151,7 +157,7 @@ def build_sample_report(figures: list[dict[str, Any]], intros: dict[str, Any], s
         "intro_count": len(intros),
         "sample_size": len(samples),
         "samples": samples,
-        "checks": ["姓名", "别名", "朝代", "职业", "作品", "典故", "亲属", "地名"],
+        "checks": ["姓名", "别名", "朝代", "职业", "作品", "典故", "亲属", "地名", "强意象"],
     }
 
 
@@ -174,7 +180,7 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
-    print("校验通过：汤面未直接暴露姓名、别名、朝代、职业、作品、典故、亲属、地名。")
+    print("校验通过：汤面未直接暴露姓名、别名、朝代、职业、作品、典故、亲属、地名、强意象。")
     return 0
 
 
