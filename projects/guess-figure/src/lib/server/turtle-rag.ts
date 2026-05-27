@@ -201,14 +201,26 @@ function degradedResult(
 }
 
 function extractEmbedding(response: unknown): number[] | null {
-  const data = getPath(response, ["data"]);
-  if (Array.isArray(data)) {
-    const first = data[0] as { embedding?: unknown };
-    if (Array.isArray(first?.embedding)) return first.embedding as number[];
-  }
+  const dataEmbedding = extractFirstEmbedding(getPath(response, ["data"]));
+  if (dataEmbedding) return dataEmbedding;
+
+  const resultDataEmbedding = extractFirstEmbedding(getPath(response, ["result", "data"]));
+  if (resultDataEmbedding) return resultDataEmbedding;
 
   const embedding = getPath(response, ["embedding"]) ?? getPath(response, ["result", "data", 0, "embedding"]);
   return Array.isArray(embedding) ? (embedding as number[]) : null;
+}
+
+function extractFirstEmbedding(data: unknown): number[] | null {
+  if (!Array.isArray(data)) return null;
+
+  const first = data[0] as { embedding?: unknown } | unknown;
+  if (Array.isArray(first)) return first as number[];
+  if (first && typeof first === "object" && Array.isArray((first as { embedding?: unknown }).embedding)) {
+    return (first as { embedding: number[] }).embedding;
+  }
+
+  return null;
 }
 
 function extractRerankScores(response: unknown): Array<{ index: number; score: number }> {

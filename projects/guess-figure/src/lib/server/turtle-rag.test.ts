@@ -35,6 +35,7 @@ function makeDeps(options?: {
   vectorMatches?: ReturnType<typeof makeChunk>[];
   rerankScores?: number[];
   rerankResponse?: unknown;
+  embeddingResponse?: unknown;
   judgeText?: string;
 }) {
   const calls: Array<{ model: string; input: unknown }> = [];
@@ -50,6 +51,9 @@ function makeDeps(options?: {
       async run(model: string, input: unknown) {
         calls.push({ model, input });
         if (model === RAG_EMBEDDING_MODEL) {
+          if (options?.embeddingResponse !== undefined) {
+            return options.embeddingResponse;
+          }
           return { data: [{ embedding: [0.1, 0.2, 0.3] }] };
         }
         if (model === RAG_RERANKER_MODEL) {
@@ -106,6 +110,40 @@ describe("answerTurtleQuestion", () => {
         returnMetadata: true,
       }),
     });
+  });
+
+  it("supports Workers AI data matrix embedding response", async () => {
+    const { dependencies, vectorQueries } = makeDeps({
+      embeddingResponse: { data: [[0.4, 0.5, 0.6]] },
+      judgeText: '{"answer":"unknown"}',
+    });
+
+    await answerTurtleQuestion({
+      targetFigure: guanYu,
+      normalizedQuestion: "test question",
+      ragIndexVersion: "rag-v1",
+      promptVersion: "prompt-v1",
+      dependencies,
+    });
+
+    expect(vectorQueries[0]?.vector).toEqual([0.4, 0.5, 0.6]);
+  });
+
+  it("supports Workers AI result data matrix embedding response", async () => {
+    const { dependencies, vectorQueries } = makeDeps({
+      embeddingResponse: { result: { data: [[0.7, 0.8, 0.9]] } },
+      judgeText: '{"answer":"unknown"}',
+    });
+
+    await answerTurtleQuestion({
+      targetFigure: guanYu,
+      normalizedQuestion: "test question",
+      ragIndexVersion: "rag-v1",
+      promptVersion: "prompt-v1",
+      dependencies,
+    });
+
+    expect(vectorQueries[0]?.vector).toEqual([0.7, 0.8, 0.9]);
   });
 
   it("先取 Vectorize topK 结果，再 rerank，并只把 4-6 个 evidence chunks 喂给裁判", async () => {
