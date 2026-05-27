@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
+from urllib import error as url_error
+from urllib import request as url_request
 
 
 DEFAULT_BUCKET = "guess-figure-turtle-corpus"
@@ -26,6 +29,8 @@ class CloudflareIngestConfig:
     vector_metric: str = "cosine"
     mock_embedding: bool = False
     wrangler_bin: str = DEFAULT_WRANGLER_BIN
+    cloudflare_account_id: str | None = None
+    cloudflare_api_token: str | None = None
 
 
 class CommandFailure(RuntimeError):
@@ -36,6 +41,7 @@ class CommandFailure(RuntimeError):
 
 
 CommandRunner = Callable[[list[str], Path | None], Any]
+Embedder = Callable[[list[dict[str, Any]], CloudflareIngestConfig], list[list[float]]]
 
 
 def default_command_runner(command: list[str], cwd: Path | None = None) -> None:
@@ -72,18 +78,131 @@ def mock_embedding(chunk_id: str, text: str, dimensions: int) -> list[float]:
     return values
 
 
+def workers_ai_embedder(rows: list[dict[str, Any]], config: CloudflareIngestConfig) -> list[list[float]]:
+    """通过 Workers AI REST API 生成真实 embedding；测试可用 embedder 参数替换。"""
+    account_id = config.cloudflare_account_id or os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+    api_token = config.cloudflare_api_token or os.environ.get("CLOUDFLARE_API_TOKEN")
+    if not account_id or not api_token:
+        raise CommandFailure(["workers-ai", "embed", config.embedding_model], "缺少 CLOUDFLARE_ACCOUNT_ID 或 CLOUDFLARE_API_TOKEN")
+
+    payload = json.dumps({"text": [str(row["text"]) for row in rows]}, ensure_ascii=False).encode("utf-8")
+    url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{config.embedding_model}"
+    request = url_request.Request(
+        url,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with url_request.urlopen(request, timeout=120) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except url_error.HTTPError as error:
+        detail = error.read().decode("utf-8", errors="replace")
+        raise CommandFailure(["workers-ai", "embed", config.embedding_model], detail, error.code) from error
+    except url_error.URLError as error:
+        raise CommandFailure(["workers-ai", "embed", config.embedding_model], str(error)) from error
+
+    result = body.get("result", {})
+    data = result.get("data") if isinstance(result, dict) else None
+    if not body.get("success", False) or not isinstance(data, list):
+        raise CommandFailure(["workers-ai", "embed", config.embedding_model], json.dumps(body, ensure_ascii=False))
+    return data
+
+
+def build_embeddings(
+    rows: list[dict[str, Any]],
+    config: CloudflareIngestConfig,
+    embedder: Embedder | None,
+) -> list[list[float]]:
+    if config.mock_embedding:
+        return [
+            mock_embedding(str(row["metadata"]["chunk_id"]), str(row["text"]), config.vector_dimensions)
+            for row in rows
+        ]
+
+    vectors = (embedder or workers_ai_embedder)(rows, config)
+    if len(vectors) != len(rows):
+        raise ValueError(f"embedding 数量不匹配：期望 {len(rows)}，实际 {len(vectors)}")
+    for index, vector in enumerate(vectors):
+        if len(vector) != config.vector_dimensions:
+            raise ValueError(f"第 {index} 条 embedding 维度不是 {config.vector_dimensions}")
+    return vectors
+
+
+def normalize_source_text(parts: list[str]) -> str:
+    return " ".join(" ".join(parts).split())
+
+
+def collect_source_records(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    sources: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        metadata = row["metadata"]
+        key = (str(metadata.get("source_type", "")), str(metadata.get("source_id", "")))
+        source = sources.setdefault(
+            key,
+            {
+                "source_type": key[0],
+                "source_id": key[1],
+                "title": metadata.get("title"),
+                "figure_id": metadata.get("figure_id"),
+                "figure_name": metadata.get("figure_name"),
+                "source_url": metadata.get("source_url"),
+                "chunk_ids": [],
+                "text_segments": [],
+            },
+        )
+        source["chunk_ids"].append(metadata.get("chunk_id"))
+        source["text_segments"].append(row["text"])
+
+    records: list[dict[str, Any]] = []
+    for source in sources.values():
+        records.append(
+            {
+                **source,
+                "chunk_count": len(source["chunk_ids"]),
+                "char_count": sum(len(part) for part in source["text_segments"]),
+            }
+        )
+    return sorted(records, key=lambda item: (item["source_type"], item["source_id"]))
+
+
+def write_source_artifacts(chunks_path: Path, output_dir: Path) -> dict[str, str]:
+    rows = load_jsonl(chunks_path)
+    records = collect_source_records(rows)
+    raw_path = output_dir / "sources-raw.jsonl"
+    normalized_path = output_dir / "sources-normalized.jsonl"
+
+    with raw_path.open("w", encoding="utf-8", newline="\n") as file:
+        for record in records:
+            file.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+
+    with normalized_path.open("w", encoding="utf-8", newline="\n") as file:
+        for record in records:
+            normalized = dict(record)
+            normalized["normalized_text"] = normalize_source_text(record["text_segments"])
+            normalized.pop("text_segments", None)
+            file.write(json.dumps(normalized, ensure_ascii=False, sort_keys=True) + "\n")
+
+    return {
+        "raw_sources_jsonl": str(raw_path),
+        "normalized_sources_jsonl": str(normalized_path),
+    }
+
+
 def write_vectorize_upsert_file(
     chunks_path: Path,
     output_dir: Path,
     config: CloudflareIngestConfig,
+    embedder: Embedder | None = None,
 ) -> Path:
-    if not config.mock_embedding:
-        raise ValueError("当前入库脚本只支持 --mock-embedding；真实 Workers AI embedding 留给可 mock 封装后接入")
-
     upsert_path = output_dir / "vectorize-upsert.jsonl"
     rows = load_jsonl(chunks_path)
+    vectors = build_embeddings(rows, config, embedder)
     with upsert_path.open("w", encoding="utf-8", newline="\n") as file:
-        for row in rows:
+        for row, vector in zip(rows, vectors):
             metadata = dict(row["metadata"])
             chunk_id = str(metadata["chunk_id"])
             metadata["text"] = row["text"]
@@ -92,7 +211,7 @@ def write_vectorize_upsert_file(
             metadata["vector_metric"] = config.vector_metric
             payload = {
                 "id": chunk_id,
-                "values": mock_embedding(chunk_id, row["text"], config.vector_dimensions),
+                "values": vector,
                 "metadata": metadata,
             }
             file.write(json.dumps(payload, ensure_ascii=False, sort_keys=True) + "\n")
@@ -174,11 +293,33 @@ def write_failure_artifacts(
     error: Exception,
     r2_keys: dict[str, str],
 ) -> None:
+    chunks_path = output_dir / "chunks.jsonl"
+    affected_sources: list[dict[str, Any]] = []
+    affected_chunk_count = 0
+    if chunks_path.exists():
+        rows = load_jsonl(chunks_path)
+        affected_chunk_count = len(rows)
+        affected_sources = [
+            {
+                "source_type": record["source_type"],
+                "source_id": record["source_id"],
+                "chunk_count": record["chunk_count"],
+            }
+            for record in collect_source_records(rows)
+        ]
     checkpoint = {
         "completed_steps": completed_steps,
         "failed_step": failed_step,
         "error": str(error),
-        "resume_command": f"python scripts/build_turtle_corpus.py --sample --cloud --output {output_dir} --mock-embedding",
+        "resume_args": [
+            "python",
+            "scripts/build_turtle_corpus.py",
+            "--sample",
+            "--cloud",
+            "--output",
+            str(output_dir),
+        ],
+        "resume_note": "当前 checkpoint 记录进度和失败点；恢复方式是从头重跑同一命令，已完成步骤不会被自动跳过。",
         "r2_keys": r2_keys,
         "report_keys": report.get("output_files", {}),
         "source_counts": report.get("source_counts", {}),
@@ -188,6 +329,8 @@ def write_failure_artifacts(
         "error": str(error),
         "source_counts": report.get("source_counts", {}),
         "failures": report.get("failures", []),
+        "affected_sources": affected_sources,
+        "affected_chunk_count": affected_chunk_count,
     }
     write_json(output_dir / "cloud-checkpoint.json", checkpoint)
     write_json(output_dir / "failed-sources.json", failed_sources)
@@ -199,6 +342,8 @@ def build_r2_keys(report: dict[str, Any]) -> dict[str, str]:
         "prefix": prefix,
         "build_report": f"{prefix}build-report.json",
         "chunks_jsonl": f"{prefix}chunks.jsonl",
+        "raw_sources_jsonl": f"{prefix}sources-raw.jsonl",
+        "normalized_sources_jsonl": f"{prefix}sources-normalized.jsonl",
         "checkpoint": f"{prefix}cloud-checkpoint.json",
     }
 
@@ -208,6 +353,7 @@ def ingest_corpus_to_cloudflare(
     output_dir: Path,
     config: CloudflareIngestConfig,
     command_runner: CommandRunner = default_command_runner,
+    embedder: Embedder | None = None,
 ) -> dict[str, Any]:
     output_dir = output_dir.resolve(strict=False)
     report_path = output_dir / "build-report.json"
@@ -216,6 +362,7 @@ def ingest_corpus_to_cloudflare(
     completed_steps: list[str] = []
 
     try:
+        source_files = write_source_artifacts(chunks_path, output_dir)
         command_runner(
             build_wrangler_command(
                 config,
@@ -230,9 +377,37 @@ def ingest_corpus_to_cloudflare(
             ),
             None,
         )
+        command_runner(
+            build_wrangler_command(
+                config,
+                [
+                    "r2",
+                    "object",
+                    "put",
+                    f"{config.bucket}/{r2_keys['raw_sources_jsonl']}",
+                    "--file",
+                    source_files["raw_sources_jsonl"],
+                ],
+            ),
+            None,
+        )
+        command_runner(
+            build_wrangler_command(
+                config,
+                [
+                    "r2",
+                    "object",
+                    "put",
+                    f"{config.bucket}/{r2_keys['normalized_sources_jsonl']}",
+                    "--file",
+                    source_files["normalized_sources_jsonl"],
+                ],
+            ),
+            None,
+        )
         completed_steps.append("r2_upload")
 
-        upsert_path = write_vectorize_upsert_file(chunks_path, output_dir, config)
+        upsert_path = write_vectorize_upsert_file(chunks_path, output_dir, config, embedder=embedder)
         command_runner(
             build_wrangler_command(config, ["vectorize", "upsert", config.vectorize_index, "--file", str(upsert_path)]),
             None,
@@ -265,6 +440,7 @@ def ingest_corpus_to_cloudflare(
         "r2_keys": r2_keys,
         "vectorize_file": str(output_dir / "vectorize-upsert.jsonl"),
         "manifest_sql": str(output_dir / "cloud-manifest.sql"),
+        "source_files": source_files,
         "vector_dimensions": config.vector_dimensions,
         "embedding_model": config.embedding_model,
     }

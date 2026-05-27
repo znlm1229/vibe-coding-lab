@@ -36,6 +36,13 @@ def is_output_inside_project(output_dir: Path) -> bool:
     return True
 
 
+def build_cloud_config(args: argparse.Namespace) -> CloudflareIngestConfig:
+    return CloudflareIngestConfig(
+        mock_embedding=args.mock_embedding,
+        wrangler_bin=args.wrangler_bin,
+    )
+
+
 def main() -> int:
     args = parse_args()
     if not args.sample:
@@ -58,10 +65,7 @@ def main() -> int:
             cloud_summary = ingest_corpus_to_cloudflare(
                 result.report,
                 output_dir=args.output,
-                config=CloudflareIngestConfig(
-                    mock_embedding=args.mock_embedding or args.sample,
-                    wrangler_bin=args.wrangler_bin,
-                ),
+                config=build_cloud_config(args),
             )
             result.report["cloud"] = cloud_summary
         except CommandFailure as error:
