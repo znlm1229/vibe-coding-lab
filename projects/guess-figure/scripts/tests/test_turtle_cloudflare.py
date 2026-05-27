@@ -168,8 +168,72 @@ class TurtleCloudflareTest(unittest.TestCase):
             self.assertIn("r2_keys", checkpoint)
             self.assertEqual(failed_sources["failed_step"], "vectorize_upsert")
             self.assertEqual(failed_sources["source_counts"], build_result.report["source_counts"])
-            self.assertEqual(failed_sources["affected_chunk_count"], build_result.report["chunk_count"])
-            self.assertGreaterEqual(len(failed_sources["affected_sources"]), 1)
+            for payload in (checkpoint, failed_sources):
+                self.assertEqual(payload["affected_chunk_count"], build_result.report["chunk_count"])
+                self.assertGreaterEqual(len(payload["affected_sources"]), 1)
+                affected_source = payload["affected_sources"][0]
+                self.assertIn("source_type", affected_source)
+                self.assertIn("source_id", affected_source)
+                self.assertIn("title", affected_source)
+                self.assertIn("figure_id", affected_source)
+                self.assertGreaterEqual(affected_source["chunk_count"], 1)
+                self.assertGreaterEqual(len(affected_source["chunks"]), 1)
+                affected_chunk = affected_source["chunks"][0]
+                self.assertIn("chunk_id", affected_chunk)
+                self.assertIn("start", affected_chunk)
+                self.assertIn("end", affected_chunk)
+
+    def test_d1_failure_checkpoint_includes_affected_source_chunk_ranges(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            build_result = self.build_sample(output_dir)
+            runner = FakeRunner(fail_step="d1 execute")
+
+            with self.assertRaises(CommandFailure):
+                ingest_corpus_to_cloudflare(
+                    build_result.report,
+                    output_dir=output_dir,
+                    config=CloudflareIngestConfig(
+                        bucket="guess-figure-turtle-corpus",
+                        vectorize_index="guess-figure-turtle-rag",
+                        d1_database="guess-figure-db",
+                        mock_embedding=True,
+                    ),
+                    command_runner=runner,
+                )
+
+            checkpoint = json.loads((output_dir / "cloud-checkpoint.json").read_text(encoding="utf-8"))
+            failed_sources = json.loads((output_dir / "failed-sources.json").read_text(encoding="utf-8"))
+
+            self.assertEqual(checkpoint["failed_step"], "d1_manifest")
+            self.assertEqual(failed_sources["failed_step"], "d1_manifest")
+            for payload in (checkpoint, failed_sources):
+                source = payload["affected_sources"][0]
+                chunk = source["chunks"][0]
+                self.assertIn("chunk_id", chunk)
+                self.assertIsInstance(chunk["start"], int)
+                self.assertIsInstance(chunk["end"], int)
+
+    def test_wrangler_bin_with_spaces_keeps_executable_boundary(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            build_result = self.build_sample(output_dir)
+            runner = FakeRunner()
+            wrangler_path = r"C:\Program Files\nodejs\wrangler.cmd"
+
+            ingest_corpus_to_cloudflare(
+                build_result.report,
+                output_dir=output_dir,
+                config=CloudflareIngestConfig(
+                    wrangler_bin=wrangler_path,
+                    wrangler_args=(),
+                    mock_embedding=True,
+                ),
+                command_runner=runner,
+            )
+
+            self.assertGreater(len(runner.commands), 0)
+            self.assertTrue(all(command[0] == wrangler_path for command in runner.commands))
 
     def test_cli_sample_cloud_uses_wrangler_runner_and_can_fail_with_checkpoint(self):
         with tempfile.TemporaryDirectory() as temp_dir:

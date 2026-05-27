@@ -16,7 +16,8 @@ DEFAULT_VECTORIZE_INDEX = "guess-figure-turtle-rag"
 DEFAULT_D1_DATABASE = "guess-figure-db"
 DEFAULT_EMBEDDING_MODEL = "@cf/qwen/qwen3-embedding-0.6b"
 DEFAULT_VECTOR_DIMENSIONS = 1024
-DEFAULT_WRANGLER_BIN = "pnpm exec wrangler"
+DEFAULT_WRANGLER_BIN = "pnpm"
+DEFAULT_WRANGLER_ARGS = ("exec", "wrangler")
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class CloudflareIngestConfig:
     vector_metric: str = "cosine"
     mock_embedding: bool = False
     wrangler_bin: str = DEFAULT_WRANGLER_BIN
+    wrangler_args: tuple[str, ...] = DEFAULT_WRANGLER_ARGS
     cloudflare_account_id: str | None = None
     cloudflare_api_token: str | None = None
 
@@ -52,7 +54,7 @@ def default_command_runner(command: list[str], cwd: Path | None = None) -> None:
 
 
 def build_wrangler_command(config: CloudflareIngestConfig, args: list[str]) -> list[str]:
-    return config.wrangler_bin.split() + args
+    return [config.wrangler_bin, *config.wrangler_args, *args]
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -167,6 +169,36 @@ def collect_source_records(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             }
         )
     return sorted(records, key=lambda item: (item["source_type"], item["source_id"]))
+
+
+def collect_affected_source_ranges(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    sources: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        metadata = row["metadata"]
+        key = (str(metadata.get("source_type", "")), str(metadata.get("source_id", "")))
+        source = sources.setdefault(
+            key,
+            {
+                "source_type": key[0],
+                "source_id": key[1],
+                "title": metadata.get("title"),
+                "figure_id": metadata.get("figure_id"),
+                "figure_name": metadata.get("figure_name"),
+                "chunks": [],
+            },
+        )
+        source["chunks"].append(
+            {
+                "chunk_id": metadata.get("chunk_id"),
+                "start": int(metadata.get("start", 0)),
+                "end": int(metadata.get("end", 0)),
+            }
+        )
+
+    affected: list[dict[str, Any]] = []
+    for source in sources.values():
+        affected.append({**source, "chunk_count": len(source["chunks"])})
+    return sorted(affected, key=lambda item: (item["source_type"], item["source_id"]))
 
 
 def write_source_artifacts(chunks_path: Path, output_dir: Path) -> dict[str, str]:
@@ -299,18 +331,13 @@ def write_failure_artifacts(
     if chunks_path.exists():
         rows = load_jsonl(chunks_path)
         affected_chunk_count = len(rows)
-        affected_sources = [
-            {
-                "source_type": record["source_type"],
-                "source_id": record["source_id"],
-                "chunk_count": record["chunk_count"],
-            }
-            for record in collect_source_records(rows)
-        ]
+        affected_sources = collect_affected_source_ranges(rows)
     checkpoint = {
         "completed_steps": completed_steps,
         "failed_step": failed_step,
         "error": str(error),
+        "affected_sources": affected_sources,
+        "affected_chunk_count": affected_chunk_count,
         "resume_args": [
             "python",
             "scripts/build_turtle_corpus.py",
