@@ -90,7 +90,7 @@ function createMemoryTurtleDb() {
                   changes = 1;
                 }
               }
-              if (sql.startsWith("INSERT INTO games")) {
+              if (sql.startsWith("INSERT INTO games") || sql.startsWith("INSERT OR IGNORE INTO games")) {
                 const [id, user_id, figure_id, won, revealed_count, score, given_up] = params;
                 if (!games.has(String(id))) {
                   games.set(String(id), {

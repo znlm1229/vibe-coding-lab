@@ -29,9 +29,14 @@ type StoredGame = {
   given_up: number;
 };
 
-function createMemoryTurtleDb() {
+function createMemoryTurtleDb(options: {
+  simulateExternalAnswerOnUpdateMiss?: boolean;
+  forceStandaloneUpdateMiss?: boolean;
+  raceInsertGameBeforeRun?: StoredGame;
+} = {}) {
   const sessions = new Map<string, TurtleSessionRecord>();
   const games = new Map<string, StoredGame>();
+  let gameReadCount = 0;
 
   return {
     _sessions: sessions,
@@ -58,6 +63,7 @@ function createMemoryTurtleDb() {
                 return null;
               }
               if (sql.includes("FROM games") && sql.includes("WHERE id = ?")) {
+                gameReadCount += 1;
                 return (games.get(String(params[0])) ?? null) as T | null;
               }
               return null;
@@ -92,19 +98,33 @@ function createMemoryTurtleDb() {
                     used_turtle: Boolean(used_turtle),
                   });
                   changes = 1;
-                } else if (
-                  existing.user_id === user_id &&
-                  existing.game_id === (game_id === null ? null : String(game_id)) &&
-                  existing.figure_id === figure_id &&
-                  existing.mode === mode
-                ) {
-                  existing.question_count = Math.max(existing.question_count, Number(question_count));
-                  existing.used_turtle = existing.used_turtle || Boolean(used_turtle);
-                  changes = 1;
+                } else {
+                  const matchesOwner =
+                    existing.user_id === user_id &&
+                    existing.game_id === (game_id === null ? null : String(game_id)) &&
+                    existing.figure_id === figure_id &&
+                    existing.mode === mode;
+                  if (matchesOwner || !sql.includes(" WHERE ")) {
+                    existing.question_count = Math.max(
+                      existing.question_count,
+                      Number(question_count),
+                    );
+                    existing.used_turtle = existing.used_turtle || Boolean(used_turtle);
+                    changes = 1;
+                  }
                 }
               }
               if (sql.startsWith("UPDATE turtle_sessions")) {
-                const [question_count, completed, won, id, user_id, figure_id] = params;
+                const [
+                  question_count,
+                  correct,
+                  max_attempts,
+                  _correct_for_won,
+                  _max_attempts_for_won,
+                  id,
+                  user_id,
+                  figure_id,
+                ] = params;
                 const session = sessions.get(String(id));
                 if (
                   session &&
@@ -112,17 +132,31 @@ function createMemoryTurtleDb() {
                   session.figure_id === figure_id &&
                   session.mode === "standalone" &&
                   !session.completed &&
-                  session.answer_attempts_used < 3
+                  session.answer_attempts_used < Number(max_attempts) &&
+                  !options.forceStandaloneUpdateMiss
                 ) {
+                  const nextAttempts = session.answer_attempts_used + 1;
                   session.question_count = Math.max(session.question_count, Number(question_count));
-                  session.answer_attempts_used += 1;
-                  session.completed = Boolean(completed);
-                  session.won = won === null ? null : Boolean(won);
+                  session.answer_attempts_used = nextAttempts;
+                  session.completed = Boolean(correct) || nextAttempts >= Number(max_attempts);
+                  session.won = Boolean(correct) ? true : session.completed ? false : null;
                   session.used_turtle = true;
                   changes = 1;
+                } else if (session && options.simulateExternalAnswerOnUpdateMiss) {
+                  session.answer_attempts_used += 1;
+                  session.completed = true;
+                  changes = 0;
                 }
               }
-              if (sql.startsWith("INSERT INTO games")) {
+              if (
+                (sql.startsWith("INSERT INTO games") ||
+                  sql.startsWith("INSERT OR IGNORE INTO games")) &&
+                options.raceInsertGameBeforeRun &&
+                !games.has(options.raceInsertGameBeforeRun.id)
+              ) {
+                games.set(options.raceInsertGameBeforeRun.id, options.raceInsertGameBeforeRun);
+              }
+              if (sql.startsWith("INSERT INTO games") || sql.startsWith("INSERT OR IGNORE INTO games")) {
                 const [id, user_id, figure_id, won, revealed_count, score, given_up] = params;
                 if (!games.has(String(id))) {
                   games.set(String(id), {
@@ -272,6 +306,65 @@ describe("turtle-session", () => {
       figure_id: "zhuge-liang",
       mode: "standalone",
       question_count: 1,
+      used_turtle: true,
+    });
+  });
+
+  it("答案 UPDATE 未命中时不返回成功，即使随后读到 attempts 已变化", async () => {
+    const db = createMemoryTurtleDb({
+      forceStandaloneUpdateMiss: true,
+      simulateExternalAnswerOnUpdateMiss: true,
+    });
+    await createStandaloneTurtleSession({
+      db,
+      userId: "user-1",
+      sessionId: "session-update-miss",
+      figureId: "zhuge-liang",
+      questionCount: 0,
+    });
+
+    await expect(
+      submitStandaloneTurtleAnswer({
+        db,
+        userId: "user-1",
+        sessionId: "session-update-miss",
+        figure,
+        answer: "曹操",
+        questionCount: 0,
+      }),
+    ).rejects.toMatchObject({ code: "completed" });
+  });
+
+  it("答案次数从 2 再错答后落库 completed=true", async () => {
+    const db = createMemoryTurtleDb();
+    await createStandaloneTurtleSession({
+      db,
+      userId: "user-1",
+      sessionId: "session-two-attempts",
+      figureId: "zhuge-liang",
+      questionCount: 0,
+    });
+    const session = db._sessions.get("session-two-attempts");
+    if (session) session.answer_attempts_used = 2;
+
+    const result = await submitStandaloneTurtleAnswer({
+      db,
+      userId: "user-1",
+      sessionId: "session-two-attempts",
+      figure,
+      answer: "曹操",
+      questionCount: 0,
+    });
+
+    expect(result).toMatchObject({
+      completed: true,
+      won: false,
+      answer_attempts_used: 3,
+      answer_attempts_remaining: 0,
+    });
+    expect(await getTurtleSession(db, "session-two-attempts")).toMatchObject({
+      completed: true,
+      won: false,
     });
   });
 
@@ -372,6 +465,33 @@ describe("turtle-session", () => {
         won: true,
         revealedCount: 6,
         score: 90,
+        givenUp: false,
+      }),
+    ).rejects.toMatchObject({ code: "conflict" });
+  });
+
+  it("finish 在 read-before-insert 竞态下仍读取 DB truth 并识别跨用户冲突", async () => {
+    const db = createMemoryTurtleDb({
+      raceInsertGameBeforeRun: {
+        id: "game-race",
+        user_id: "user-2",
+        figure_id: "zhuge-liang",
+        won: 1,
+        revealed_count: 6,
+        score: 42,
+        given_up: 0,
+      },
+    });
+
+    await expect(
+      persistFinishedGame({
+        db,
+        gameId: "game-race",
+        userId: "user-1",
+        figureId: "zhuge-liang",
+        won: true,
+        revealedCount: 6,
+        score: 80,
         givenUp: false,
       }),
     ).rejects.toMatchObject({ code: "conflict" });

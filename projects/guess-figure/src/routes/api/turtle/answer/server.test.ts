@@ -70,7 +70,16 @@ function createMemoryTurtleDb() {
                 }
               }
               if (sql.startsWith("UPDATE turtle_sessions")) {
-                const [question_count, completed, won, id, user_id, figure_id] = params;
+                const [
+                  question_count,
+                  correct,
+                  max_attempts,
+                  _correct_for_won,
+                  _max_attempts_for_won,
+                  id,
+                  user_id,
+                  figure_id,
+                ] = params;
                 const session = sessions.get(String(id));
                 if (
                   session &&
@@ -78,12 +87,13 @@ function createMemoryTurtleDb() {
                   session.figure_id === figure_id &&
                   session.mode === "standalone" &&
                   !session.completed &&
-                  session.answer_attempts_used < 3
+                  session.answer_attempts_used < Number(max_attempts)
                 ) {
+                  const nextAttempts = session.answer_attempts_used + 1;
                   session.question_count = Math.max(session.question_count, Number(question_count));
-                  session.answer_attempts_used += 1;
-                  session.completed = Boolean(completed);
-                  session.won = won === null ? null : Boolean(won);
+                  session.answer_attempts_used = nextAttempts;
+                  session.completed = Boolean(correct) || nextAttempts >= Number(max_attempts);
+                  session.won = Boolean(correct) ? true : session.completed ? false : null;
                   session.used_turtle = true;
                   changes = 1;
                 }

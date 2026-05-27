@@ -3,11 +3,15 @@ import type { Figure, TurtleMode } from "$lib/types";
 
 const STANDALONE_MAX_ANSWER_ATTEMPTS = 3;
 
+type D1RunResult = {
+  meta?: { changes?: number };
+};
+
 export type TurtleD1Database = {
   prepare(sql: string): {
     bind(...values: unknown[]): {
       first<T = unknown>(): Promise<T | null>;
-      run(): Promise<{ meta?: { changes?: number } } | unknown>;
+      run(): Promise<D1RunResult>;
     };
   };
 };
@@ -103,19 +107,17 @@ export async function submitStandaloneTurtleAnswer(input: {
   }
 
   const correct = matchExactly(input.answer, input.figure);
-  const attemptsUsed = current.answer_attempts_used + 1;
-  const completed = correct || attemptsUsed >= STANDALONE_MAX_ANSWER_ATTEMPTS;
-  const won = correct;
   const storedQuestionCount = Math.max(current.question_count, questionCount);
-
-  await input.db
+  const updateResult = await input.db
     .prepare(
-      "UPDATE turtle_sessions SET question_count = max(question_count, ?), answer_attempts_used = answer_attempts_used + 1, completed = ?, won = ?, used_turtle = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND figure_id = ? AND mode = 'standalone' AND completed = 0 AND answer_attempts_used < ?",
+      "UPDATE turtle_sessions SET question_count = max(question_count, ?), answer_attempts_used = answer_attempts_used + 1, completed = CASE WHEN ? = 1 OR answer_attempts_used + 1 >= ? THEN 1 ELSE 0 END, won = CASE WHEN ? = 1 THEN 1 WHEN answer_attempts_used + 1 >= ? THEN 0 ELSE NULL END, used_turtle = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ? AND figure_id = ? AND mode = 'standalone' AND completed = 0 AND answer_attempts_used < ?",
     )
     .bind(
       storedQuestionCount,
-      completed ? 1 : 0,
-      completed ? (won ? 1 : 0) : null,
+      correct ? 1 : 0,
+      STANDALONE_MAX_ANSWER_ATTEMPTS,
+      correct ? 1 : 0,
+      STANDALONE_MAX_ANSWER_ATTEMPTS,
       input.sessionId,
       input.userId,
       input.figure.id,
@@ -125,9 +127,19 @@ export async function submitStandaloneTurtleAnswer(input: {
 
   const stored = await getTurtleSession(input.db, input.sessionId);
   if (!stored) throw new TurtleSessionError("not_found", "海龟汤会话不存在");
-  if (stored.answer_attempts_used === current.answer_attempts_used) {
+  if (changesOf(updateResult) !== 1) {
+    if (
+      stored.user_id !== input.userId ||
+      stored.figure_id !== input.figure.id ||
+      stored.mode !== "standalone"
+    ) {
+      throw new TurtleSessionError("conflict", "海龟汤会话与当前用户或人物不匹配");
+    }
     if (stored.completed) throw new TurtleSessionError("completed", "海龟汤会话已完成");
-    throw new TurtleSessionError("attempts_exhausted", "答案提交机会已用完");
+    if (stored.answer_attempts_used >= STANDALONE_MAX_ANSWER_ATTEMPTS) {
+      throw new TurtleSessionError("attempts_exhausted", "答案提交机会已用完");
+    }
+    throw new TurtleSessionError("attempts_exhausted", "答案提交未生效");
   }
 
   return {
@@ -149,10 +161,9 @@ export async function markEmbeddedTurtleUsed(input: {
   gameId: string;
   figureId: string;
 }): Promise<TurtleSessionRecord> {
-  const sessionId = embeddedSessionId(input.gameId);
-  await ensureTurtleSession({
+  return ensureTurtleSession({
     db: input.db,
-    sessionId,
+    sessionId: embeddedSessionId(input.gameId),
     userId: input.userId,
     gameId: input.gameId,
     figureId: input.figureId,
@@ -163,10 +174,6 @@ export async function markEmbeddedTurtleUsed(input: {
     won: null,
     usedTurtle: true,
   });
-
-  const session = await getTurtleSession(input.db, sessionId);
-  if (!session) throw new TurtleSessionError("not_found", "嵌入式海龟汤会话不存在");
-  return session;
 }
 
 export async function hasEmbeddedTurtleUsage(
@@ -195,26 +202,10 @@ export async function persistFinishedGame(input: {
 }): Promise<{ persisted: true; score: number; turtle_used: boolean }> {
   const turtleUsed = await hasEmbeddedTurtleUsage(input.db, input.userId, input.gameId);
   const effectiveScore = turtleUsed ? 0 : Math.round(input.score);
-  const existing = await getFinishedGame(input.db, input.gameId);
-
-  if (existing) {
-    if (existing.user_id !== input.userId) {
-      throw new TurtleSessionError("conflict", "game_id 已属于其他用户");
-    }
-    if (turtleUsed && existing.score !== 0) {
-      await input.db
-        .prepare("UPDATE games SET score = 0 WHERE id = ? AND user_id = ?")
-        .bind(input.gameId, input.userId)
-        .run();
-    }
-    const stored = await getFinishedGame(input.db, input.gameId);
-    if (!stored) throw new TurtleSessionError("not_found", "游戏结算记录不存在");
-    return { persisted: true, score: stored.score, turtle_used: turtleUsed };
-  }
 
   await input.db
     .prepare(
-      "INSERT INTO games (id, user_id, figure_id, won, revealed_count, score, given_up, played_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+      "INSERT OR IGNORE INTO games (id, user_id, figure_id, won, revealed_count, score, given_up, played_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))",
     )
     .bind(
       input.gameId,
@@ -227,8 +218,25 @@ export async function persistFinishedGame(input: {
     )
     .run();
 
-  const stored = await getFinishedGame(input.db, input.gameId);
-  return { persisted: true, score: stored?.score ?? effectiveScore, turtle_used: turtleUsed };
+  let stored = await getFinishedGame(input.db, input.gameId);
+  if (!stored) throw new TurtleSessionError("not_found", "游戏结算记录不存在");
+  if (stored.user_id !== input.userId) {
+    throw new TurtleSessionError("conflict", "game_id 已属于其他用户");
+  }
+
+  if (turtleUsed && stored.score !== 0) {
+    await input.db
+      .prepare("UPDATE games SET score = 0 WHERE id = ? AND user_id = ?")
+      .bind(input.gameId, input.userId)
+      .run();
+    stored = await getFinishedGame(input.db, input.gameId);
+    if (!stored) throw new TurtleSessionError("not_found", "游戏结算记录不存在");
+    if (stored.user_id !== input.userId) {
+      throw new TurtleSessionError("conflict", "game_id 已属于其他用户");
+    }
+  }
+
+  return { persisted: true, score: stored.score, turtle_used: turtleUsed };
 }
 
 function embeddedSessionId(gameId: string): string {
@@ -250,7 +258,7 @@ async function ensureTurtleSession(input: {
 }): Promise<TurtleSessionRecord> {
   await input.db
     .prepare(
-      "INSERT INTO turtle_sessions (id, user_id, game_id, figure_id, mode, question_count, answer_attempts_used, completed, won, used_turtle, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET question_count = max(turtle_sessions.question_count, excluded.question_count), used_turtle = max(turtle_sessions.used_turtle, excluded.used_turtle), updated_at = CURRENT_TIMESTAMP",
+      "INSERT INTO turtle_sessions (id, user_id, game_id, figure_id, mode, question_count, answer_attempts_used, completed, won, used_turtle, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(id) DO UPDATE SET question_count = max(turtle_sessions.question_count, excluded.question_count), used_turtle = max(turtle_sessions.used_turtle, excluded.used_turtle), updated_at = CURRENT_TIMESTAMP WHERE turtle_sessions.user_id = excluded.user_id AND ((turtle_sessions.game_id IS NULL AND excluded.game_id IS NULL) OR turtle_sessions.game_id = excluded.game_id) AND turtle_sessions.figure_id = excluded.figure_id AND turtle_sessions.mode = excluded.mode",
     )
     .bind(
       input.sessionId,
@@ -277,6 +285,10 @@ async function ensureTurtleSession(input: {
     throw new TurtleSessionError("conflict", "海龟汤会话与当前用户、游戏、人物或模式不匹配");
   }
   return stored;
+}
+
+function changesOf(result: D1RunResult): number | undefined {
+  return result.meta?.changes;
 }
 
 type TurtleSessionRow = {
@@ -322,7 +334,9 @@ async function getFinishedGame(
   gameId: string,
 ): Promise<FinishedGameRow | null> {
   return db
-    .prepare("SELECT id, user_id, figure_id, won, revealed_count, score, given_up FROM games WHERE id = ?")
+    .prepare(
+      "SELECT id, user_id, figure_id, won, revealed_count, score, given_up FROM games WHERE id = ?",
+    )
     .bind(gameId)
     .first<FinishedGameRow>();
 }
