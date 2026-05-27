@@ -34,6 +34,7 @@ function makeChunk(index: number, text: string, figureId = "guan-yu") {
 function makeDeps(options?: {
   vectorMatches?: ReturnType<typeof makeChunk>[];
   rerankScores?: number[];
+  rerankResponse?: unknown;
   judgeText?: string;
 }) {
   const calls: Array<{ model: string; input: unknown }> = [];
@@ -52,6 +53,9 @@ function makeDeps(options?: {
           return { data: [{ embedding: [0.1, 0.2, 0.3] }] };
         }
         if (model === RAG_RERANKER_MODEL) {
+          if (options?.rerankResponse !== undefined) {
+            return options.rerankResponse;
+          }
           const scores =
             options?.rerankScores ??
             Array.from({ length: vectorMatches.length }, (_, i) => vectorMatches.length - i);
@@ -198,12 +202,47 @@ describe("answerTurtleQuestion", () => {
     expect(result.answer).toBe("无关");
     expect(result.degraded).toBe(true);
   });
+
+  it("reranker 只返回部分有效分数时，用原 Vectorize 顺序补足证据而不是过早降级", async () => {
+    const { dependencies, calls } = makeDeps({
+      judgeText: '{"answer":"是"}',
+      rerankResponse: {
+        response: [
+          { index: 0, score: 100 },
+          { index: 99, score: 90 },
+          { score: "bad" },
+        ],
+      },
+    });
+
+    const result = await answerTurtleQuestion({
+      targetFigure: guanYu,
+      normalizedQuestion: "他是不是被后世尊为武圣？",
+      ragIndexVersion: "rag-v1",
+      promptVersion: "prompt-v1",
+      dependencies,
+    });
+
+    const judgeCall = calls.find((call) => call.model === "@cf/meta/llama-3.1-8b-instruct");
+    expect(judgeCall).toBeDefined();
+    expect(result.answer).toBe("是");
+    expect(result.degraded).toBe(false);
+    expect(result.evidence).toHaveLength(5);
+    expect(result.evidence.map((chunk) => chunk.metadata.chunk_id)).toEqual([
+      "chunk-1",
+      "chunk-2",
+      "chunk-3",
+      "chunk-4",
+      "chunk-5",
+    ]);
+  });
 });
 
 describe("parseTurtleJudgeAnswer", () => {
   it.each([
     ['{"answer":"是"}', "是"],
     ["```json\n{\"answer\":\"否\"}\n```", "否"],
+    ['答案如下：{"answer":"是"}', "是"],
     ["无关", "无关"],
     ['{"answer":"不确定"}', "无关"],
   ] as const)("容错解析裁判输出 %s", (raw, expected) => {

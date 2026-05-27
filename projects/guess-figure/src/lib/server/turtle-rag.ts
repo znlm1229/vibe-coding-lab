@@ -136,7 +136,7 @@ export function parseTurtleJudgeAnswer(raw: unknown): TurtleRagAnswer {
 function parseTurtleJudgeAnswerWithValidity(raw: unknown): { answer: TurtleRagAnswer; valid: boolean } {
   const text = String(raw ?? "").trim();
   const unwrapped = unwrapMarkdownJson(text);
-  const parsed = safeJsonParse(unwrapped);
+  const parsed = parseJsonObject(unwrapped);
   const answer =
     parsed && typeof parsed === "object" && "answer" in parsed
       ? (parsed as { answer?: unknown }).answer
@@ -159,13 +159,18 @@ async function rerankEvidence(
   const scores = extractRerankScores(response);
   if (scores.length === 0) return evidence;
 
-  return scores
+  const reranked = scores
     .filter((item) => item.index >= 0 && item.index < evidence.length)
     .sort((a, b) => b.score - a.score)
     .map((item) => ({
       ...evidence[item.index],
       rerankScore: item.score,
     }));
+  const rerankedIds = new Set(reranked.map((chunk) => chunk.id));
+  return [
+    ...reranked,
+    ...evidence.filter((chunk) => !rerankedIds.has(chunk.id)),
+  ];
 }
 
 function toEvidenceChunk(match: TurtleVectorMatch): TurtleEvidenceChunk {
@@ -240,6 +245,14 @@ function extractAiText(response: unknown): string {
 function unwrapMarkdownJson(text: string): string {
   const fence = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
   return (fence?.[1] ?? text).trim();
+}
+
+function parseJsonObject(text: string): unknown {
+  const direct = safeJsonParse(text);
+  if (direct) return direct;
+
+  const embeddedJson = text.match(/\{[\s\S]*\}/)?.[0];
+  return embeddedJson ? safeJsonParse(embeddedJson) : null;
 }
 
 function safeJsonParse(text: string): unknown {
