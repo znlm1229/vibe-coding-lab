@@ -1,15 +1,27 @@
 // @ts-nocheck
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const root = resolve(import.meta.dirname, "..");
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 function readProjectFile(path) {
   return readFileSync(resolve(root, path), "utf8");
 }
 
 describe("004 T1 Cloudflare RAG 契约", () => {
+  it("契约测试本身使用跨版本 ESM 路径解析和明确 R2 列断言", () => {
+    const contractTest = readProjectFile("src/cloudflare-rag-contract.test.js");
+    const legacyDirnamePattern = ["import", "meta", "dirname"].join(".");
+    const fuzzyR2Assertion = ["toContain(", '"r2_object_key TEXT"', ")"].join("");
+
+    expect(contractTest).toContain('from "node:url"');
+    expect(contractTest).toContain("fileURLToPath");
+    expect(contractTest).not.toContain(legacyDirnamePattern);
+    expect(contractTest).not.toContain(fuzzyR2Assertion);
+  });
+
   it("wrangler 声明 Vectorize、R2、AI bindings 与 RAG vars", () => {
     const wrangler = readProjectFile("wrangler.toml");
 
@@ -51,7 +63,10 @@ describe("004 T1 Cloudflare RAG 契约", () => {
     expect(migration).toContain("vector_dimensions INTEGER NOT NULL DEFAULT 1024");
     expect(migration).toContain("vector_metric TEXT NOT NULL DEFAULT 'cosine'");
     expect(migration).toContain("source_type TEXT NOT NULL");
-    expect(migration).toContain("r2_object_key TEXT");
+    expect(migration).toContain("original_r2_object_key TEXT");
+    expect(migration).toContain("normalized_r2_object_key TEXT");
+    expect(migration).toContain("report_r2_object_key TEXT");
+    expect(migration).toContain("checkpoint_r2_object_key TEXT");
     expect(migration).not.toMatch(/\b(full_text|content|body|raw_text|clean_text)\b/i);
   });
 });
