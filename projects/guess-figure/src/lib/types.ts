@@ -25,3 +25,20 @@ export type GameStatus =
   | "rescue"  // 求救范围内（线索 6-7）
   | "won"     // 猜中
   | "revealed"; // 7 条用完 / 放弃 → 显示答案
+
+export type TurtleQuestionAnswer = "是" | "否" | "无关";
+
+export type TurtleMode = "embedded" | "standalone";
+
+export interface TurtleQuestionApiResponse {
+  answer?: TurtleQuestionAnswer | string;
+  invalid?: boolean;
+  consumes_question: boolean;
+  cached?: boolean;
+  degraded?: boolean;
+  network_error?: boolean;
+  reason?: string;
+  mode?: TurtleMode | string;
+  rag_index_version?: string;
+  prompt_version?: string;
+}
