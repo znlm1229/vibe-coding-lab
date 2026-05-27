@@ -16,17 +16,19 @@ export interface TurtleCacheKeyInput {
 }
 
 /**
- * 缓存 key 必须同时受人物、规范化问题、RAG 索引版本和 prompt 版本约束。
- * 使用 encodeURIComponent 避免中文、空格、问号等字符破坏 KV key 的分隔结构。
+ * 缓存 key 同时受人物、问题 hash、RAG 索引版本和 prompt 版本约束。
+ * normalizedQuestion 只入 SHA-256，避免长中文问题超过 Cloudflare KV 512 bytes key 限制。
  */
-export function turtleCacheKey(input: TurtleCacheKeyInput): string {
+export async function turtleCacheKey(input: TurtleCacheKeyInput): Promise<string> {
+  const questionHash = await sha256Hex(input.normalizedQuestion);
+
   return [
     "turtle-cache",
     "v1",
-    encodePart(input.figureId),
-    encodePart(input.normalizedQuestion),
-    encodePart(input.ragIndexVersion),
-    encodePart(input.promptVersion),
+    `figure:${encodePart(input.figureId)}`,
+    `rag:${encodePart(input.ragIndexVersion)}`,
+    `prompt:${encodePart(input.promptVersion)}`,
+    `q:${questionHash}`,
   ].join(":");
 }
 
@@ -80,6 +82,13 @@ export async function getOrResolveTurtleCache(
   const value = await resolver();
   await setTurtleCache(kv, key, value);
   return { value, cacheHit: false };
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function encodePart(value: string): string {

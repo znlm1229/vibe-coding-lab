@@ -34,14 +34,24 @@ const baseKeyInput = {
 };
 
 describe("turtleCacheKey", () => {
-  it("key 稳定且包含 figure_id、normalized_question、rag_index_version、prompt_version", () => {
-    const key = turtleCacheKey(baseKeyInput);
+  it("key 稳定，保留可读前缀和 figure/index/prompt 版本隔离字段", async () => {
+    const key = await turtleCacheKey(baseKeyInput);
+    const decodedKey = decodeURIComponent(key);
 
-    expect(key).toBe(turtleCacheKey(baseKeyInput));
-    expect(decodeURIComponent(key)).toContain("zhuge-liang");
-    expect(decodeURIComponent(key)).toContain("他是否当过皇帝？");
-    expect(decodeURIComponent(key)).toContain("rag-20260527");
-    expect(decodeURIComponent(key)).toContain("prompt-v1");
+    expect(key).toBe(await turtleCacheKey(baseKeyInput));
+    expect(decodedKey).toContain("turtle-cache:v1");
+    expect(decodedKey).toContain("figure:zhuge-liang");
+    expect(decodedKey).toContain("rag:rag-20260527");
+    expect(decodedKey).toContain("prompt:prompt-v1");
+    expect(decodedKey).not.toContain("他是否当过皇帝？");
+  });
+
+  it("question hash 为固定 64 hex", async () => {
+    const key = await turtleCacheKey(baseKeyInput);
+    const questionHash = key.match(/:q:([a-f0-9]{64})$/)?.[1];
+
+    expect(questionHash).toBeDefined();
+    expect(questionHash).toBe((await turtleCacheKey(baseKeyInput)).match(/:q:([a-f0-9]{64})$/)?.[1]);
   });
 
   it.each([
@@ -49,16 +59,25 @@ describe("turtleCacheKey", () => {
     ["normalizedQuestion", "他姓刘吗？"],
     ["ragIndexVersion", "rag-20260528"],
     ["promptVersion", "prompt-v2"],
-  ] as const)("变更 %s 时 key 隔离", (field, value) => {
-    const changed = turtleCacheKey({ ...baseKeyInput, [field]: value });
-    expect(changed).not.toBe(turtleCacheKey(baseKeyInput));
+  ] as const)("变更 %s 时 key 隔离", async (field, value) => {
+    const changed = await turtleCacheKey({ ...baseKeyInput, [field]: value });
+    expect(changed).not.toBe(await turtleCacheKey(baseKeyInput));
+  });
+
+  it("长中文问题不会让 KV key 超过 512 bytes", async () => {
+    const key = await turtleCacheKey({
+      ...baseKeyInput,
+      normalizedQuestion: "他是不是在很长很长的历史叙述里仍然和某个事件有关？".repeat(40),
+    });
+
+    expect(new TextEncoder().encode(key).byteLength).toBeLessThanOrEqual(512);
   });
 });
 
 describe("turtle cache KV helpers", () => {
   it("写缓存使用 30 天 TTL", async () => {
     const { kv, puts } = mockKV();
-    const key = turtleCacheKey(baseKeyInput);
+    const key = await turtleCacheKey(baseKeyInput);
 
     await setTurtleCache(kv, key, { answer: "是" });
 
@@ -68,7 +87,7 @@ describe("turtle cache KV helpers", () => {
 
   it("cache hit 直接返回缓存，不调用后续依赖", async () => {
     const { kv } = mockKV();
-    const key = turtleCacheKey(baseKeyInput);
+    const key = await turtleCacheKey(baseKeyInput);
     await setTurtleCache(kv, key, { answer: "否" });
 
     let resolverCalls = 0;
@@ -83,7 +102,7 @@ describe("turtle cache KV helpers", () => {
 
   it("cache miss 调用后续依赖并写入缓存", async () => {
     const { kv } = mockKV();
-    const key = turtleCacheKey(baseKeyInput);
+    const key = await turtleCacheKey(baseKeyInput);
 
     const result = await getOrResolveTurtleCache(kv, key, async () => ({ answer: "无关" }));
 
