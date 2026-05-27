@@ -4,7 +4,11 @@
 import { json, error } from "@sveltejs/kit";
 import figures from "$lib/data/figures.json";
 import type { Figure } from "$lib/types";
-import { persistFinishedGame, type TurtleD1Database } from "$lib/server/turtle-session";
+import {
+  persistFinishedGame,
+  TurtleSessionError,
+  type TurtleD1Database,
+} from "$lib/server/turtle-session";
 import type { RequestHandler } from "./$types";
 
 interface FinishBody {
@@ -45,8 +49,13 @@ export function _createGameFinishHandler(deps: HandlerDeps = {}): RequestHandler
       throw error(400, `figure_id 不在题库: ${figure_id}`);
     }
     if (typeof won !== "boolean") throw error(400, "won 必须是 boolean");
-    if (typeof revealed_count !== "number" || revealed_count < 1 || revealed_count > 7) {
-      throw error(400, "revealed_count 必须是 1-7 的数字");
+    if (
+      typeof revealed_count !== "number" ||
+      !Number.isInteger(revealed_count) ||
+      revealed_count < 1 ||
+      revealed_count > 7
+    ) {
+      throw error(400, "revealed_count 必须是 1-7 的整数");
     }
     if (typeof score !== "number" || !Number.isFinite(score)) {
       throw error(400, "score 必须是数字");
@@ -78,6 +87,10 @@ export function _createGameFinishHandler(deps: HandlerDeps = {}): RequestHandler
 
       return json({ ok: true, game_id, ...result });
     } catch (cause) {
+      if (cause instanceof TurtleSessionError) {
+        if (cause.code === "conflict") throw error(409, cause.message);
+        throw error(400, cause.message);
+      }
       console.error("写入游戏结算失败", cause);
       throw error(500, "写入游戏结算失败");
     }

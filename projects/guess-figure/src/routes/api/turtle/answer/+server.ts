@@ -22,6 +22,8 @@ type HandlerDeps = {
   figures?: Figure[];
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
 export function _createTurtleAnswerHandler(deps: HandlerDeps = {}): RequestHandler {
   const figureList = deps.figures ?? (figures as Figure[]);
 
@@ -40,12 +42,22 @@ export function _createTurtleAnswerHandler(deps: HandlerDeps = {}): RequestHandl
 
     if (mode === "embedded") {
       const gameId = readRequiredString(body.game_id, "game_id");
-      await markEmbeddedTurtleUsed({ db, userId, gameId, figureId });
-      return json({
-        mode,
-        used_turtle: true,
-        consumes_answer: false,
-      } satisfies TurtleAnswerApiResponse);
+      if (!UUID_RE.test(gameId)) throw error(400, "game_id 必须是 UUID 字符串");
+      try {
+        await markEmbeddedTurtleUsed({ db, userId, gameId, figureId });
+        return json({
+          mode,
+          used_turtle: true,
+          consumes_answer: false,
+        } satisfies TurtleAnswerApiResponse);
+      } catch (cause) {
+        if (cause instanceof TurtleSessionError) {
+          if (cause.code === "conflict") throw error(409, cause.message);
+          throw error(400, cause.message);
+        }
+        console.error("记录嵌入式海龟汤使用失败", cause);
+        throw error(500, "记录嵌入式海龟汤使用失败");
+      }
     }
 
     const sessionId = readRequiredString(body.session_id, "session_id");
@@ -76,6 +88,8 @@ export function _createTurtleAnswerHandler(deps: HandlerDeps = {}): RequestHandl
       if (cause instanceof TurtleSessionError) {
         if (cause.code === "completed") throw error(409, "海龟汤会话已完成");
         if (cause.code === "attempts_exhausted") throw error(409, "答案提交机会已用完");
+        if (cause.code === "not_found") throw error(400, "海龟汤会话不存在");
+        if (cause.code === "conflict") throw error(409, cause.message);
         throw error(400, cause.message);
       }
       console.error("提交海龟汤答案失败", cause);

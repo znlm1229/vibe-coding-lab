@@ -29,6 +29,7 @@ function createMemoryTurtleDb() {
               return null;
             },
             async run() {
+              let changes = 0;
               if (sql.startsWith("INSERT INTO turtle_sessions")) {
                 const [
                   id,
@@ -42,7 +43,8 @@ function createMemoryTurtleDb() {
                   won,
                   used_turtle,
                 ] = params;
-                if (!sessions.has(String(id))) {
+                const existing = sessions.get(String(id));
+                if (!existing) {
                   sessions.set(String(id), {
                     id: String(id),
                     user_id: String(user_id),
@@ -55,26 +57,59 @@ function createMemoryTurtleDb() {
                     won: won === null ? null : Boolean(won),
                     used_turtle: Boolean(used_turtle),
                   });
+                  changes = 1;
+                } else if (
+                  existing.user_id === user_id &&
+                  existing.game_id === (game_id === null ? null : String(game_id)) &&
+                  existing.figure_id === figure_id &&
+                  existing.mode === mode
+                ) {
+                  existing.question_count = Math.max(existing.question_count, Number(question_count));
+                  existing.used_turtle = existing.used_turtle || Boolean(used_turtle);
+                  changes = 1;
                 }
               }
               if (sql.startsWith("UPDATE turtle_sessions")) {
-                const [question_count, answer_attempts_used, completed, won, id] = params;
+                const [question_count, completed, won, id, user_id, figure_id] = params;
                 const session = sessions.get(String(id));
-                if (session) {
-                  session.question_count = Number(question_count);
-                  session.answer_attempts_used = Number(answer_attempts_used);
+                if (
+                  session &&
+                  session.user_id === user_id &&
+                  session.figure_id === figure_id &&
+                  session.mode === "standalone" &&
+                  !session.completed &&
+                  session.answer_attempts_used < 3
+                ) {
+                  session.question_count = Math.max(session.question_count, Number(question_count));
+                  session.answer_attempts_used += 1;
                   session.completed = Boolean(completed);
                   session.won = won === null ? null : Boolean(won);
                   session.used_turtle = true;
+                  changes = 1;
                 }
               }
-              return { success: true };
+              return { success: true, meta: { changes } };
             },
           };
         },
       };
     },
   };
+}
+
+function seedStandalone(db: ReturnType<typeof createMemoryTurtleDb>, sessionId: string) {
+  db._sessions.set(sessionId, {
+    id: sessionId,
+    user_id: "user-1",
+    game_id: null,
+    figure_id: "zhuge-liang",
+    mode: "standalone",
+    question_count: 6,
+    answer_attempts_used: 0,
+    completed: false,
+    won: null,
+    used_turtle: true,
+  });
 }
 
 function mockEvent(body: unknown, db = createMemoryTurtleDb()) {
@@ -104,8 +139,33 @@ describe("/api/turtle/answer", () => {
     });
   });
 
+  it("未知独立 session 返回 400，不隐式创建记录", async () => {
+    const db = createMemoryTurtleDb();
+    const handler = _createTurtleAnswerHandler({ figures: [figure] });
+
+    await expect(
+      handler(
+        mockEvent(
+          {
+            mode: "standalone",
+            session_id: "missing-session",
+            figure_id: "zhuge-liang",
+            answer: "曹操",
+            question_count: 6,
+          },
+          db,
+        ),
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      body: { message: "海龟汤会话不存在" },
+    });
+    expect(db._sessions.has("missing-session")).toBe(false);
+  });
+
   it("独立模式 3 次错答后完成失败，且 question_count 不减少", async () => {
     const db = createMemoryTurtleDb();
+    seedStandalone(db, "session-1");
     const handler = _createTurtleAnswerHandler({ figures: [figure] });
 
     const first = await readJson(
@@ -169,6 +229,7 @@ describe("/api/turtle/answer", () => {
 
   it("独立模式次数耗尽后再次提交返回 409", async () => {
     const db = createMemoryTurtleDb();
+    seedStandalone(db, "session-2");
     const handler = _createTurtleAnswerHandler({ figures: [figure] });
     for (const answer of ["曹操", "刘备", "孙权"]) {
       await handler(
@@ -201,6 +262,23 @@ describe("/api/turtle/answer", () => {
     ).rejects.toMatchObject({
       status: 409,
       body: { message: "海龟汤会话已完成" },
+    });
+  });
+
+  it("嵌入式模式 game_id 非 UUID 返回 400", async () => {
+    const handler = _createTurtleAnswerHandler({ figures: [figure] });
+
+    await expect(
+      handler(
+        mockEvent({
+          mode: "embedded",
+          game_id: "not-a-uuid",
+          figure_id: "zhuge-liang",
+        }),
+      ),
+    ).rejects.toMatchObject({
+      status: 400,
+      body: { message: "game_id 必须是 UUID 字符串" },
     });
   });
 });
