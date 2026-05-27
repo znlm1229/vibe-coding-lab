@@ -18,6 +18,9 @@ export function createGameState(figure: Figure) {
   let revealedCount = $state(1);
   let won = $state(false);
   let gaveUp = $state(false);
+  let turtleHelpUsed = $state(false);
+  let turtleQuestionsUsed = $state(0);
+  const turtleQuestionLimit = 5;
 
   const visibleClues = $derived(figure.clues.slice(0, revealedCount));
   const totalClues = figure.clues.length; // 应该 = 7
@@ -46,6 +49,9 @@ export function createGameState(figure: Figure) {
 
   // 是否能输入答案（未结束时）
   const canSubmit = $derived(!finished);
+  const canUseTurtleHelp = $derived(!finished && revealedCount >= 6);
+  const turtleQuestionsRemaining = $derived(Math.max(0, turtleQuestionLimit - turtleQuestionsUsed));
+  const canAskTurtleQuestion = $derived(canUseTurtleHelp && turtleQuestionsRemaining > 0);
 
   function nextClue() {
     if (revealedCount < 5 && !finished) {
@@ -74,6 +80,19 @@ export function createGameState(figure: Figure) {
   function giveUp() {
     if (!finished) {
       gaveUp = true;
+    }
+  }
+
+  function markTurtleHelpUsed() {
+    if (canUseTurtleHelp) {
+      turtleHelpUsed = true;
+    }
+  }
+
+  function markTurtleQuestionConsumed() {
+    if (canAskTurtleQuestion) {
+      turtleQuestionsUsed += 1;
+      turtleHelpUsed = true;
     }
   }
 
@@ -120,7 +139,7 @@ export function createGameState(figure: Figure) {
       return finished;
     },
     get score() {
-      return score;
+      return turtleHelpUsed ? 0 : score;
     },
     get canNextClue() {
       return canNextClue;
@@ -134,11 +153,28 @@ export function createGameState(figure: Figure) {
     get canSubmit() {
       return canSubmit;
     },
+    get canUseTurtleHelp() {
+      return canUseTurtleHelp;
+    },
+    get turtleHelpUsed() {
+      return turtleHelpUsed;
+    },
+    get turtleQuestionsUsed() {
+      return turtleQuestionsUsed;
+    },
+    get turtleQuestionsRemaining() {
+      return turtleQuestionsRemaining;
+    },
+    get canAskTurtleQuestion() {
+      return canAskTurtleQuestion;
+    },
     nextClue,
     startRescue,
     nextRescueClue,
     markWon,
     giveUp,
+    markTurtleHelpUsed,
+    markTurtleQuestionConsumed,
     consumeOnWrongAnswer,
   };
 }

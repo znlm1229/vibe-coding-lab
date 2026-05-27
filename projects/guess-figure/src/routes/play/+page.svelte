@@ -11,6 +11,7 @@
   } from "$lib/check-answer-client";
   import AnswerInput from "$lib/components/AnswerInput.svelte";
   import FailReveal from "$lib/components/FailReveal.svelte";
+  import TurtleHelpPanel from "$lib/components/TurtleHelpPanel.svelte";
 
   // 随机抽一个人物作为当前局
   let game = $state(createGameState(pickRandomFigure(figures as Figure[])));
@@ -139,6 +140,16 @@
       onretry={startNewGame}
     />
   {:else}
+    {#if game.canUseTurtleHelp}
+      <TurtleHelpPanel
+        figureId={game.figure.id}
+        {gameId}
+        questionsRemaining={game.turtleQuestionsRemaining}
+        canAskQuestion={game.canAskTurtleQuestion}
+        onQuestionConsumed={() => game.markTurtleQuestionConsumed()}
+      />
+    {/if}
+
     <section class="input">
       <AnswerInput bind:value={userInput} disabled={checking} onsubmit={handleSubmit} />
       {#if checking}
