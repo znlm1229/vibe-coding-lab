@@ -1,0 +1,80 @@
+{
+  "targets": [
+    {
+      "figure": "诸葛亮",
+      "aliases": [
+        "孔明",
+        "卧龙",
+        "忠武侯",
+        "诸葛武侯"
+      ],
+      "sources": [
+        {
+          "type": "profile",
+          "ref": "src\\lib\\data\\profiles\\诸葛亮.md",
+          "chars": 1063,
+          "chunks": 2
+        },
+        {
+          "type": "wikisource",
+          "ref": "三國志/卷35",
+          "chars": 6000,
+          "chunks": 9
+        }
+      ]
+    },
+    {
+      "figure": "关羽",
+      "aliases": [
+        "云长",
+        "壮缪侯",
+        "关公",
+        "关帝",
+        "关圣帝君"
+      ],
+      "sources": [
+        {
+          "type": "profile",
+          "ref": "src\\lib\\data\\profiles\\关羽.md",
+          "chars": 1106,
+          "chunks": 2
+        },
+        {
+          "type": "wikisource",
+          "ref": "三國志/卷36",
+          "chars": 4562,
+          "chunks": 7
+        }
+      ]
+    },
+    {
+      "figure": "苏轼",
+      "aliases": [
+        "子瞻",
+        "东坡居士",
+        "文忠",
+        "苏文忠公",
+        "苏仙"
+      ],
+      "sources": [
+        {
+          "type": "profile",
+          "ref": "src\\lib\\data\\profiles\\苏轼.md",
+          "chars": 954,
+          "chunks": 2
+        },
+        {
+          "type": "wikisource",
+          "ref": "宋史/卷338",
+          "chars": 6000,
+          "chunks": 9
+        }
+      ]
+    }
+  ],
+  "chunk_policy": {
+    "min_chars": 500,
+    "max_chars": 800,
+    "overlap_chars": 100
+  }
+}
