@@ -48,6 +48,15 @@ def build_cloud_config(args: argparse.Namespace) -> CloudflareIngestConfig:
     )
 
 
+def write_report_json(report: dict) -> None:
+    report_path = report.get("output_files", {}).get("report_json")
+    if report_path:
+        Path(report_path).write_text(
+            json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+
 def main() -> int:
     args = parse_args()
     if not args.sample:
@@ -73,6 +82,7 @@ def main() -> int:
                 config=build_cloud_config(args),
             )
             result.report["cloud"] = cloud_summary
+            write_report_json(result.report)
         except CommandFailure as error:
             print(f"Cloudflare 入库失败，已写入 cloud-checkpoint.json: {error}", file=sys.stderr)
             return error.returncode

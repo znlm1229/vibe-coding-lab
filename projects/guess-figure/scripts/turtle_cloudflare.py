@@ -16,8 +16,14 @@ DEFAULT_VECTORIZE_INDEX = "guess-figure-turtle-rag"
 DEFAULT_D1_DATABASE = "guess-figure-db"
 DEFAULT_EMBEDDING_MODEL = "@cf/qwen/qwen3-embedding-0.6b"
 DEFAULT_VECTOR_DIMENSIONS = 1024
-DEFAULT_WRANGLER_BIN = "pnpm"
 DEFAULT_WRANGLER_ARGS = ("exec", "wrangler")
+
+
+def default_wrangler_bin_for_platform(os_name: str = os.name) -> str:
+    return "pnpm.cmd" if os_name == "nt" else "pnpm"
+
+
+DEFAULT_WRANGLER_BIN = default_wrangler_bin_for_platform()
 
 
 @dataclass(frozen=True)
@@ -47,7 +53,15 @@ Embedder = Callable[[list[dict[str, Any]], CloudflareIngestConfig], list[list[fl
 
 
 def default_command_runner(command: list[str], cwd: Path | None = None) -> None:
-    result = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+    result = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
     if result.returncode != 0:
         error = (result.stderr or result.stdout or "wrangler command failed").strip()
         raise CommandFailure(command, error, result.returncode)
@@ -277,7 +291,6 @@ def build_manifest_sql(report: dict[str, Any], r2_keys: dict[str, str], config: 
 
     return "\n".join(
         [
-            "BEGIN;",
             (
                 "INSERT INTO turtle_corpus_versions "
                 "(version, status, r2_prefix, manifest_r2_key, source_count, chunk_count, vector_count, "
@@ -308,7 +321,6 @@ def build_manifest_sql(report: dict[str, Any], r2_keys: dict[str, str], config: 
                 f"{sql_quote(r2_keys['checkpoint'])}, {source_total}, {source_total - failed_count}, {failed_count}, "
                 f"{chunk_count}, {chunk_count}, {sql_quote(stats_json)}, CURRENT_TIMESTAMP);"
             ),
-            "COMMIT;",
         ]
     )
 
@@ -447,7 +459,7 @@ def ingest_corpus_to_cloudflare(
         command_runner(
             build_wrangler_command(
                 config,
-                ["d1", "execute", config.d1_database, "--remote", "--command", sql],
+                ["d1", "execute", config.d1_database, "--remote", "--file", str(sql_path)],
             ),
             None,
         )

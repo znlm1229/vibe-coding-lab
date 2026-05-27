@@ -10,9 +10,9 @@
 
 ## 进度
 
-- [ ] T1 - Cloudflare 资源与绑定契约 - commit: `df2d459` + `5988d12`。代码配置完成；远端资源验证被 Cloudflare 认证阻塞，当前 `pnpm exec wrangler whoami` 输出 `Failed to fetch auth token: 400 Bad Request` / `Not logged in`，背景中的已知输出为 `Invalid access token [code: 9109]`。
+- [x] T1 - Cloudflare 资源与绑定契约 - commit: `df2d459` + `5988d12`。代码配置完成；本轮已验证 `wrangler whoami`、Vectorize/R2/D1 远端资源和 D1 manifest 表可访问。AC1 仍保留 Dashboard/manual：Vectorize 1024 维与 cosine metric 需人工取证。
 - [x] T2 - 本地语料构建与 chunk 校验 - commit: `642dc73` + `5bed5e8`。SPEC review PASS；code-quality re-review APPROVED。
-- [ ] T3 - Cloudflare 入库链路 - commit: `c283155` + `0fac610` + `76f360e` + `1c70e68`。代码链路复审 PASS；真实 `--cloud` 写入仍被 Cloudflare 认证阻塞，Stage 8/9 需要补远端证据。
+- [x] T3 - Cloudflare 入库链路 - commit: `c283155` + `0fac610` + `76f360e` + `1c70e68` + 本轮修复待提交。真实 `--sample --cloud --mock-embedding` 已完成 R2 upload、Vectorize upsert、D1 manifest 三步；Windows 下默认 `pnpm.cmd exec wrangler`、D1 `--file` manifest 与 UTF-8 输出捕获已修复。
 - [x] T4 - RAG 问题校验与缓存核心 - commit: `1963aca` + `e8a4795`。SPEC review PASS；code-quality re-review APPROVED。
 - [x] T5 - RAG 检索、rerank 与三态裁判 - commit: `1598f8f` + `91da358` + `a214c10`。SPEC review PASS；code-quality re-review APPROVED；最终整体验收修复 Workers AI embedding 矩阵响应兼容。
 - [x] T6 - 海龟汤问答 API - commit: `e385921` + `d4e19b8`。SPEC review PASS；code-quality re-review APPROVED。
@@ -28,19 +28,20 @@
 
 ## 当前阻塞
 
-- Cloudflare 真实远端验收仍阻塞：`pnpm exec wrangler whoami` 失败。当前实际输出为 `Failed to fetch auth token: 400 Bad Request` / `Not logged in`；任务背景中的已知输出为 `Invalid access token [code: 9109]`。两者都表示当前认证不可用，因此 AC1/T1 和 AC2/T3 的真实远端资源、R2/Vectorize/D1 写入证据不得标 PASS。
+- AC1 仍需人工取证：自动化已确认 Cloudflare 账号、Vectorize/R2/D1 资源和 D1 manifest 表可访问；Vectorize 1024 维与 cosine metric 仍需 Dashboard/manual 记录。
 - AC4 自动化仅覆盖 sample 的 `profile`、`wikipedia`、`wikisource` 三类 source type；完整 AC4 还需要全量二十四史 processed/failed 统计报告确认，当前不得标完整 PASS。
 - Stage 8 是人工关卡，浏览器人工主路径尚未由用户实测；AC20 保持 MANUAL。
 
 ## 已运行的自动化检查
 
-- `C:\Program Files\Git\bin\bash.exe scripts/verify_ac.sh`：exit code `2`；summary `PASS=16 FAIL=0 BLOCKED=3 MANUAL=1 SKIP=0`。PowerShell 中 `bash` 命令不存在，已改用 Git Bash。
+- `C:\Program Files\Git\bin\bash.exe scripts/verify_ac.sh`：exit code `1`；summary `PASS=17 FAIL=0 BLOCKED=1 MANUAL=2 SKIP=0`。AC2/AC3 已通过；AC1/AC20 为人工项，AC4 等待全量二十四史 processed/failed 报告。
+- `python scripts/build_turtle_corpus.py --sample --cloud --mock-embedding --output <repo外临时目录>`：成功；cloud summary 包含 `r2_upload`、`vectorize_upsert`、`d1_manifest`。
 - `pnpm test`：17 test files passed，150 tests passed。
 - `pnpm run check`：0 errors，2 existing warnings：
   - `src/routes/play/+page.svelte:310` unused CSS selector `.result small`
   - `tsconfig.json:1` cannot find type definition file for `node`
 - `pnpm run build`：pass；构建期间仍报告同一个既有 `.result small` unused CSS warning。
-- `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro`：Ran 24 tests，OK。
+- `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro`：Ran 26 tests，OK。
 
 ## Stage 7 -> 8 verification-before-completion 核对
 
@@ -48,8 +49,8 @@
 
 | AC | AI 验证命令 | 输出证据 | 状态 |
 |---|---|---|---|
-| AC1 | `pnpm exec wrangler whoami`; 恢复认证后继续跑 `pnpm exec wrangler vectorize list`; `pnpm exec wrangler r2 bucket list`; `pnpm exec wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';"` | 当前 `whoami` 为 Cloudflare 认证失败：`Failed to fetch auth token: 400 Bad Request` / `Not logged in`；背景已知 blocker 为 `Invalid access token [code: 9109]`。恢复认证后脚本只自动检查资源存在和 D1 manifest 表，Vectorize 1024/cosine 仍需 Dashboard/manual 取证。 | BLOCKED |
-| AC2 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>`；恢复认证后跑 `python scripts/build_turtle_corpus.py --sample --cloud --mock-embedding --output <repo外临时目录>` | 本地 dry-run 生成 `corpus_version`、`index_version`、`build-report.json` 和 `chunks.jsonl`；真实 R2/Vectorize/D1 写入因认证不可用未跑通。恢复认证后还需 report/stdout 证明 version、source counts、R2 object keys、Vectorize/D1/cloud summary。 | BLOCKED |
+| AC1 | `pnpm exec wrangler whoami`; `pnpm exec wrangler vectorize list`; `pnpm exec wrangler r2 bucket list`; `pnpm exec wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master WHERE name LIKE 'turtle_%';"` | `whoami` 成功；Vectorize index、R2 bucket、D1 manifest 表可见。脚本自动检查资源存在和 D1 表，Vectorize 1024/cosine 仍需 Dashboard/manual 取证。 | MANUAL |
+| AC2 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>`；`python scripts/build_turtle_corpus.py --sample --cloud --mock-embedding --output <repo外临时目录>` | 本地 dry-run 生成 `corpus_version`、`index_version`、`build-report.json` 和 `chunks.jsonl`；真实小样本云写入完成 R2 object upload、Vectorize upsert、D1 manifest，最终 build report 包含 cloud summary。 | PASS |
 | AC3 | `git ls-files | rg '(^|/)(raw|normalized|chunks|wikisource|r2-cache).*\.(jsonl|txt|md)$|(^|/)corpus/|r2-cache'` | `scripts/verify_ac.sh` 报 `git 未跟踪全量原始/清洗语料、chunk JSONL 或 R2 cache`。 | PASS |
 | AC4 | `python scripts/build_turtle_corpus.py --sample --mock-embedding --output <repo外临时目录>` 后检查 `build-report.json` | 自动化仅覆盖 sample source type coverage：`profile`、`wikipedia`、`wikisource` 三类来源；完整 AC4 待全量二十四史 processed/failed 统计报告确认。 | BLOCKED |
 | AC5 | `python -m unittest scripts.tests.test_turtle_corpus` | Python corpus 测试覆盖 chunk 长度、overlap、metadata <10KiB 与来源追溯；相关总 Python suite 24 passed。 | PASS |
@@ -66,11 +67,11 @@
 | AC16 | `pnpm exec vitest run src/lib/server/turtle-question.test.ts` | 直接猜姓名/别名类 yes/no 问题不被 invalid 拦截。 | PASS |
 | AC17 | `pnpm exec vitest run src/lib/server/turtle-rag.test.ts src/routes/api/turtle/question/server.test.ts` | Workers AI/Vectorize/预算失败走 degraded；不误记为“否”或错误答案。 | PASS |
 | AC18 | `pnpm exec vitest run src/lib/server/turtle-rag.test.ts` | 关羽“后世尊为武圣”维基 fixture 回归为“是”。 | PASS |
-| AC19 | `pnpm test`; `pnpm run check`; `pnpm run build`; `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro` | `pnpm test` 150 passed；`check` 0 errors/2 existing warnings；`build` pass；Python 24 passed。 | PASS |
+| AC19 | `pnpm test`; `pnpm run check`; `pnpm run build`; `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro` | `pnpm test` 150 passed；`check` 0 errors/2 existing warnings；`build` pass；Python 26 passed。 | PASS |
 | AC20 | `scripts/verify_ac.sh` 只生成人工路径提示；浏览器主路径需 Stage 8 真人实测 | 脚本标 `MANUAL`，指向 `08-qa.md`。 | MANUAL |
 
 ## Stage 8 入场摘要预备
 
 T11 已把旧 002 AC 验证脚本替换为 004 专用脚本。影响：`scripts/verify_ac.sh` 现在验证 `workflow/004-turtle-soup-rag` 的 AC1-AC20，不再假装旧 002 AC 是当前任务。Stage 8 需要用户重点补齐 Cloudflare Dashboard 远端资源截图/记录、真实 R2/Vectorize/D1 入库证据，以及两条浏览器主路径实测。
 
-T11 代码与证据包改动已提交；Stage 8 人工关卡尚未由用户确认，且 AC1/AC2/AC4/AC20 仍需补齐远端、全量或人工证据。
+T11 代码与证据包改动已提交；本轮修复待提交。Stage 8 人工关卡尚未由用户确认，且 AC1/AC4/AC20 仍需补齐 Dashboard、全量或人工浏览器证据。

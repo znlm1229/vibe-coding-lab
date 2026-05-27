@@ -10,6 +10,7 @@ from scripts.turtle_cloudflare import (
     CloudflareIngestConfig,
     CommandFailure,
     build_wrangler_command,
+    default_wrangler_bin_for_platform,
     ingest_corpus_to_cloudflare,
 )
 from scripts.turtle_corpus import build_sample_corpus
@@ -97,7 +98,7 @@ class TurtleCloudflareTest(unittest.TestCase):
             self.assertTrue(any("sources-raw.jsonl" in item for item in commands))
             self.assertTrue(any("sources-normalized.jsonl" in item for item in commands))
             self.assertTrue(any("vectorize upsert guess-figure-turtle-rag" in item for item in commands))
-            self.assertTrue(any("d1 execute guess-figure-db --remote --command" in item for item in commands))
+            self.assertTrue(any("d1 execute guess-figure-db --remote --file" in item for item in commands))
 
             upsert_rows = [
                 json.loads(line)
@@ -109,6 +110,9 @@ class TurtleCloudflareTest(unittest.TestCase):
             self.assertTrue(all(row["metadata"]["vector_dimensions"] == 1024 for row in upsert_rows))
             self.assertTrue(Path(summary["source_files"]["raw_sources_jsonl"]).exists())
             self.assertTrue(Path(summary["source_files"]["normalized_sources_jsonl"]).exists())
+            manifest_sql = Path(summary["manifest_sql"]).read_text(encoding="utf-8")
+            self.assertNotIn("BEGIN;", manifest_sql)
+            self.assertNotIn("COMMIT;", manifest_sql)
 
     def test_non_mock_path_uses_injected_real_embedder(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -267,6 +271,22 @@ class TurtleCloudflareTest(unittest.TestCase):
 
         self.assertFalse(config.mock_embedding)
 
+    def test_cli_report_json_can_be_rewritten_with_cloud_summary(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            report_path = Path(temp_dir) / "build-report.json"
+            report = {
+                "corpus_version": "turtle-corpus-v1",
+                "output_files": {"report_json": str(report_path)},
+            }
+
+            build_cli.write_report_json(report)
+            report["cloud"] = {"status": "succeeded", "completed_steps": ["d1_manifest"]}
+            build_cli.write_report_json(report)
+
+            saved = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved["cloud"]["status"], "succeeded")
+            self.assertEqual(saved["cloud"]["completed_steps"], ["d1_manifest"])
+
     def test_default_cli_cloud_config_builds_pnpm_exec_wrangler_argv(self):
         config = build_cli.build_cloud_config(
             argparse.Namespace(mock_embedding=False, wrangler_bin=None)
@@ -274,8 +294,12 @@ class TurtleCloudflareTest(unittest.TestCase):
 
         command = build_wrangler_command(config, ["r2", "bucket", "list"])
 
-        self.assertEqual(command[:3], ["pnpm", "exec", "wrangler"])
+        self.assertEqual(command[:3], [default_wrangler_bin_for_platform(), "exec", "wrangler"])
         self.assertEqual(command[3:], ["r2", "bucket", "list"])
+
+    def test_default_wrangler_bin_uses_cmd_shim_on_windows(self):
+        self.assertEqual(default_wrangler_bin_for_platform("nt"), "pnpm.cmd")
+        self.assertEqual(default_wrangler_bin_for_platform("posix"), "pnpm")
 
     def test_custom_cli_wrangler_bin_with_spaces_does_not_append_default_args(self):
         wrangler_path = r"C:\Program Files\nodejs\wrangler.cmd"
