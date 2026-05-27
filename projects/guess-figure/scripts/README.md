@@ -109,3 +109,18 @@ git commit -m "fix(T5.2): 修李白生卒年错误（应为 701-762）"
 ## 来源
 
 提升自 [prototype A](../workflow/001-guess-figure/prototype/A-content/) 的 `proto_generate.py` + `batch_generate.py`（throwaway，已验证概念）。
+
+## T2 海龟汤 RAG 本地语料 dry-run
+
+T2 只构建本地小样本，不连接 Cloudflare，不写入 R2 / Vectorize / D1。输出目录由调用方显式指定，避免默认在仓库内生成大文件。
+
+```bash
+python scripts/build_turtle_corpus.py --sample --output C:\temp\turtle-corpus-sample
+```
+
+输出文件：
+
+- `build-report.json`：包含 `corpus_version`、`index_version`、`source_counts`、`chunk_count`、`failures`、`output_files`
+- `chunks.jsonl`：每行包含 `text` 和 `metadata`
+
+`metadata` 字段包含 `chunk_id`、`source_type`、`source_id`、`figure_id`、`figure_name`、`title`、`start`、`end`，可用时包含 `source_url`。本地 sample 会覆盖 `profile / wikipedia / wikisource` 三类 source；全量语料与 Cloudflare 入库由后续任务处理。
