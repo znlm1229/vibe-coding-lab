@@ -18,7 +18,7 @@
 - [x] T4 — RAG 问题校验与缓存核心  ｜ commit: `1963aca` + `e8a4795` ｜ SPEC review: PASS；code-quality re-review: APPROVED
 - [x] T5 — RAG 检索、rerank 与三态裁判  ｜ commit: `1598f8f` + `91da358` ｜ SPEC review: PASS；code-quality re-review: APPROVED
 - [x] T6 — 海龟汤问答 API  ｜ commit: `e385921` + `d4e19b8` ｜ SPEC review: PASS；code-quality re-review: APPROVED
-- [ ] T7 — 答案提交与持久化状态  ｜ commit: pending
+- [x] T7 — 答案提交与持久化状态  ｜ commit: `b52508d` + `e21bc26` + `462e540` ｜ SPEC re-review: PASS；code-quality second re-review: APPROVED
 - [x] T8 — 极短隐晦汤面数据与校验  ｜ commit: `d4064fb` + `0b4057f` ｜ SPEC/code-quality re-review: APPROVED
 - [ ] T9 — 主游戏嵌入式 UI  ｜ commit: pending
 - [ ] T10 — 独立 `/turtle-soup` 玩法 UI  ｜ commit: pending
@@ -36,7 +36,7 @@
 
 ## 已运行的自动化检查
 
-- [x] 单元测试：`pnpm test` → 11 files / 108 tests passed；`python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus` → 15 tests passed；`python -m unittest scripts.tests.test_turtle_intro` → 9 tests passed
+- [x] 单元测试：`pnpm test` → 127 tests passed；T7 相关 `pnpm test -- src/lib/server/turtle-session.test.ts src/routes/api/turtle/answer/server.test.ts src/routes/api/game/finish/server.test.ts` → 19 tests passed；`python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus` → 15 tests passed；`python -m unittest scripts.tests.test_turtle_intro` → 9 tests passed
 - [x] 集成测试：T2 sample dry-run 生成 `profile/wikipedia/wikisource` report；T1 `wrangler types` 由 worker 验证 bindings 可识别；T3 mock runner 覆盖 R2/Vectorize/D1 命令编排
 - [ ] Linter
 - [x] 类型检查：`pnpm run check` → 0 errors，2 个既有 warnings

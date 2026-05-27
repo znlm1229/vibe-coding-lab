@@ -47,7 +47,7 @@
   - Done when: API 测试覆盖 invalid、cache miss、cache hit、degraded 四条路径；命中缓存时 mock 断言不调用 Vectorize / LLM
   - Depends on: T4, T5
 
-- [ ] **T7 — 答案提交与持久化状态**
+- [x] **T7 — 答案提交与持久化状态**
   - Touches: `src/routes/api/turtle/answer/+server.ts`、`src/routes/api/game/finish/+server.ts`、`src/lib/server/turtle-session.ts`、`migrations/0003_turtle_sessions.sql`
   - Done when: API 测试覆盖独立模式 3 次答案机会且错误答案不消耗提问次数；嵌入式模式用过海龟汤后 finish payload 和持久化记录固定 `score=0`
   - Depends on: T6
