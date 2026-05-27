@@ -22,7 +22,7 @@
   - Done when: `wrangler vectorize list`、`wrangler r2 bucket list`、`wrangler d1 execute guess-figure-db --remote --command "SELECT name FROM sqlite_master"` 能看到 004 所需资源；`pnpm run check` 能识别新增 bindings 类型
   - Depends on: nothing
 
-- [ ] **T2 — 本地语料构建与 chunk 校验**
+- [x] **T2 — 本地语料构建与 chunk 校验**
   - Touches: `scripts/build_turtle_corpus.py`、`scripts/turtle_corpus.py`、`scripts/tests/test_turtle_corpus.py`、`scripts/README.md`
   - Done when: 小样本 dry-run 生成包含 `profile/wikipedia/wikisource` 的 build report；测试覆盖 500-800 字 chunk、80-120 overlap、metadata 小于 10KiB
   - Depends on: T1
@@ -32,7 +32,7 @@
   - Done when: `--sample --cloud` 可把原始/清洗语料和 chunk JSONL 写入 R2、向 Vectorize upsert 1024 维向量、向 D1 写入 manifest；失败时生成可恢复 checkpoint 与失败 source 报告
   - Depends on: T1, T2
 
-- [ ] **T4 — RAG 问题校验与缓存核心**
+- [x] **T4 — RAG 问题校验与缓存核心**
   - Touches: `src/lib/server/turtle-question.ts`、`src/lib/server/turtle-cache.ts`、`src/lib/server/turtle-question.test.ts`、`src/lib/server/turtle-cache.test.ts`
   - Done when: 单测覆盖 invalid 不消耗次数、直接猜名 yes/no 不拦截；缓存 key 含 `figure_id + normalized_question + rag_index_version + prompt_version` 且 TTL 为 30 天
   - Depends on: T1
