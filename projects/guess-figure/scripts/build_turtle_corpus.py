@@ -22,10 +22,26 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def is_output_inside_project(output_dir: Path) -> bool:
+    output_path = output_dir.resolve(strict=False)
+    project_path = PROJECT_ROOT.resolve(strict=False)
+    try:
+        output_path.relative_to(project_path)
+    except ValueError:
+        return False
+    return True
+
+
 def main() -> int:
     args = parse_args()
     if not args.sample:
         print("当前 T2 只支持 --sample dry-run；全量入库由 T3 处理。", file=sys.stderr)
+        return 2
+    if is_output_inside_project(args.output):
+        print(
+            f"拒绝写入仓库内 output 目录：{args.output}。请使用 $env:TEMP 或其他仓库外临时目录。",
+            file=sys.stderr,
+        )
         return 2
 
     figures = load_figures(FIGURES_PATH)

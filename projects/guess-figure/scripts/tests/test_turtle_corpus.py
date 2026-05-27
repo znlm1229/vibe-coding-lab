@@ -1,4 +1,7 @@
 import json
+import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,6 +19,19 @@ def make_text(length: int) -> str:
     return (unit * ((length // len(unit)) + 1))[:length]
 
 
+def assert_full_coverage(test_case: unittest.TestCase, text_length: int) -> None:
+    chunks = chunk_text(make_text(text_length), chunk_size=700, overlap=100)
+    covered = [False] * text_length
+    for chunk in chunks:
+        test_case.assertGreaterEqual(len(chunk.text), 500)
+        test_case.assertLessEqual(len(chunk.text), 800)
+        for index in range(chunk.start, chunk.end):
+            covered[index] = True
+
+    missing = [index for index, is_covered in enumerate(covered) if not is_covered]
+    test_case.assertEqual(missing, [], f"{text_length} 字文本存在未覆盖位置")
+
+
 class TurtleCorpusTest(unittest.TestCase):
     def test_chunk_text_uses_target_size_and_overlap(self):
         chunks = chunk_text(make_text(1900), chunk_size=700, overlap=100)
@@ -24,6 +40,11 @@ class TurtleCorpusTest(unittest.TestCase):
         self.assertTrue(all(500 <= len(chunk.text) <= 800 for chunk in chunks))
         self.assertEqual(chunks[0].end - chunks[1].start, 100)
         self.assertEqual(chunks[1].end - chunks[2].start, 100)
+
+    def test_chunk_text_covers_tail_boundary_lengths(self):
+        for text_length in (1099, 1200, 1401):
+            with self.subTest(text_length=text_length):
+                assert_full_coverage(self, text_length)
 
     def test_chunk_metadata_stays_under_10k(self):
         metadata = {
@@ -97,6 +118,34 @@ class TurtleCorpusTest(unittest.TestCase):
             self.assertTrue(report_path.exists())
             self.assertTrue(chunks_path.exists())
             self.assertGreater(chunks_path.stat().st_size, 0)
+
+    def test_cli_rejects_output_inside_project_root(self):
+        project_root = Path.cwd()
+        output_dir = project_root / "turtle-corpus-output-should-reject"
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+
+        try:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build_turtle_corpus.py",
+                    "--sample",
+                    "--output",
+                    str(output_dir),
+                ],
+                cwd=project_root,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("output", result.stderr.lower())
+            self.assertFalse(output_dir.exists())
+        finally:
+            if output_dir.exists():
+                shutil.rmtree(output_dir)
 
 
 if __name__ == "__main__":

@@ -73,10 +73,20 @@ def chunk_text(text: str, chunk_size: int = DEFAULT_CHUNK_SIZE, overlap: int = D
         chunks.append(TextChunk(text=clean_text[start:end], start=start, end=end))
         start += step
 
-    # 尾段不足 500 字时已被上一个 chunk 覆盖，避免生成不合规长文 chunk。
-    if len(clean_text) - start >= MIN_CHUNK_CHARS:
-        chunks.append(TextChunk(text=clean_text[start:], start=start, end=len(clean_text)))
-    return chunks
+    # 末尾不足一个标准窗口时，回退起点生成合规尾窗，保证全文位置不丢失。
+    last_end = chunks[-1].end
+    if last_end < len(clean_text):
+        desired_start = max(0, last_end - overlap)
+        latest_valid_start = max(0, len(clean_text) - MIN_CHUNK_CHARS)
+        tail_start = min(desired_start, latest_valid_start)
+        tail_end = len(clean_text)
+        if tail_end - tail_start > MAX_CHUNK_CHARS:
+            tail_start = max(0, tail_end - chunk_size)
+        tail = TextChunk(text=clean_text[tail_start:tail_end], start=tail_start, end=tail_end)
+        if all((item.start, item.end) != (tail.start, tail.end) for item in chunks):
+            chunks.append(tail)
+
+    return sorted(chunks, key=lambda item: (item.start, item.end))
 
 
 def metadata_size_bytes(metadata: dict[str, Any]) -> int:

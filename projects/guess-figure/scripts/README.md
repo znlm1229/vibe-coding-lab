@@ -114,8 +114,12 @@ git commit -m "fix(T5.2): 修李白生卒年错误（应为 701-762）"
 
 T2 只构建本地小样本，不连接 Cloudflare，不写入 R2 / Vectorize / D1。输出目录由调用方显式指定，避免默认在仓库内生成大文件。
 
+```powershell
+python scripts/build_turtle_corpus.py --sample --output (Join-Path $env:TEMP "turtle-corpus-sample")
+```
+
 ```bash
-python scripts/build_turtle_corpus.py --sample --output C:\temp\turtle-corpus-sample
+python scripts/build_turtle_corpus.py --sample --output /tmp/turtle-corpus-sample
 ```
 
 输出文件：
