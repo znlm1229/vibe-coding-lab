@@ -37,12 +37,12 @@
   - Done when: 单测覆盖 invalid 不消耗次数、直接猜名 yes/no 不拦截；缓存 key 含 `figure_id + normalized_question + rag_index_version + prompt_version` 且 TTL 为 30 天
   - Depends on: T1
 
-- [ ] **T5 — RAG 检索、rerank 与三态裁判**
+- [x] **T5 — RAG 检索、rerank 与三态裁判**
   - Touches: `src/lib/server/turtle-rag.ts`、`src/lib/server/turtle-rag.test.ts`、`src/lib/server/turtle-prompts.ts`
   - Done when: mock 测试覆盖 query expansion、Vectorize topK=20、rerank 后取 4-6 chunks、返回值只允许「是/否/无关」；证据不足返回「无关」，关羽“武圣”维基 fixture 返回「是」
   - Depends on: T2, T4
 
-- [ ] **T6 — 海龟汤问答 API**
+- [x] **T6 — 海龟汤问答 API**
   - Touches: `src/routes/api/turtle/question/+server.ts`、`src/routes/api/turtle/question/+server.test.ts`、`src/lib/types.ts`
   - Done when: API 测试覆盖 invalid、cache miss、cache hit、degraded 四条路径；命中缓存时 mock 断言不调用 Vectorize / LLM
   - Depends on: T4, T5
@@ -52,7 +52,7 @@
   - Done when: API 测试覆盖独立模式 3 次答案机会且错误答案不消耗提问次数；嵌入式模式用过海龟汤后 finish payload 和持久化记录固定 `score=0`
   - Depends on: T6
 
-- [ ] **T8 — 极短隐晦汤面数据与校验**
+- [x] **T8 — 极短隐晦汤面数据与校验**
   - Touches: `src/lib/data/figures.json` 或相邻派生数据文件、`scripts/generate_turtle_intro.py`、`scripts/validate_turtle_intro.py`、`scripts/tests/test_turtle_intro.py`
   - Done when: 每个人物都有 `turtle_intro` 且通过长度/禁词/强识别信息校验；抽样报告显示汤面不直接暴露姓名、别名、朝代、职业、作品、典故、亲属、地名
   - Depends on: T2

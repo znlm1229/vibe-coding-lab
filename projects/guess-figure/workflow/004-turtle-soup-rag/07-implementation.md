@@ -14,12 +14,12 @@
 
 - [ ] T1 — Cloudflare 资源与绑定契约  ｜ commit: `df2d459` + `5988d12` ｜ 代码配置完成；远端资源验证被 Cloudflare token `Invalid access token [code: 9109]` 阻塞
 - [x] T2 — 本地语料构建与 chunk 校验  ｜ commit: `642dc73` + `5bed5e8` ｜ SPEC review: PASS；code-quality re-review: APPROVED
-- [ ] T3 — Cloudflare 入库链路  ｜ commit: pending ｜ worker: `019e681b-fcfc-7202-a706-ec2d3dd41b9c`
+- [ ] T3 — Cloudflare 入库链路  ｜ commit: `c283155` + `0fac610` + `76f360e` + `1c70e68` ｜ 代码链路复审 PASS；真实 Cloudflare `--cloud` 写入受 token `Invalid access token [code: 9109]` 阻塞，Stage 8/9 需补远端证据
 - [x] T4 — RAG 问题校验与缓存核心  ｜ commit: `1963aca` + `e8a4795` ｜ SPEC review: PASS；code-quality re-review: APPROVED
-- [ ] T5 — RAG 检索、rerank 与三态裁判  ｜ commit: pending ｜ worker: `019e681c-2e1b-78b0-93cb-c6146e95f1cf`
-- [ ] T6 — 海龟汤问答 API  ｜ commit: pending
+- [x] T5 — RAG 检索、rerank 与三态裁判  ｜ commit: `1598f8f` + `91da358` ｜ SPEC review: PASS；code-quality re-review: APPROVED
+- [x] T6 — 海龟汤问答 API  ｜ commit: `e385921` + `d4e19b8` ｜ SPEC review: PASS；code-quality re-review: APPROVED
 - [ ] T7 — 答案提交与持久化状态  ｜ commit: pending
-- [ ] T8 — 极短隐晦汤面数据与校验  ｜ commit: pending
+- [x] T8 — 极短隐晦汤面数据与校验  ｜ commit: `d4064fb` + `0b4057f` ｜ SPEC/code-quality re-review: APPROVED
 - [ ] T9 — 主游戏嵌入式 UI  ｜ commit: pending
 - [ ] T10 — 独立 `/turtle-soup` 玩法 UI  ｜ commit: pending
 - [ ] T11 — AC 验证脚本与 Stage 8 证据包  ｜ commit: pending
@@ -36,8 +36,8 @@
 
 ## 已运行的自动化检查
 
-- [x] 单元测试：`pnpm test` → 9 files / 91 tests passed；`python -m unittest scripts.tests.test_turtle_corpus` → 6 tests passed
-- [x] 集成测试：T2 sample dry-run 生成 `profile/wikipedia/wikisource` report；T1 `wrangler types` 由 worker 验证 bindings 可识别
+- [x] 单元测试：`pnpm test` → 11 files / 108 tests passed；`python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus` → 15 tests passed；`python -m unittest scripts.tests.test_turtle_intro` → 9 tests passed
+- [x] 集成测试：T2 sample dry-run 生成 `profile/wikipedia/wikisource` report；T1 `wrangler types` 由 worker 验证 bindings 可识别；T3 mock runner 覆盖 R2/Vectorize/D1 命令编排
 - [ ] Linter
 - [x] 类型检查：`pnpm run check` → 0 errors，2 个既有 warnings
 - [x] 构建通过：`pnpm run build` → pass
