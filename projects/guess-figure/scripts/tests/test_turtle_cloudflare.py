@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -114,6 +115,46 @@ class TurtleCloudflareTest(unittest.TestCase):
             self.assertNotIn("BEGIN;", manifest_sql)
             self.assertNotIn("COMMIT;", manifest_sql)
 
+    def test_manifest_sql_persists_history_stats_and_source_rows(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            build_result = self.build_sample(output_dir)
+            build_result.report["history_book_stats"] = [
+                {
+                    "book": "史記",
+                    "processed": 1,
+                    "failed": 0,
+                    "skipped": 0,
+                    "source_processed": 1,
+                    "source_failed": 0,
+                    "source_skipped": 0,
+                    "chunk_count": build_result.report["chunk_count"],
+                    "char_count": 900,
+                }
+            ]
+            build_result.report["budget"] = {
+                "token_budget_limit": 10_000,
+                "token_budget_used": 900,
+                "vector_budget_limit": 20,
+                "vector_budget_used": build_result.report["chunk_count"],
+            }
+            runner = FakeRunner()
+
+            summary = ingest_corpus_to_cloudflare(
+                build_result.report,
+                output_dir=output_dir,
+                config=CloudflareIngestConfig(mock_embedding=True),
+                command_runner=runner,
+            )
+
+            manifest_sql = Path(summary["manifest_sql"]).read_text(encoding="utf-8")
+            self.assertIn("history_book_stats", manifest_sql)
+            self.assertIn("token_budget_used", manifest_sql)
+            self.assertIn("INSERT INTO turtle_corpus_sources", manifest_sql)
+            self.assertIn("ON CONFLICT(corpus_version, source_type, source_id)", manifest_sql)
+            self.assertIn("UPDATE turtle_corpus_versions SET source_count=(SELECT COUNT(*)", manifest_sql)
+            self.assertIn("UPDATE turtle_index_versions SET chunk_count=(SELECT COALESCE(SUM(chunk_count)", manifest_sql)
+
     def test_non_mock_path_uses_injected_real_embedder(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             output_dir = Path(temp_dir)
@@ -142,6 +183,44 @@ class TurtleCloudflareTest(unittest.TestCase):
                 for line in Path(summary["vectorize_file"]).read_text(encoding="utf-8").splitlines()
             ]
             self.assertTrue(all(len(row["values"]) == 1024 for row in upsert_rows))
+
+    def test_non_mock_path_batches_real_embedder_calls(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            build_result = build_sample_corpus(
+                output_dir=output_dir,
+                figures=[
+                    {
+                        "id": "甲",
+                        "name": "甲",
+                        "wiki_url": "https://example.test/甲",
+                        "wikisource_page": "史記/卷001",
+                        "clues": [{"text": make_text(300)}],
+                    },
+                    {
+                        "id": "乙",
+                        "name": "乙",
+                        "wiki_url": "https://example.test/乙",
+                        "wikisource_page": "漢書/卷001",
+                        "clues": [{"text": make_text(300)}],
+                    },
+                ],
+                profiles={"甲": make_text(900), "乙": make_text(900)},
+                sample_size=2,
+            )
+            runner = FakeRunner()
+            embedder = FakeRealEmbedder()
+
+            ingest_corpus_to_cloudflare(
+                build_result.report,
+                output_dir=output_dir,
+                config=CloudflareIngestConfig(mock_embedding=False, embedding_batch_size=3),
+                command_runner=runner,
+                embedder=embedder,
+            )
+
+            self.assertGreater(len(embedder.calls), 1)
+            self.assertTrue(all(len(call) <= 3 for call in embedder.calls))
 
     def test_failure_writes_resume_checkpoint_and_failed_source_report(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -187,6 +266,65 @@ class TurtleCloudflareTest(unittest.TestCase):
                 self.assertIn("chunk_id", affected_chunk)
                 self.assertIn("start", affected_chunk)
                 self.assertIn("end", affected_chunk)
+
+    def test_full_history_failure_checkpoint_keeps_resume_arguments(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            build_result = self.build_sample(output_dir)
+            build_result.report["build_args"] = {
+                "mode": "full-history",
+                "cloud": True,
+                "mock_embedding": False,
+                "daily_token_budget": 600_000,
+                "daily_vector_limit": 700,
+                "resume_after": "史記/卷034",
+                "batch_id": "batch-next",
+                "discovery_sleep": 1.5,
+                "skip_local_sources": True,
+                "embedding_batch_size": 8,
+            }
+            runner = FakeRunner(fail_step="vectorize upsert")
+
+            with self.assertRaises(CommandFailure):
+                ingest_corpus_to_cloudflare(
+                    build_result.report,
+                    output_dir=output_dir,
+                    config=CloudflareIngestConfig(mock_embedding=True),
+                    command_runner=runner,
+                )
+
+            checkpoint = json.loads((output_dir / "cloud-checkpoint.json").read_text(encoding="utf-8"))
+            resume_args = checkpoint["resume_args"]
+            self.assertIn("--full-history", resume_args)
+            self.assertNotIn("--sample", resume_args)
+            self.assertIn("--resume-after", resume_args)
+            self.assertIn("史記/卷034", resume_args)
+            self.assertIn("--skip-local-sources", resume_args)
+            self.assertIn("--embedding-batch-size", resume_args)
+            self.assertIn("8", resume_args)
+
+    def test_real_embedding_without_credentials_fails_before_r2_upload(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_dir = Path(temp_dir)
+            build_result = self.build_sample(output_dir)
+            runner = FakeRunner()
+            old_account = os.environ.pop("CLOUDFLARE_ACCOUNT_ID", None)
+            old_token = os.environ.pop("CLOUDFLARE_API_TOKEN", None)
+            try:
+                with self.assertRaises(CommandFailure):
+                    ingest_corpus_to_cloudflare(
+                        build_result.report,
+                        output_dir=output_dir,
+                        config=CloudflareIngestConfig(mock_embedding=False),
+                        command_runner=runner,
+                    )
+            finally:
+                if old_account is not None:
+                    os.environ["CLOUDFLARE_ACCOUNT_ID"] = old_account
+                if old_token is not None:
+                    os.environ["CLOUDFLARE_API_TOKEN"] = old_token
+
+            self.assertEqual(runner.commands, [])
 
     def test_d1_failure_checkpoint_includes_affected_source_chunk_ranges(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -286,6 +424,28 @@ class TurtleCloudflareTest(unittest.TestCase):
             saved = json.loads(report_path.read_text(encoding="utf-8"))
             self.assertEqual(saved["cloud"]["status"], "succeeded")
             self.assertEqual(saved["cloud"]["completed_steps"], ["d1_manifest"])
+
+    def test_cli_loads_cloudflare_credentials_from_local_env_without_overwrite(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            env_path = Path(temp_dir) / ".env"
+            env_path.write_text(
+                "CLOUDFLARE_ACCOUNT_ID=account-from-file\nCLOUDFLARE_API_TOKEN=token-from-file\n",
+                encoding="utf-8",
+            )
+            old_account = os.environ.pop("CLOUDFLARE_ACCOUNT_ID", None)
+            old_token = os.environ.pop("CLOUDFLARE_API_TOKEN", None)
+            try:
+                os.environ["CLOUDFLARE_API_TOKEN"] = "existing-token"
+                build_cli.load_local_env(env_path)
+                self.assertEqual(os.environ["CLOUDFLARE_ACCOUNT_ID"], "account-from-file")
+                self.assertEqual(os.environ["CLOUDFLARE_API_TOKEN"], "existing-token")
+            finally:
+                os.environ.pop("CLOUDFLARE_ACCOUNT_ID", None)
+                os.environ.pop("CLOUDFLARE_API_TOKEN", None)
+                if old_account is not None:
+                    os.environ["CLOUDFLARE_ACCOUNT_ID"] = old_account
+                if old_token is not None:
+                    os.environ["CLOUDFLARE_API_TOKEN"] = old_token
 
     def test_default_cli_cloud_config_builds_pnpm_exec_wrangler_argv(self):
         config = build_cli.build_cloud_config(

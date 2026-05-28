@@ -70,6 +70,21 @@
 | AC19 | `pnpm test`; `pnpm run check`; `pnpm run build`; `python -m unittest scripts.tests.test_turtle_cloudflare scripts.tests.test_turtle_corpus scripts.tests.test_turtle_intro` | `pnpm test` 150 passed；`check` 0 errors/2 existing warnings；`build` pass；Python 26 passed。 | PASS |
 | AC20 | `scripts/verify_ac.sh` 只生成人工路径提示；浏览器主路径需 Stage 8 真人实测 | 脚本标 `MANUAL`，指向 `08-qa.md`。 | MANUAL |
 
+## 2026-05-28 全量史料入库进展
+
+- 已把本地离线脚本所需 `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` 写入项目 `.env`；`.env` 不进入 git，Pages runtime 仍使用 `wrangler.toml` bindings。
+- 覆盖取证批次：`C:\Users\61780\AppData\Local\Temp\turtle-full-cloud-day1-20260528-103626\build-report.json`。该批次使用 `--max-pages-per-book 1`，完成 R2 upload、Vectorize upsert、D1 manifest；写入 696 个 chunk / vector，覆盖 65 个 profile、65 个 wikipedia、59 个 wikisource source，16/25 部史书至少有 1 页 processed。该批次只用于 AC4 覆盖取证，不作为真正全量续跑 checkpoint。
+- 真全量序列批次：`C:\Users\61780\AppData\Local\Temp\turtle-full-cloud-seq1b-20260528-110129\build-report.json`。该批次未限制每书页数，完成 R2 upload、Vectorize upsert、D1 manifest；处理 `史記/卷001` 到 `史記/卷034`，写入 348 个 chunk / vector，`budget.next_resume_after` 为 `史記/卷034`。
+- 远端核对：`pnpm.cmd exec wrangler vectorize info guess-figure-turtle-rag` 显示 `dimensions=1024`、`vectorCount=1036`；`wrangler vectorize get-vectors` 可取到新增 `史記/卷002` 向量。D1 `turtle_corpus_versions` 显示 `source_count=220`、`chunk_count=1032`、`vector_count=1032`、`failed_source_count=0`，`turtle_build_reports` 最新成功时间为 `2026-05-28 03:09:40` UTC。
+- 下一批真实全量续跑命令应从 `史記/卷034` 之后继续，且继续不要使用 `--max-pages-per-book`：
+
+```powershell
+$out = Join-Path $env:TEMP ("turtle-full-" + (Get-Date -Format yyyyMMdd-HHmmss))
+python scripts/build_turtle_corpus.py --full-history --cloud --skip-local-sources --output $out --resume-after "史記/卷034" --daily-token-budget 600000 --daily-vector-limit 700 --embedding-batch-size 8 --discovery-sleep 1.5
+```
+
+- 最终 AC4 自动化验收应使用 `TURTLE_FULL_REPORTS` 传入覆盖批次和所有真实全量序列批次的 `build-report.json`，脚本会聚合 `source_counts` 与逐书 `history_book_stats`。
+
 ## Stage 8 入场摘要预备
 
 T11 已把旧 002 AC 验证脚本替换为 004 专用脚本。影响：`scripts/verify_ac.sh` 现在验证 `workflow/004-turtle-soup-rag` 的 AC1-AC20，不再假装旧 002 AC 是当前任务。Stage 8 需要用户重点补齐 Cloudflare Dashboard 远端资源截图/记录、真实 R2/Vectorize/D1 入库证据，以及两条浏览器主路径实测。

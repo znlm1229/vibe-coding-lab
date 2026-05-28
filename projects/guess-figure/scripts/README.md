@@ -127,4 +127,42 @@ python scripts/build_turtle_corpus.py --sample --output /tmp/turtle-corpus-sampl
 - `build-report.json`：包含 `corpus_version`、`index_version`、`source_counts`、`chunk_count`、`failures`、`output_files`
 - `chunks.jsonl`：每行包含 `text` 和 `metadata`
 
-`metadata` 字段包含 `chunk_id`、`source_type`、`source_id`、`figure_id`、`figure_name`、`title`、`start`、`end`，可用时包含 `source_url`。本地 sample 会覆盖 `profile / wikipedia / wikisource` 三类 source；全量语料与 Cloudflare 入库由后续任务处理。
+`metadata` 字段包含 `chunk_id`、`source_type`、`source_id`、`figure_id`、`figure_name`、`title`、`start`、`end`，可用时包含 `source_url`。本地 sample 会覆盖 `profile / wikipedia / wikisource` 三类 source。
+
+## T3/AC4 全量史料分批入库
+
+全量模式会发现 Wikisource 二十四史/清史稿卷页，按本批预算抓取、切 chunk、写 R2、upsert Vectorize，并把 D1 manifest 与逐书 `processed/failed/skipped` 统计写入报告。输出目录必须在仓库外。
+
+Workers AI 免费 allocation 为每日 10,000 Neurons；`@cf/qwen/qwen3-embedding-0.6b` 按 input tokens 计价。脚本用保守 token 估算和 vector 条数做双限额，默认 `--daily-token-budget 600000 --daily-vector-limit 700`，可按 Cloudflare Dashboard 当日用量调大或调小。
+
+首次真实全量序列不要使用 `--max-pages-per-book`，否则只适合 AC4 覆盖取证，不适合作为全量续跑 checkpoint。
+
+```powershell
+$out = Join-Path $env:TEMP ("turtle-full-" + (Get-Date -Format yyyyMMdd))
+python scripts/build_turtle_corpus.py --full-history --cloud --skip-local-sources --output $out --daily-token-budget 600000 --daily-vector-limit 700 --embedding-batch-size 8 --discovery-sleep 1.5
+```
+
+如需先补 AC4 覆盖证据，可以单独跑一批 `--max-pages-per-book 1` 且不加 `--skip-local-sources` 的小覆盖批次；它会覆盖 `profile / wikipedia / wikisource` 和多部史书首卷，但不要把这批的 `next_resume_after` 当作真实全量续跑位置。
+
+如果预算用尽，读取 `build-report.json` 里的 `budget.next_resume_after`，第二天继续：
+
+```powershell
+$out = Join-Path $env:TEMP ("turtle-full-" + (Get-Date -Format yyyyMMdd))
+python scripts/build_turtle_corpus.py --full-history --cloud --skip-local-sources --output $out --resume-after "<上一批 next_resume_after>" --daily-token-budget 600000 --daily-vector-limit 700 --embedding-batch-size 8 --discovery-sleep 1.5
+```
+
+AC4 自动化可用上一批全量报告复核：
+
+```powershell
+$env:TURTLE_FULL_REPORT = "$out\build-report.json"
+& "C:\Program Files\Git\bin\bash.exe" scripts/verify_ac.sh
+```
+
+分多天入库时，用分号把覆盖批次和所有真实全量批次的 `build-report.json` 拼给 `TURTLE_FULL_REPORTS`；脚本会聚合 `source_counts` 与逐书 `history_book_stats`：
+
+```powershell
+$env:TURTLE_FULL_REPORTS = "C:\tmp\coverage\build-report.json;C:\tmp\seq1\build-report.json;C:\tmp\seq2\build-report.json"
+& "C:\Program Files\Git\bin\bash.exe" scripts/verify_ac.sh
+```
+
+不要提交全量正文、chunk JSONL、Vectorize upsert 文件或 R2 cache；这些只应存在于仓库外输出目录和 Cloudflare R2。

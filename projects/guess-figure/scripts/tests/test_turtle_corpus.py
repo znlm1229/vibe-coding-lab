@@ -7,11 +7,14 @@ import unittest
 from pathlib import Path
 
 from scripts.turtle_corpus import (
+    CorpusSource,
     build_sample_corpus,
+    build_corpus_from_sources,
     chunk_text,
     metadata_size_bytes,
     write_corpus_outputs,
 )
+from scripts.turtle_history import HistoryPage, build_history_batch
 
 
 def make_text(length: int) -> str:
@@ -146,6 +149,112 @@ class TurtleCorpusTest(unittest.TestCase):
         finally:
             if output_dir.exists():
                 shutil.rmtree(output_dir)
+
+    def test_full_build_report_contains_history_book_processed_failed_stats(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            sources = [
+                CorpusSource(
+                    source_type="wikisource",
+                    source_id="史記/卷001",
+                    title="史記 卷001",
+                    text=make_text(900),
+                    source_url="https://zh.wikisource.org/wiki/史記/卷001",
+                    book="史記",
+                    volume="卷001",
+                    source_ref="史記/卷001",
+                ),
+                CorpusSource(
+                    source_type="wikisource",
+                    source_id="漢書/卷001",
+                    title="漢書 卷001",
+                    text=make_text(900),
+                    source_url="https://zh.wikisource.org/wiki/漢書/卷001",
+                    book="漢書",
+                    volume="卷001",
+                    source_ref="漢書/卷001",
+                ),
+            ]
+            failures = [
+                {
+                    "source_type": "wikisource",
+                    "source_id": "三國志/卷001",
+                    "title": "三國志 卷001",
+                    "book": "三國志",
+                    "volume": "卷001",
+                    "reason": "fetch_failed",
+                    "error": "模拟抓取失败",
+                }
+            ]
+
+            result = build_corpus_from_sources(
+                output_dir=Path(temp_dir),
+                sources=sources,
+                failures=failures,
+                history_book_names=["史記", "漢書", "三國志"],
+                budget_report={"token_budget_limit": 10_000, "token_budget_used": 1_800},
+            )
+
+            stats = {item["book"]: item for item in result.report["history_book_stats"]}
+            self.assertEqual(stats["史記"]["source_processed"], 1)
+            self.assertEqual(stats["漢書"]["source_processed"], 1)
+            self.assertEqual(stats["三國志"]["source_failed"], 1)
+            self.assertIn("processed", stats["史記"])
+            self.assertIn("failed", stats["史記"])
+            self.assertEqual(result.report["budget"]["token_budget_used"], 1_800)
+
+            rows = [
+                json.loads(line)
+                for line in Path(result.report["output_files"]["chunks_jsonl"]).read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertTrue(all(row["metadata"]["book"] in {"史記", "漢書"} for row in rows))
+            self.assertTrue(all("volume" in row["metadata"] for row in rows))
+
+    def test_history_batch_respects_token_and_vector_budget(self):
+        pages = [
+            HistoryPage(book="史記", title="史記/卷001", volume="卷001"),
+            HistoryPage(book="史記", title="史記/卷002", volume="卷002"),
+            HistoryPage(book="漢書", title="漢書/卷001", volume="卷001"),
+        ]
+        texts = {
+            "史記/卷001": make_text(900),
+            "史記/卷002": make_text(900),
+            "漢書/卷001": make_text(900),
+        }
+
+        batch = build_history_batch(
+            pages=pages,
+            fetch_text=lambda title: texts[title],
+            token_budget=1_500,
+            vector_budget=3,
+        )
+
+        self.assertEqual([source.source_id for source in batch.sources], ["史記/卷001"])
+        self.assertTrue(batch.budget["budget_exhausted"])
+        self.assertEqual(batch.budget["next_resume_after"], "史記/卷001")
+        self.assertGreater(batch.budget["token_budget_used"], 0)
+
+    def test_history_batch_marks_single_source_over_budget_as_failed(self):
+        pages = [
+            HistoryPage(book="史記", title="史記/卷001", volume="卷001"),
+            HistoryPage(book="史記", title="史記/卷002", volume="卷002"),
+        ]
+        texts = {
+            "史記/卷001": make_text(2_000),
+            "史記/卷002": make_text(700),
+        }
+
+        batch = build_history_batch(
+            pages=pages,
+            fetch_text=lambda title: texts[title],
+            token_budget=800,
+            vector_budget=2,
+        )
+
+        self.assertEqual([source.source_id for source in batch.sources], ["史記/卷002"])
+        self.assertEqual(batch.budget["failed_pages"], 1)
+        self.assertEqual(batch.failures[0]["source_id"], "史記/卷001")
+        self.assertEqual(batch.failures[0]["reason"], "source_over_budget")
+        self.assertEqual(batch.budget["next_resume_after"], "史記/卷002")
 
 
 if __name__ == "__main__":

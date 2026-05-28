@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import subprocess
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
@@ -39,6 +40,7 @@ class CloudflareIngestConfig:
     wrangler_args: tuple[str, ...] = DEFAULT_WRANGLER_ARGS
     cloudflare_account_id: str | None = None
     cloudflare_api_token: str | None = None
+    embedding_batch_size: int = 64
 
 
 class CommandFailure(RuntimeError):
@@ -103,23 +105,37 @@ def workers_ai_embedder(rows: list[dict[str, Any]], config: CloudflareIngestConf
 
     payload = json.dumps({"text": [str(row["text"]) for row in rows]}, ensure_ascii=False).encode("utf-8")
     url = f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/{config.embedding_model}"
-    request = url_request.Request(
-        url,
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    try:
-        with url_request.urlopen(request, timeout=120) as response:
-            body = json.loads(response.read().decode("utf-8"))
-    except url_error.HTTPError as error:
-        detail = error.read().decode("utf-8", errors="replace")
-        raise CommandFailure(["workers-ai", "embed", config.embedding_model], detail, error.code) from error
-    except url_error.URLError as error:
-        raise CommandFailure(["workers-ai", "embed", config.embedding_model], str(error)) from error
+    body: dict[str, Any] | None = None
+    last_error: Exception | None = None
+    for attempt in range(5):
+        request = url_request.Request(
+            url,
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_token}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with url_request.urlopen(request, timeout=180) as response:
+                body = json.loads(response.read().decode("utf-8"))
+                break
+        except url_error.HTTPError as error:
+            detail = error.read().decode("utf-8", errors="replace")
+            if error.code not in {408, 429, 500, 502, 503, 504} or attempt == 4:
+                raise CommandFailure(["workers-ai", "embed", config.embedding_model], detail, error.code) from error
+            retry_after = error.headers.get("Retry-After")
+            wait = float(retry_after) if retry_after and retry_after.isdigit() else 2.0 * (attempt + 1)
+            last_error = error
+            time.sleep(wait)
+        except (TimeoutError, url_error.URLError) as error:
+            if attempt == 4:
+                raise CommandFailure(["workers-ai", "embed", config.embedding_model], str(error)) from error
+            last_error = error
+            time.sleep(2.0 * (attempt + 1))
+    if body is None:
+        raise CommandFailure(["workers-ai", "embed", config.embedding_model], str(last_error or "Workers AI 请求失败"))
 
     result = body.get("result", {})
     data = result.get("data") if isinstance(result, dict) else None
@@ -139,7 +155,11 @@ def build_embeddings(
             for row in rows
         ]
 
-    vectors = (embedder or workers_ai_embedder)(rows, config)
+    vectors: list[list[float]] = []
+    batch_size = max(1, config.embedding_batch_size)
+    active_embedder = embedder or workers_ai_embedder
+    for start in range(0, len(rows), batch_size):
+        vectors.extend(active_embedder(rows[start : start + batch_size], config))
     if len(vectors) != len(rows):
         raise ValueError(f"embedding 数量不匹配：期望 {len(rows)}，实际 {len(vectors)}")
     for index, vector in enumerate(vectors):
@@ -281,6 +301,8 @@ def build_manifest_sql(report: dict[str, Any], r2_keys: dict[str, str], config: 
     stats_json = json.dumps(
         {
             "source_counts": source_counts,
+            "history_book_stats": report.get("history_book_stats", []),
+            "budget": report.get("budget", {}),
             "r2_keys": r2_keys,
             "checkpoint": "cloud-checkpoint.json",
             "status": "succeeded",
@@ -288,6 +310,10 @@ def build_manifest_sql(report: dict[str, Any], r2_keys: dict[str, str], config: 
         ensure_ascii=False,
         sort_keys=True,
     )
+
+    source_records = report.get("source_records", [])
+    source_sql = [build_source_record_sql(corpus_version, item) for item in source_records if isinstance(item, dict)]
+    refresh_totals_sql = build_refresh_version_totals_sql(corpus_version, index_version)
 
     return "\n".join(
         [
@@ -316,10 +342,58 @@ def build_manifest_sql(report: dict[str, Any], r2_keys: dict[str, str], config: 
             (
                 "INSERT INTO turtle_build_reports "
                 "(corpus_version, index_version, status, report_r2_object_key, checkpoint_r2_object_key, "
-                "source_total, source_processed, source_failed, chunk_count, vector_count, stats_json, completed_at) VALUES "
+                "source_total, source_processed, source_failed, chunk_count, vector_count, token_estimate, stats_json, completed_at) VALUES "
                 f"({sql_quote(corpus_version)}, {sql_quote(index_version)}, 'succeeded', {sql_quote(r2_keys['build_report'])}, "
                 f"{sql_quote(r2_keys['checkpoint'])}, {source_total}, {source_total - failed_count}, {failed_count}, "
-                f"{chunk_count}, {chunk_count}, {sql_quote(stats_json)}, CURRENT_TIMESTAMP);"
+                f"{chunk_count}, {chunk_count}, {int(report.get('budget', {}).get('token_budget_used', 0) or 0)}, "
+                f"{sql_quote(stats_json)}, CURRENT_TIMESTAMP);"
+            ),
+            *source_sql,
+            refresh_totals_sql,
+        ]
+    )
+
+
+def build_source_record_sql(corpus_version: str, record: dict[str, Any]) -> str:
+    status = str(record.get("status") or "processed")
+    if status not in {"pending", "processed", "failed", "skipped"}:
+        status = "failed"
+    return (
+        "INSERT INTO turtle_corpus_sources "
+        "(corpus_version, source_type, source_id, figure_id, title, source_url, source_ref, "
+        "checksum_sha256, status, char_count, byte_count, chunk_count, error_message, updated_at) VALUES "
+        f"({sql_quote(corpus_version)}, {sql_quote(record.get('source_type'))}, {sql_quote(record.get('source_id'))}, "
+        f"{sql_quote(record.get('figure_id'))}, {sql_quote(record.get('title'))}, {sql_quote(record.get('source_url'))}, "
+        f"{sql_quote(record.get('source_ref'))}, NULL, {sql_quote(status)}, "
+        f"{int(record.get('char_count') or 0)}, 0, {int(record.get('chunk_count') or 0)}, "
+        f"{sql_quote(record.get('error_message'))}, CURRENT_TIMESTAMP) "
+        "ON CONFLICT(corpus_version, source_type, source_id) DO UPDATE SET "
+        "figure_id=excluded.figure_id, title=excluded.title, source_url=excluded.source_url, "
+        "source_ref=excluded.source_ref, status=excluded.status, char_count=excluded.char_count, "
+        "byte_count=excluded.byte_count, chunk_count=excluded.chunk_count, error_message=excluded.error_message, "
+        "updated_at=CURRENT_TIMESTAMP;"
+    )
+
+
+def build_refresh_version_totals_sql(corpus_version: str, index_version: str) -> str:
+    quoted_corpus = sql_quote(corpus_version)
+    quoted_index = sql_quote(index_version)
+    return "\n".join(
+        [
+            (
+                "UPDATE turtle_corpus_versions SET "
+                f"source_count=(SELECT COUNT(*) FROM turtle_corpus_sources WHERE corpus_version={quoted_corpus}), "
+                f"chunk_count=(SELECT COALESCE(SUM(chunk_count), 0) FROM turtle_corpus_sources WHERE corpus_version={quoted_corpus}), "
+                f"vector_count=(SELECT COALESCE(SUM(chunk_count), 0) FROM turtle_corpus_sources WHERE corpus_version={quoted_corpus}), "
+                f"failed_source_count=(SELECT COUNT(*) FROM turtle_corpus_sources WHERE corpus_version={quoted_corpus} AND status='failed'), "
+                "updated_at=CURRENT_TIMESTAMP "
+                f"WHERE version={quoted_corpus};"
+            ),
+            (
+                "UPDATE turtle_index_versions SET "
+                f"chunk_count=(SELECT COALESCE(SUM(chunk_count), 0) FROM turtle_corpus_sources WHERE corpus_version={quoted_corpus}), "
+                f"vector_count=(SELECT COALESCE(SUM(chunk_count), 0) FROM turtle_corpus_sources WHERE corpus_version={quoted_corpus}) "
+                f"WHERE index_version={quoted_index};"
             ),
         ]
     )
@@ -350,14 +424,7 @@ def write_failure_artifacts(
         "error": str(error),
         "affected_sources": affected_sources,
         "affected_chunk_count": affected_chunk_count,
-        "resume_args": [
-            "python",
-            "scripts/build_turtle_corpus.py",
-            "--sample",
-            "--cloud",
-            "--output",
-            str(output_dir),
-        ],
+        "resume_args": build_resume_args(report, output_dir),
         "resume_note": "当前 checkpoint 记录进度和失败点；恢复方式是从头重跑同一命令，已完成步骤不会被自动跳过。",
         "r2_keys": r2_keys,
         "report_keys": report.get("output_files", {}),
@@ -375,8 +442,45 @@ def write_failure_artifacts(
     write_json(output_dir / "failed-sources.json", failed_sources)
 
 
+def build_resume_args(report: dict[str, Any], output_dir: Path) -> list[str]:
+    build_args = report.get("build_args", {})
+    mode = str(build_args.get("mode") or "sample") if isinstance(build_args, dict) else "sample"
+    args = ["python", "scripts/build_turtle_corpus.py"]
+    if mode == "full-history":
+        args.append("--full-history")
+    else:
+        args.append("--sample")
+    args.extend(["--cloud", "--output", str(output_dir)])
+    if not isinstance(build_args, dict):
+        return args
+    if build_args.get("mock_embedding"):
+        args.append("--mock-embedding")
+    if mode == "full-history":
+        option_map = [
+            ("daily_token_budget", "--daily-token-budget"),
+            ("daily_vector_limit", "--daily-vector-limit"),
+            ("max_books", "--max-books"),
+            ("max_pages_per_book", "--max-pages-per-book"),
+            ("resume_after", "--resume-after"),
+            ("batch_id", "--batch-id"),
+            ("discovery_sleep", "--discovery-sleep"),
+            ("embedding_batch_size", "--embedding-batch-size"),
+        ]
+        for key, flag in option_map:
+            value = build_args.get(key)
+            if value is not None:
+                args.extend([flag, str(value)])
+        if build_args.get("skip_local_sources"):
+            args.append("--skip-local-sources")
+    elif build_args.get("sample_size") is not None:
+        args.extend(["--sample-size", str(build_args["sample_size"])])
+    return args
+
+
 def build_r2_keys(report: dict[str, Any]) -> dict[str, str]:
-    prefix = f"{report['corpus_version']}/"
+    prefix = str(report.get("r2_prefix") or f"{report['corpus_version']}/")
+    if not prefix.endswith("/"):
+        prefix += "/"
     return {
         "prefix": prefix,
         "build_report": f"{prefix}build-report.json",
@@ -401,6 +505,14 @@ def ingest_corpus_to_cloudflare(
     completed_steps: list[str] = []
 
     try:
+        if not config.mock_embedding and embedder is None:
+            account_id = config.cloudflare_account_id or os.environ.get("CLOUDFLARE_ACCOUNT_ID")
+            api_token = config.cloudflare_api_token or os.environ.get("CLOUDFLARE_API_TOKEN")
+            if not account_id or not api_token:
+                raise CommandFailure(
+                    ["workers-ai", "embed", config.embedding_model],
+                    "缺少 CLOUDFLARE_ACCOUNT_ID 或 CLOUDFLARE_API_TOKEN，未开始写入 R2/Vectorize/D1",
+                )
         source_files = write_source_artifacts(chunks_path, output_dir)
         command_runner(
             build_wrangler_command(

@@ -25,6 +25,15 @@ __pycache__/
 scripts/logs/
 figures-new.json
 figures-batch*.json
+corpus/
+turtle-corpus*/
+r2-cache/
+*chunks.jsonl
+*sources-raw.jsonl
+*sources-normalized.jsonl
+*vectorize-upsert.jsonl
+*cloud-checkpoint.json
+*failed-sources.json
 
 # 日志
 *.log

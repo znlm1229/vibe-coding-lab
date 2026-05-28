@@ -180,11 +180,85 @@ else
   record AC3 PASS "git 未跟踪全量原始/清洗语料、chunk JSONL 或 R2 cache"
 fi
 
-if [ -f "$REPORT_JSON" ] \
+AC4_FULL_REPORT="${TURTLE_FULL_REPORTS:-${TURTLE_FULL_REPORT:-}}"
+AC4_LOG="$RUN_DIR/ac4-full-history-report.log"
+if [ -n "$AC4_FULL_REPORT" ]; then
+  if python - "$AC4_FULL_REPORT" >"$AC4_LOG" 2>&1 <<'PY'
+import json
+import sys
+from pathlib import Path
+
+from scripts.turtle_history import HISTORY_BOOKS
+
+def iter_report_paths(raw: str):
+    for part in raw.split(";"):
+        value = part.strip().strip('"').strip("'")
+        if not value:
+            continue
+        path = Path(value)
+        if path.is_dir():
+            direct = path / "build-report.json"
+            if direct.exists():
+                yield direct
+            for child in sorted(path.glob("*/build-report.json")):
+                yield child
+        else:
+            yield path
+
+reports = []
+missing_paths = []
+for path in iter_report_paths(sys.argv[1]):
+    if path.exists():
+        reports.append(json.loads(path.read_text(encoding="utf-8")))
+    else:
+        missing_paths.append(str(path))
+if not reports:
+    print(json.dumps({"missing_report_paths": missing_paths or [sys.argv[1]]}, ensure_ascii=False, indent=2))
+    raise SystemExit(1)
+
+source_counts = {}
+stats = {}
+for report in reports:
+    for name, count in report.get("source_counts", {}).items():
+        source_counts[name] = source_counts.get(name, 0) + int(count or 0)
+    for item in report.get("history_book_stats", []):
+        if not isinstance(item, dict) or not item.get("book"):
+            continue
+        book = item["book"]
+        target = stats.setdefault(book, {"book": book, "processed": 0, "failed": 0})
+        target["processed"] += int(item.get("processed", 0) or 0)
+        target["failed"] += int(item.get("failed", 0) or 0)
+
+missing_sources = [name for name in ("profile", "wikipedia", "wikisource") if int(source_counts.get(name, 0)) <= 0]
+missing_books = [book for book in HISTORY_BOOKS if book not in stats]
+bad_books = []
+for book in HISTORY_BOOKS:
+    item = stats.get(book, {})
+    if "processed" not in item or "failed" not in item:
+        bad_books.append(book)
+    elif int(item.get("processed", 0)) + int(item.get("failed", 0)) <= 0:
+        bad_books.append(book)
+if missing_paths or missing_sources or missing_books or bad_books:
+    print(json.dumps({
+        "report_count": len(reports),
+        "missing_report_paths": missing_paths,
+        "missing_sources": missing_sources,
+        "missing_books": missing_books,
+        "bad_books": bad_books,
+    }, ensure_ascii=False, indent=2))
+    raise SystemExit(1)
+print(json.dumps({"status": "ok", "report_count": len(reports)}, ensure_ascii=False))
+PY
+  then
+    record AC4 PASS "全量 build report 覆盖 profile/wikipedia/wikisource，且二十四史/清史稿逐书含 processed/failed 统计；报告 $AC4_FULL_REPORT"
+  else
+    record AC4 FAIL "全量 build report 未满足 AC4；输出见 $AC4_LOG"
+  fi
+elif [ -f "$REPORT_JSON" ] \
   && grep -q '"profile"' "$REPORT_JSON" \
   && grep -q '"wikipedia"' "$REPORT_JSON" \
   && grep -q '"wikisource"' "$REPORT_JSON"; then
-  record AC4 BLOCKED "自动化仅确认 sample source type coverage 覆盖 profile/wikipedia/wikisource；完整 AC4 还需全量二十四史 processed/failed 统计报告"
+  record AC4 BLOCKED "自动化仅确认 sample source type coverage 覆盖 profile/wikipedia/wikisource；完整 AC4 还需 TURTLE_FULL_REPORT 或 TURTLE_FULL_REPORTS 指向全量二十四史 processed/failed 统计报告"
 else
   record AC4 FAIL "build report 未覆盖三类来源"
 fi
